@@ -1,23 +1,29 @@
 @echo off
 setlocal
-title PapiClips - AI Stream Clipper & Viral Shorts Generator
+cd /d "%~dp0"
+title PapiClips - AI Stream Clipper ^& Viral Shorts Generator
 color 06
 
 if not exist ".venv\Scripts\python.exe" (
-    echo [NOTICE] PapiClips is not installed yet.
-    echo Running installer first...
+    echo ================================================================
+    echo  PapiClips is not installed yet.
+    echo  Running automatic installer first...
+    echo ================================================================
     echo.
-    call install.bat
-    if %errorlevel% neq 0 (
-        echo [ERROR] Installation did not finish.
-        pause
-        exit /b 1
-    )
+    call "%~dp0install.bat"
+)
+
+if not exist ".venv\Scripts\python.exe" (
+    echo.
+    echo [ERROR] PapiClips installation could not be completed.
+    echo Please review the error messages above.
+    pause
+    exit /b 1
 )
 
 cls
 echo ================================================================
-echo           PapiClips - AI Stream Clipper & Viral Shorts
+echo           PapiClips - AI Stream Clipper ^& Viral Shorts
 echo           Created by @papig.udda (instagram.com/papig.udda)
 echo ================================================================
 echo.
@@ -30,8 +36,14 @@ echo ================================================================
 echo.
 
 :: Launch browser in background after 2 seconds
-start /b cmd /c "timeout /t 2 /nobreak >nul && start http://127.0.0.1:8765/app"
+start "" cmd /c "ping -n 3 127.0.0.1 >nul && start http://127.0.0.1:8765/app"
 
 :: Start the Python studio server
-.venv\Scripts\python.exe -m studio.server
+".venv\Scripts\python.exe" -m studio.server
+
+if %errorlevel% neq 0 (
+    echo.
+    echo [ERROR] PapiClips server stopped with exit code %errorlevel%.
+)
+
 pause
