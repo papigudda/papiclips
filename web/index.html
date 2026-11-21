@@ -2983,7 +2983,7 @@ document.addEventListener("click", async e => {
     }
     if (a === "aikeyadd") {
       const p = $("#new_key_provider").value;
-      let k = $("#new_key_val").value.trim();
+      let k = $("#new_key_val").value.trim().replace(/\u0130/g, "I").replace(/\u0131/g, "i").replace(/[\u200B-\u200D\uFEFF]/g, "");
       if (!k && p === "ollama") k = "local";
       if (!k) return toast("Paste an API key first.", "bad");
       b.disabled = true;

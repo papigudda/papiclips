@@ -4,6 +4,7 @@ import json
 import os
 import re
 import threading
+import unicodedata
 
 import httpx
 
@@ -51,6 +52,17 @@ _KEY_STATE = {}
 _key_lock = threading.Lock()
 
 
+def clean_key(val) -> str:
+    """Sanitizes an API key string, stripping invisible characters, fixing unicode lookalikes, and ensuring ASCII."""
+    if not val:
+        return ""
+    s = str(val).strip()
+    s = s.replace("\u0130", "I").replace("\u0131", "i")
+    s = unicodedata.normalize("NFKD", s)
+    s = re.sub(r"[\u200b\u200c\u200d\ufeff\u00a0\r\n\t ]", "", s)
+    return s.encode("ascii", "ignore").decode("ascii").strip()
+
+
 def parse_keys(val) -> list[str]:
     """Extract list of clean non-empty keys from string, list, or dict."""
     if not val:
@@ -64,7 +76,7 @@ def parse_keys(val) -> list[str]:
     out = []
     seen = set()
     for k in raw:
-        s = str(k).strip()
+        s = clean_key(k)
         if s and s not in seen:
             seen.add(s)
             out.append(s)
@@ -254,7 +266,7 @@ def all_keys_detailed() -> list[dict]:
 def test_single_key(provider_id: str, key_val: str, address: str = "") -> dict:
     """Verifies an individual API key by querying models."""
     p = ALIASES.get(str(provider_id or "").strip().lower(), str(provider_id or "").strip().lower())
-    k = str(key_val or "").strip()
+    k = clean_key(key_val)
     if p not in PROVIDERS:
         raise ValueError("Invalid AI provider.")
     if not k and p not in NO_KEY:
@@ -265,7 +277,7 @@ def test_single_key(provider_id: str, key_val: str, address: str = "") -> dict:
 
 def add_key_to_pool(provider_id: str, key_val: str, address: str = "", test_first: bool = True) -> dict:
     p = ALIASES.get(str(provider_id or "").strip().lower(), str(provider_id or "").strip().lower())
-    k = str(key_val or "").strip()
+    k = clean_key(key_val)
     if test_first:
         test_single_key(p, k, address)
     d = _from_dashboard()
@@ -414,7 +426,7 @@ def save(provider_id: str, model_ids, address: str = "", new_key=None, keys_map=
         keys_map = old_keys
 
     if new_key is not None:
-        k = str(new_key).strip()[:2000]
+        k = clean_key(new_key)[:2000]
     elif old["provider"] == p and old.get("key"):
         k = old["key"]
     else:
