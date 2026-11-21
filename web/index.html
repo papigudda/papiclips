@@ -2133,11 +2133,23 @@ const setTabs = () => [
 function aiHints() {
   const k = S.ai, sel = $("#ai_provider"); if (!k || !sel) return;
   const pv = k.providers.find(x => x.id === sel.value) || k.providers[0], same = pv.id === k.provider;
-  $("#ai_key").placeholder = same && k.has_key ? `Saved${k.key_hint ? ", ends in " + k.key_hint : ""}. Paste a new key to replace it` : pv.needs_key ? "Paste your key" : "Not needed";
-  $("#ai_keyhint").innerHTML = pv.key_url ? `${pv.needs_key ? "Get a key at" : "Set it up at"} <a href="${esc(pv.key_url)}" target="_blank" rel="noopener">${esc(pv.key_url.replace("https://", ""))}</a>. The key stays on this server and is never shown again.` : "The key stays on this server and is never shown again.";
-  $("#ai_model").placeholder = pv.example ? "For example " + pv.example : "The model id, exactly as the service names it";
-  $("#ai_base").placeholder = pv.address || "http://127.0.0.1:1234/v1";
-  $("#ai_basewrap").hidden = pv.id !== "custom" && !(same && k.base_url);
+  if ($("#ai_key")) $("#ai_key").placeholder = same && k.has_key ? `Saved${k.key_hint ? ", ends in " + k.key_hint : ""}. Paste a new key to replace it` : pv.needs_key ? "Paste your key" : "Not needed";
+  if ($("#ai_keyhint")) $("#ai_keyhint").innerHTML = pv.key_url ? `${pv.needs_key ? "Get a key at" : "Set it up at"} <a href="${esc(pv.key_url)}" target="_blank" rel="noopener">${esc(pv.key_url.replace("https://", ""))}</a>. The key stays on this server and is never shown again.` : "The key stays on this server and is never shown again.";
+  if ($("#ai_model")) $("#ai_model").placeholder = pv.example ? "For example " + pv.example : "The model id, exactly as the service names it";
+  if ($("#ai_base")) $("#ai_base").placeholder = pv.address || "http://127.0.0.1:1234/v1";
+  if ($("#ai_basewrap")) $("#ai_basewrap").hidden = pv.id !== "custom" && !(same && k.base_url);
+}
+function updateNewKeyHint() {
+  const sel = $("#new_key_provider"), inp = $("#new_key_val");
+  if (!sel || !inp) return;
+  const p = sel.value;
+  if (p === "groq") inp.placeholder = "Paste Groq key: gsk_... (free from console.groq.com)";
+  else if (p === "gemini") inp.placeholder = "Paste Gemini key: AIza... (free from aistudio.google.com)";
+  else if (p === "ollama") inp.placeholder = "Local Ollama requires no key (leave blank or type local)";
+  else if (p === "openai") inp.placeholder = "Paste OpenAI key: sk-...";
+  else if (p === "anthropic") inp.placeholder = "Paste Claude key: sk-ant-...";
+  else if (p === "deepseek") inp.placeholder = "Paste DeepSeek key: sk-...";
+  else inp.placeholder = "Paste API key";
 }
 async function drawSettings() {
   const box = $("#sform"); if (!box) return;
@@ -2921,6 +2933,7 @@ document.addEventListener("change", async e => {
     syncCaptionStyle(t);
   }
   if (t.id === "ai_provider") { $("#ai_models").innerHTML = ""; if (S.ai && t.value !== S.ai.provider) { $("#ai_model").value = ""; $("#ai_base").value = ""; } return aiHints(); }
+  if (t.id === "new_key_provider") return updateNewKeyHint();
   if (t.dataset.sel) {
     const k = t.dataset.sel;
     if (t.checked) sel().add(k); else sel().delete(k);
@@ -2950,7 +2963,8 @@ document.addEventListener("click", async e => {
     if (a === "aimodels") {
       b.disabled = true;
       try {
-        const r = await send("/api/ai/models", {provider: $("#ai_provider").value, base_url: $("#ai_base").value, key: $("#ai_key").value});
+        const kv = $("#ai_key") ? $("#ai_key").value : "";
+        const r = await send("/api/ai/models", {provider: $("#ai_provider").value, base_url: $("#ai_base").value, key: kv});
         $("#ai_models").innerHTML = r.models.map(m => `<option value="${esc(m)}">`).join("");
         toast(r.models.length ? `${r.models.length} models found. Click the model box to pick one.` : "The service listed no models. Type the model yourself.", r.models.length ? "ok" : "");
         if (r.models.length) $("#ai_model").focus();
@@ -2959,6 +2973,7 @@ document.addEventListener("click", async e => {
     }
     if (a === "showaddkey") {
       $("#add_key_box").style.display = "block";
+      updateNewKeyHint();
       $("#new_key_val").focus();
       return;
     }
@@ -2968,7 +2983,8 @@ document.addEventListener("click", async e => {
     }
     if (a === "aikeyadd") {
       const p = $("#new_key_provider").value;
-      const k = $("#new_key_val").value.trim();
+      let k = $("#new_key_val").value.trim();
+      if (!k && p === "ollama") k = "local";
       if (!k) return toast("Paste an API key first.", "bad");
       b.disabled = true;
       $("#key_test_spinner").style.display = "inline";
