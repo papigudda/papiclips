@@ -1662,7 +1662,6 @@ function onLink(input) {
 }
 document.addEventListener("input", e => {
   if (e.target.id === "url") onLink(e.target);
-  if (e.target.id === "new_key_val") onNewKeyInput(e.target);
   if (e.target.closest?.("#cform") && e.target.dataset.k && !/checkbox|radio/.test(e.target.type)) dirty(true);
 });
 document.addEventListener("change", e => {
@@ -2155,15 +2154,6 @@ function detectKeyProvider(raw) {
   if (k.startsWith("AIza") || k.startsWith("AQ.")) return "gemini";
   if (/^[a-f0-9]{32}\.[a-zA-Z0-9_\-]+$/i.test(k)) return "ollama";
   return null;
-}
-function onNewKeyInput(inp) {
-  if (!inp) return;
-  const autoP = detectKeyProvider(inp.value);
-  const sel = $("#new_key_provider");
-  if (autoP && sel && sel.value !== autoP) {
-    sel.value = autoP;
-    updateNewKeyHint();
-  }
 }
 function updateNewKeyHint() {
   const sel = $("#new_key_provider"), inp = $("#new_key_val");
@@ -3008,14 +2998,8 @@ document.addEventListener("click", async e => {
       return;
     }
     if (a === "aikeyadd") {
-      let p = $("#new_key_provider").value;
+      const p = $("#new_key_provider").value;
       let k = $("#new_key_val").value.trim().replace(/\u0130/g, "I").replace(/\u0131/g, "i").replace(/[\u200B-\u200D\uFEFF]/g, "");
-      const autoP = detectKeyProvider(k);
-      if (autoP && autoP !== p) {
-        p = autoP;
-        $("#new_key_provider").value = autoP;
-        updateNewKeyHint();
-      }
       if (!k && p === "ollama") k = "local";
       if (!k) return toast("Paste an API key first.", "bad");
       b.disabled = true;

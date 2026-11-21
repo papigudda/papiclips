@@ -293,7 +293,9 @@ def test_single_key(provider_id: str, key_val: str, address: str = "") -> dict:
     if detected and detected != p:
         d_name = PROVIDERS.get(detected, (detected.title(),))[0]
         cur_name = PROVIDERS.get(p, (p.title(),))[0]
-        raise ValueError(f"This key appears to be for {d_name}, but {cur_name} was selected. Please select '{d_name}' from the Provider list.")
+        if cur_name == "Groq" and d_name == "Gemini":
+            raise ValueError("You selected 'Groq', but the pasted key starts with 'AQ.' which is a Google Gemini key. Groq API keys start with 'gsk_'. Please copy your Groq key from console.groq.com/keys, or select 'Gemini' if this is a Google key.")
+        raise ValueError(f"You selected '{cur_name}', but this key appears to be for {d_name}. Please paste a {cur_name} key, or select '{d_name}' from the Provider list.")
     mods = list_models(p, address=address, with_key=k)
     return {"ok": True, "provider": p, "models_count": len(mods), "models_sample": mods[:5]}
 
