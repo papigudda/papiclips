@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# Environment variables & secrets (CRITICAL: NEVER COMMIT SECRETS)
+.env
+.env.local
+.env.*.local
+client_secret.json
+apps.json
+
+# Local storage and data (clips, thumbnails, database)
+data/
+storage.json
+*.mp4
+*.jpg
+*.ass
+*.wav
+*.mp3
+
+# Logs and temp files
+*.log
+.tmp/
+tmp/
