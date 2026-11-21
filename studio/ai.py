@@ -567,6 +567,10 @@ def explain(e, provider_id=None) -> str:
     m = re.match(r"HTTP (\d{3})\b", text)
     status = m.group(1) if m else ""
     if status in ("401", "403") or "api key" in low or "api_key" in low or "unauthorized" in low or "permission" in low:
+        if p == "gemini":
+            return "Google refused the key ('API key not valid'). Go to aistudio.google.com/apikey and copy an active Gemini key."
+        if p == "groq":
+            return "Groq refused the key. Check your key (starts with 'gsk_') at console.groq.com/keys."
         return f"{prov_name} refused the key. Check your {prov_name} API key under Settings, AI."
     if "no longer available" in low or "deprecated" in low or "retired" in low or "discontinued" in low:
         return f"{prov_name} has retired \"{name}\" (or it isn't available to new keys). Open Settings, AI, press Find models and pick a newer model."
