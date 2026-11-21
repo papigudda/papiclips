@@ -209,6 +209,8 @@ def resolve_model(model_spec: str):
     base = PROVIDERS.get(p, ("", ""))[1]
     if p == provider() and current()["base_url"]:
         base = current()["base_url"]
+    if p == "ollama" and k and (not base or "127.0.0.1" in base):
+        base = "https://ollama.com/v1"
     how = PROVIDERS.get(p, ("", "", "openai"))[2]
     return p, m, base, k, how
 
@@ -457,6 +459,8 @@ def list_models(provider_id=None, address=None, with_key=None) -> list:
     k_candidates = parse_keys(with_key) if with_key else []
     k = k_candidates[0] if k_candidates else (get_key_for(p) or (parse_keys(c.get("key"))[0] if c.get("key") and c["provider"] == p else ""))
     base = str(address or "").strip().rstrip("/") or (c["base_url"] if c["provider"] == p else "") or PROVIDERS[p][1]
+    if p == "ollama" and k and (not base or "127.0.0.1" in base):
+        base = "https://ollama.com/v1"
     if not base:
         raise ValueError("Enter the service's address first.")
     how = PROVIDERS[p][2]
