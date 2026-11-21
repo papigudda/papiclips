@@ -279,7 +279,15 @@ def add_key_to_pool(provider_id: str, key_val: str, address: str = "", test_firs
     if prov_example and not any(p in m for m in models_to_use):
         models_to_use = [f"{p}:{prov_example}"] + models_to_use
 
-    save(cur["provider"] or p, models_to_use, cur["base_url"] or address, keys_map=km)
+    # If current provider has no key or is not set, switch default provider to p
+    active_p = cur["provider"] or p
+    cur_keys = parse_keys(km.get(active_p, "")) or parse_keys(cur.get("key", ""))
+    if not cur_keys and p in km:
+        active_p = p
+
+    primary_key = cur.get("key") if active_p == cur["provider"] and cur.get("key") else (parse_keys(km.get(active_p, ""))[0] if parse_keys(km.get(active_p, "")) else k)
+
+    save(active_p, models_to_use, cur["base_url"] or address, new_key=primary_key, keys_map=km)
     return {"ok": True, "provider": p, "total_keys": len(existing)}
 
 
@@ -398,20 +406,33 @@ def save(provider_id: str, model_ids, address: str = "", new_key=None, keys_map=
     if p == "custom" and not address:
         raise ValueError("A custom service needs its address, for example http://127.0.0.1:1234/v1")
     old = current()
-    if new_key is None and old["provider"] == p:
-        k = old["key"]
-    elif new_key is not None:
-        k = str(new_key).strip()[:2000]
-    else:
-        d = _from_dashboard()
-        km = d.get("keys", {}) if isinstance(d.get("keys"), dict) else {}
-        k = str(km.get(p) or "").strip()
-    if not k and p not in NO_KEY:
-        raise ValueError("Paste the key for this service.")
     d = _from_dashboard()
-    old_keys = d.get("keys", {}) if isinstance(d.get("keys"), dict) else {}
+    old_keys = dict(d.get("keys", {}) if isinstance(d.get("keys"), dict) else {})
     if keys_map is None:
         keys_map = old_keys
+
+    if new_key is not None:
+        k = str(new_key).strip()[:2000]
+    elif old["provider"] == p and old.get("key"):
+        k = old["key"]
+    else:
+        p_keys = parse_keys(keys_map.get(p, ""))
+        k = p_keys[0] if p_keys else ""
+
+    if not k and p not in NO_KEY:
+        p_keys = parse_keys(keys_map.get(p, ""))
+        if p_keys:
+            k = p_keys[0]
+        else:
+            for alt_p, alt_val in keys_map.items():
+                alt_keys = parse_keys(alt_val)
+                if alt_keys:
+                    p = alt_p
+                    k = alt_keys[0]
+                    break
+
+    if not k and p not in NO_KEY:
+        raise ValueError("Paste the key for this service.")
     with _lock:
         f = _file()
         tmp = f.with_suffix(".tmp")
