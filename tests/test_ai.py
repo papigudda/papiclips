@@ -169,6 +169,29 @@ check("a 400 about the request itself is not called an unknown model",
 check("a 404 that is not about a model is not called an unknown model",
       "doesn't know" not in explained('HTTP 404 {"error": {"message": "Method not allowed for this path"}}'))
 check("quota is still quota", "limit" in explained('HTTP 429 {"error": {"status": "RESOURCE_EXHAUSTED"}}'))
+
+# Provider-aware explain tests
+err_groq = ai.AIError("HTTP 401 Invalid API Key", provider="groq")
+check("explain with provider attribute names groq", "Groq refused the key" in ai.explain(err_groq))
+check("explain with explicit provider_id names groq", "Groq refused the key" in ai.explain(ai.AIError("HTTP 401"), provider_id="groq"))
+check("explain with provider attribute names ollama", "Ollama refused the key" in ai.explain(ai.AIError("HTTP 401"), provider_id="ollama"))
+
+# Key format detection tests
+check("detect groq key", ai.detect_provider_from_key("gsk_abc123456789") == "groq")
+check("detect ollama key", ai.detect_provider_from_key("475cecfcc57544e2ae67429dcf2d550f.voiORMsOsSh34iDf-7W7kpkd") == "ollama")
+check("detect gemini key AQ", ai.detect_provider_from_key("AQ.Ab8RN6KJeFHPKGAS1DGqPgvePM1u0") == "gemini")
+check("detect gemini key AIza", ai.detect_provider_from_key("AIzaSyB123456789") == "gemini")
+check("detect anthropic key", ai.detect_provider_from_key("sk-ant-api03-12345") == "anthropic")
+check("detect openai key", ai.detect_provider_from_key("sk-proj-12345") == "openai")
+
+# test_single_key mismatch detection
+mismatch_caught = False
+try:
+    ai.test_single_key("groq", "475cecfcc57544e2ae67429dcf2d550f.voiORMsOsSh34iDf-7W7kpkd")
+except ValueError as e:
+    mismatch_caught = "Ollama" in str(e) and "Groq" in str(e)
+check("mismatched key caught with informative message", mismatch_caught)
+
 ai.httpx.get, ai.httpx.post = real_get, real_post_fn
 
 print("ALL PASSED" if not fails else f"{len(fails)} failed")

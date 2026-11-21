@@ -1660,8 +1660,15 @@ function onLink(input) {
   if (fullLink(u)) return takeLink(A, u, input);
   linkTimer = setTimeout(() => { if (input.value.trim() === u) takeLink(A, u, input); }, 900);   // other link shapes: take it once typing stops
 }
-document.addEventListener("input", e => { if (e.target.id === "url") onLink(e.target);
-  if (e.target.closest?.("#cform") && e.target.dataset.k && !/checkbox|radio/.test(e.target.type)) dirty(true); });
+document.addEventListener("input", e => {
+  if (e.target.id === "url") onLink(e.target);
+  if (e.target.id === "new_key_val") onNewKeyInput(e.target);
+  if (e.target.closest?.("#cform") && e.target.dataset.k && !/checkbox|radio/.test(e.target.type)) dirty(true);
+});
+document.addEventListener("change", e => {
+  if (e.target.id === "new_key_provider") updateNewKeyHint();
+  if (e.target.id === "ai_provider") aiHints();
+});
 document.addEventListener("keydown", e => { if (e.target.id === "url" && e.key === "Enter" && e.target.value.trim() && looksLink(e.target.value.trim())) { e.preventDefault(); clearTimeout(linkTimer); takeLink(att(), e.target.value.trim(), e.target); } });
 document.addEventListener("click", e => {
   const r = e.target.closest("[data-rm]"), A = att(); if (!r || A.busy) return;
@@ -2139,13 +2146,32 @@ function aiHints() {
   if ($("#ai_base")) $("#ai_base").placeholder = pv.address || "http://127.0.0.1:1234/v1";
   if ($("#ai_basewrap")) $("#ai_basewrap").hidden = pv.id !== "custom" && !(same && k.base_url);
 }
+function detectKeyProvider(raw) {
+  const k = (raw || "").trim().replace(/\u0130/g, "I").replace(/\u0131/g, "i").replace(/[\u200B-\u200D\uFEFF]/g, "");
+  if (!k) return null;
+  if (k.startsWith("gsk_")) return "groq";
+  if (k.startsWith("sk-ant-")) return "anthropic";
+  if (k.startsWith("sk-proj-")) return "openai";
+  if (k.startsWith("AIza") || k.startsWith("AQ.")) return "gemini";
+  if (/^[a-f0-9]{32}\.[a-zA-Z0-9_\-]+$/i.test(k)) return "ollama";
+  return null;
+}
+function onNewKeyInput(inp) {
+  if (!inp) return;
+  const autoP = detectKeyProvider(inp.value);
+  const sel = $("#new_key_provider");
+  if (autoP && sel && sel.value !== autoP) {
+    sel.value = autoP;
+    updateNewKeyHint();
+  }
+}
 function updateNewKeyHint() {
   const sel = $("#new_key_provider"), inp = $("#new_key_val");
   if (!sel || !inp) return;
   const p = sel.value;
   if (p === "groq") inp.placeholder = "Paste Groq key: gsk_... (free from console.groq.com)";
-  else if (p === "gemini") inp.placeholder = "Paste Gemini key: AIza... (free from aistudio.google.com)";
-  else if (p === "ollama") inp.placeholder = "Local Ollama requires no key (leave blank or type local)";
+  else if (p === "gemini") inp.placeholder = "Paste Gemini key: AIza... or AQ... (from aistudio.google.com)";
+  else if (p === "ollama") inp.placeholder = "Local Ollama requires no key, or paste an Ollama Cloud key";
   else if (p === "openai") inp.placeholder = "Paste OpenAI key: sk-...";
   else if (p === "anthropic") inp.placeholder = "Paste Claude key: sk-ant-...";
   else if (p === "deepseek") inp.placeholder = "Paste DeepSeek key: sk-...";
@@ -2982,8 +3008,14 @@ document.addEventListener("click", async e => {
       return;
     }
     if (a === "aikeyadd") {
-      const p = $("#new_key_provider").value;
+      let p = $("#new_key_provider").value;
       let k = $("#new_key_val").value.trim().replace(/\u0130/g, "I").replace(/\u0131/g, "i").replace(/[\u200B-\u200D\uFEFF]/g, "");
+      const autoP = detectKeyProvider(k);
+      if (autoP && autoP !== p) {
+        p = autoP;
+        $("#new_key_provider").value = autoP;
+        updateNewKeyHint();
+      }
       if (!k && p === "ollama") k = "local";
       if (!k) return toast("Paste an API key first.", "bad");
       b.disabled = true;
@@ -2991,6 +3023,8 @@ document.addEventListener("click", async e => {
       try {
         await send("/api/ai/key/add", {provider: p, key: k, test_first: true});
         toast("API key verified and added to AI pool!", "ok");
+        if ($("#new_key_val")) $("#new_key_val").value = "";
+        if ($("#add_key_box")) $("#add_key_box").style.display = "none";
         S.status = await api("/api/status");
         await drawSettings();
       } catch (err) {

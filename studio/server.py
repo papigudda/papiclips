@@ -1383,12 +1383,13 @@ def ai_put(request: Request, body: dict = Body(...)):
 def ai_models(request: Request, body: dict = Body(default={})):
     _admin(request)
     _throttle("aimodels:" + ctx.uid(), 30, 600)
+    p = body.get("provider")
     try:
-        return {"models": ai.list_models(body.get("provider"), body.get("base_url"), body.get("key"))}
+        return {"models": ai.list_models(p, body.get("base_url"), body.get("key"))}
     except ValueError as e:
         raise HTTPException(400, str(e))
     except Exception as e:  # noqa: BLE001
-        reason = ai.explain(e)
+        reason = ai.explain(e, provider_id=p)
         raise HTTPException(502, f"The service did not give its list of models. {reason}" if reason else
                             "The service did not give its list of models. Check the key, or type the model yourself. " + _ai_error(e)[:160])
 
@@ -1409,42 +1410,45 @@ def ai_test(request: Request):
 def ai_key_test(request: Request, body: dict = Body(...)):
     _admin(request)
     _throttle("aikeytest:" + ctx.uid(), 20, 600)
+    p = body.get("provider")
     try:
-        return ai.test_single_key(body.get("provider"), body.get("key"), body.get("base_url") or "")
+        return ai.test_single_key(p, body.get("key"), body.get("base_url") or "")
     except ValueError as e:
         raise HTTPException(400, str(e))
     except Exception as e:  # noqa: BLE001
-        raise HTTPException(502, ai.explain(e) or str(e))
+        raise HTTPException(502, ai.explain(e, provider_id=p) or str(e))
 
 
 @app.post("/api/ai/key/add")
 def ai_key_add(request: Request, body: dict = Body(...)):
     _admin(request)
     _throttle("aikeyadd:" + ctx.uid(), 30, 600)
+    p = body.get("provider")
     try:
-        out = ai.add_key_to_pool(body.get("provider"), body.get("key"), body.get("base_url") or "", test_first=bool(body.get("test_first", True)))
+        out = ai.add_key_to_pool(p, body.get("key"), body.get("base_url") or "", test_first=bool(body.get("test_first", True)))
         usage.forget_all()
         ctx.bump()
         return out
     except ValueError as e:
         raise HTTPException(400, str(e))
     except Exception as e:  # noqa: BLE001
-        raise HTTPException(502, ai.explain(e) or str(e))
+        raise HTTPException(502, ai.explain(e, provider_id=p) or str(e))
 
 
 @app.post("/api/ai/key/remove")
 def ai_key_remove(request: Request, body: dict = Body(...)):
     _admin(request)
     _throttle("aikeyrem:" + ctx.uid(), 30, 600)
+    p = body.get("provider")
     try:
-        out = ai.remove_key_from_pool(body.get("provider"), body.get("key"))
+        out = ai.remove_key_from_pool(p, body.get("key"))
         usage.forget_all()
         ctx.bump()
         return out
     except ValueError as e:
         raise HTTPException(400, str(e))
     except Exception as e:  # noqa: BLE001
-        raise HTTPException(502, ai.explain(e) or str(e))
+        raise HTTPException(502, ai.explain(e, provider_id=p) or str(e))
 
 
 # ---------------------------------------------------------------- speech models, one per spoken language

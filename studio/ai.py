@@ -11,7 +11,7 @@ import httpx
 from . import config
 
 PROVIDERS = {
-    "gemini": ("Gemini", "https://generativelanguage.googleapis.com/v1beta/models", "gemini", "https://aistudio.google.com/apikey", "gemma-4-26b-a4b-it"),
+    "gemini": ("Gemini", "https://generativelanguage.googleapis.com/v1beta/models", "gemini", "https://aistudio.google.com/apikey", "gemini-3-flash-preview"),
     "openai": ("OpenAI", "https://api.openai.com/v1", "openai", "https://platform.openai.com/api-keys", "gpt-4o-mini"),
     "xai": ("Grok", "https://api.x.ai/v1", "openai", "https://console.x.ai", "grok-4"),
     "groq": ("Groq", "https://api.groq.com/openai/v1", "openai", "https://console.groq.com/keys", "openai/gpt-oss-120b"),
@@ -263,6 +263,24 @@ def all_keys_detailed() -> list[dict]:
     return out
 
 
+def detect_provider_from_key(key_val: str) -> str:
+    """Infers the intended provider from recognizable API key formats."""
+    k = clean_key(key_val)
+    if not k:
+        return ""
+    if k.startswith("gsk_"):
+        return "groq"
+    if k.startswith("sk-ant-"):
+        return "anthropic"
+    if k.startswith("sk-proj-"):
+        return "openai"
+    if k.startswith("AIza") or k.startswith("AQ."):
+        return "gemini"
+    if re.fullmatch(r"[a-f0-9]{32}\.[a-zA-Z0-9_\-]+", k):
+        return "ollama"
+    return ""
+
+
 def test_single_key(provider_id: str, key_val: str, address: str = "") -> dict:
     """Verifies an individual API key by querying models."""
     p = ALIASES.get(str(provider_id or "").strip().lower(), str(provider_id or "").strip().lower())
@@ -271,6 +289,11 @@ def test_single_key(provider_id: str, key_val: str, address: str = "") -> dict:
         raise ValueError("Invalid AI provider.")
     if not k and p not in NO_KEY:
         raise ValueError("API key cannot be empty.")
+    detected = detect_provider_from_key(k)
+    if detected and detected != p:
+        d_name = PROVIDERS.get(detected, (detected.title(),))[0]
+        cur_name = PROVIDERS.get(p, (p.title(),))[0]
+        raise ValueError(f"This key appears to be for {d_name}, but {cur_name} was selected. Please select '{d_name}' from the Provider list.")
     mods = list_models(p, address=address, with_key=k)
     return {"ok": True, "provider": p, "models_count": len(mods), "models_sample": mods[:5]}
 
@@ -483,7 +506,7 @@ def list_models(provider_id=None, address=None, with_key=None) -> list:
     else:
         r = httpx.get(f"{base}/models", headers={"Authorization": f"Bearer {k}"} if k else {}, timeout=20)
     if r.status_code != 200:
-        raise AIError(f"HTTP {r.status_code} {r.text[:200].replace(k or chr(0), '<key>')}")
+        raise AIError(f"HTTP {r.status_code} {r.text[:200].replace(k or chr(0), '<key>')}", provider=p)
     data = r.json()
     if how == "gemini":
         found = []
@@ -520,33 +543,42 @@ def test() -> dict:
 class AIError(RuntimeError):
     """A failed AI call. `wait` is how many seconds the service asked us to wait before trying again, when it
     said so (a Retry-After header, or Gemini's retryDelay)."""
-    def __init__(self, message, wait=None, daily=False):
+    def __init__(self, message, wait=None, daily=False, provider=None):
         super().__init__(message)
         self.wait = wait
         self.daily = daily        # the limit is for the whole day, so waiting a minute won't help
+        self.provider = provider
 
 
 problem = {"text": "", "at": 0.0}
 
 
-def explain(e) -> str:
+def explain(e, provider_id=None) -> str:
     text, low = str(e), str(e).lower()
+    p = ALIASES.get(str(provider_id or getattr(e, "provider", None) or "").strip().lower(), str(provider_id or getattr(e, "provider", None) or "").strip().lower())
+    if p == "ollama":
+        prov_name = "Ollama"
+    elif p:
+        prov_name = PROVIDERS.get(p, (p.capitalize(),))[0]
+    else:
+        prov_name = label()
+    is_ollama = (p == "ollama") if p else (provider() == "ollama")
     name = (models() or ["?"])[0]
     m = re.match(r"HTTP (\d{3})\b", text)
     status = m.group(1) if m else ""
     if status in ("401", "403") or "api key" in low or "api_key" in low or "unauthorized" in low or "permission" in low:
-        return f"{label()} refused the key. Paste a working key under Settings, AI."
+        return f"{prov_name} refused the key. Check your {prov_name} API key under Settings, AI."
     if "no longer available" in low or "deprecated" in low or "retired" in low or "discontinued" in low:
-        return f"{label()} has retired \"{name}\" (or it isn't available to new keys). Open Settings, AI, press Find models and pick a newer model."
+        return f"{prov_name} has retired \"{name}\" (or it isn't available to new keys). Open Settings, AI, press Find models and pick a newer model."
     # Only a 404 that is about a model says the model is unknown. A 400 like "API key not found" or a stray
     # "404" inside some other message must not be reported as an unknown model.
     if (status == "404" and "model" in low) or (not status and ("404" in text or "not found" in low or "does not exist" in low or "unknown model" in low or "not_found" in low)) \
             or (status and "is not found for api version" in low):
-        return f"{label()} doesn't know the model \"{name}\". Open Settings, AI, press Find models and pick one from the list."
+        return f"{prov_name} doesn't know the model \"{name}\". Open Settings, AI, press Find models and pick one from the list."
     if "429" in text or "quota" in low or "rate limit" in low or "exhausted" in low:
-        return f"{label()} says the key has hit its limit or has no credit left. Check the account with {label()}, or try again later."
+        return f"{prov_name} says the key has hit its limit or has no credit left. Check the account with {prov_name}, or try again later."
     if "connect" in low or "timed out" in low or "timeout" in low or "getaddrinfo" in low or "refused" in low or "nodename" in low or "servname" in low or "nameresolutionerror" in low or "name resolution" in low:
-        return f"PapiClips couldn't reach {label()}. Check the internet connection" + (" and that Ollama is running." if provider() == "ollama" else ".")
+        return f"PapiClips couldn't reach {prov_name}. Check the internet connection" + (" and that Ollama is running." if is_ollama else ".")
     return ""
 
 
