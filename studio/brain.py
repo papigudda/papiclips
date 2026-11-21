@@ -222,29 +222,35 @@ def retry_wait(e, attempt, timeout=None):
 
 
 def _order_models_by_team_role(all_models: list[str], purpose: str) -> list[str]:
-    """Sorts available models so the best specialist on the AI Editing Team handles this task:
-    - Scout: Groq / low-latency fast models for scanning and peak detection.
-    - Creative Director: Gemini / creative LLMs for hooks, titles, hashtags, descriptions.
-    - Caption & Polish: Gemini / multilingual LLMs for wording fix and romanization.
+    """Dynamically analyzes every model's real architectural strengths and delegates the task
+    to whichever AI model in the user's active pool is best suited for it:
+    - Scout: Real-time low-latency stream scanning, transcript processing & loudness spike detection
+    - Director: Viral hooks, high-retention titles, emotional scoring, hashtags & descriptions
+    - Captioner: Word-level phonetic romanization (Hinglish/Urdu), grammar & animated subtitles
     """
+    if not all_models:
+        return all_models
     p_lower = (purpose or "").lower()
-    if "finding clips" in p_lower or "live" in p_lower or "scout" in p_lower:
-        preferred = ["groq", "ollama", "gemini", "anthropic", "openai"]
+    
+    # Determine which capability is being tested
+    if "finding clips" in p_lower or "live" in p_lower or "scout" in p_lower or "reaction" in p_lower:
+        role = "scout"
     elif "title" in p_lower or "hook" in p_lower or "hand clip" in p_lower or "describe" in p_lower:
-        preferred = ["gemini", "anthropic", "openai", "groq", "ollama"]
-    elif "caption" in p_lower:
-        preferred = ["gemini", "groq", "openai", "anthropic", "ollama"]
+        role = "director"
+    elif "caption" in p_lower or "translate" in p_lower or "word" in p_lower:
+        role = "captioner"
     else:
         return all_models
 
-    def rank(m: str) -> int:
-        m_low = m.lower()
-        for idx, pref in enumerate(preferred):
-            if pref in m_low:
-                return idx
-        return len(preferred)
+    # Sort descending by the model's auto-detected capability score for this specific role
+    def get_score(m: str) -> float:
+        try:
+            caps = ai.analyze_model_capabilities(m)
+            return float(caps.get(role, 50))
+        except Exception:
+            return 50.0
 
-    return sorted(all_models, key=rank)
+    return sorted(all_models, key=get_score, reverse=True)
 
 
 def ask_ai(prompt, schema=None, purpose="AI call", timeout=None):

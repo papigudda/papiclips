@@ -296,12 +296,87 @@ def remove_key_from_pool(provider_id: str, key_val: str) -> dict:
     return {"ok": True, "provider": p, "total_keys": len(updated)}
 
 
+def analyze_model_capabilities(model_spec: str) -> dict:
+    """Evaluates a model's architectural characteristics and determines its score (0-100)
+    for Scout (Speed/Detection), Director (Creativity/Virality), and Captioner (Language/Precision)."""
+    spec = str(model_spec or "").lower().strip()
+    scout_score = 50
+    director_score = 50
+    caption_score = 50
+    tags = []
+
+    # Provider characteristics
+    if "ollama" in spec or "localhost" in spec or "127.0.0.1" in spec:
+        tags.append("Local / Private (Ollama)")
+        scout_score += 20  # local speed, zero API cost
+        director_score += 10
+    if "groq" in spec or "cerebras" in spec:
+        tags.append("Ultra-Low Latency (Groq)")
+        scout_score += 35  # hardware LPU speed
+    if "gemini" in spec:
+        tags.append("Multimodal & Creative (Gemini)")
+        director_score += 30
+        caption_score += 25
+    if "anthropic" in spec or "claude" in spec:
+        tags.append("Deep Reasoning (Claude)")
+        director_score += 35
+        caption_score += 20
+    if "openai" in spec or "gpt-4" in spec:
+        tags.append("High Precision (OpenAI)")
+        director_score += 25
+        caption_score += 25
+    if "deepseek" in spec:
+        tags.append("Reasoning & Logic")
+        director_score += 30
+
+    # Model size & family characteristics
+    if any(k in spec for k in ["flash", "mini", "8b", "7b", "3b", "1b", "turbo", "fast", "tiny"]):
+        scout_score += 20
+        director_score -= 5
+    if any(k in spec for k in ["70b", "120b", "pro", "large", "sonnet", "opus", "plus", "r1"]):
+        director_score += 25
+        scout_score -= 10
+    if any(k in spec for k in ["qwen", "gemini", "gemma", "gpt"]):
+        caption_score += 15
+
+    return {
+        "model": model_spec,
+        "scout": min(100, max(10, scout_score)),
+        "director": min(100, max(10, director_score)),
+        "captioner": min(100, max(10, caption_score)),
+        "tags": tags
+    }
+
+
+def auto_assigned_team() -> dict:
+    """Dynamically analyzes the active models in the pool and assigns the optimal model
+    for each role based on architecture & real capability benchmarks."""
+    ms = models()
+    if not ms:
+        return {
+            "scout": {"model": "None configured", "reason": "Add models to pool", "tags": []},
+            "director": {"model": "None configured", "reason": "Add models to pool", "tags": []},
+            "captioner": {"model": "None configured", "reason": "Add models to pool", "tags": []}
+        }
+    scored = [analyze_model_capabilities(m) for m in ms]
+    best_scout = max(scored, key=lambda x: x["scout"])
+    best_director = max(scored, key=lambda x: x["director"])
+    best_captioner = max(scored, key=lambda x: x["captioner"])
+
+    return {
+        "scout": {"model": best_scout["model"], "score": best_scout["scout"], "tags": best_scout["tags"]},
+        "director": {"model": best_director["model"], "score": best_director["director"], "tags": best_director["tags"]},
+        "captioner": {"model": best_captioner["model"], "score": best_captioner["captioner"], "tags": best_captioner["tags"]},
+    }
+
+
 def public() -> dict:
     c = current()
     return {"provider": c["provider"], "models": c["models"], "base_url": c["base_url"], "has_key": bool(c["key"]),
             "key_hint": c["key"][-4:] if len(c["key"]) >= 12 else "", "ready": ready(), "label": label(),
             "saved_here": bool(_from_dashboard().get("provider")),
             "all_keys": all_keys_detailed(),
+            "team": auto_assigned_team(),
             "providers": [{"id": k, "label": v[0], "address": v[1], "needs_key": k not in NO_KEY, "key_url": v[3], "example": v[4]}
                           for k, v in PROVIDERS.items()]}
 

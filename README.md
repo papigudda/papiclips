@@ -15,16 +15,15 @@ Unlike generic clippers that grab random chunks of footage with awkward silences
 
 ## 🚀 Key Features
 
-### 1. 🕵️ Collaborative AI Editorial Team
-PapiClips routes clipping tasks to the specialized AI models that perform best at each stage:
-* **The Scout (Groq / Fast LLMs):** Ultra-fast, low-latency transcript evaluation and loudness spike analysis to catch explosive reactions, screams, clutch wins, and sudden chat eruptions.
-* **The Creative Director (Gemini 2.0 Flash / Pro):** Crafts punchy, high-retention hooks (ALL CAPS on screen), curiosity-driven click-worthy titles, and engaging descriptions with emojis.
-* **The Caption Specialist (Gemini / Groq):** Generates animated word-by-word captions with perfect punctuation and phonetic romanization for Hindi/Urdu (Hinglish: *"bhai ye kya ho gaya"*).
+### 1. 🕵️ Intelligent AI Capability & Dynamic Role Matcher
+You don't need to manually configure which model does what! PapiClips automatically analyzes the architecture and strengths of whatever models you configure (local Ollama or cloud providers like Groq, Gemini, DeepSeek, Claude, or OpenAI) and dynamically assigns tasks:
+* **The Scout (Speed & Throughput):** Low-latency models (e.g. Groq, Cerebras, local Ollama lightweight models like Llama 3.2) scan hours of stream audio and transcripts in seconds to identify loudness spikes and high-energy reactions.
+* **The Creative Director (Reasoning & Storytelling):** High-creativity models (e.g. Gemini 2.0 Flash, Claude, DeepSeek-R1) craft punchy, high-retention hooks (ALL CAPS on screen), click-worthy titles, and engaging descriptions with emojis.
+* **The Caption Specialist (Multilingual & Precision):** Precision models generate animated word-by-word captions with perfect punctuation and phonetic romanization for Hindi/Urdu (Hinglish: *"bhai ye kya ho gaya"*).
 
-### 2. ⚡ Infinite Multi-API Key Failover Pool
-* Never get stopped by rate limits (`429 Too Many Requests`).
-* Add 2 to 3 free API keys per provider (e.g. from multiple Gmail accounts on **Google AI Studio** or **GroqCloud**).
-* PapiClips automatically round-robins across healthy keys and cascades to backup models in real time without dropping your clipping pipeline.
+### 2. 🦙 100% Free & Local with Ollama or Infinite Cloud Failover
+* **Run 100% Free & Offline with Ollama:** Zero API keys, zero subscription costs, and complete privacy! PapiClips natively connects to Ollama (`http://127.0.0.1:11434/v1`) to run Llama 3.2, DeepSeek-R1, Qwen 2.5, or Mistral locally on your GPU.
+* **Infinite Cloud Multi-Key Pool:** Add 2 to 3 free API keys per provider (e.g. from multiple Gmail accounts on **Google AI Studio** or **GroqCloud**). PapiClips automatically round-robins across healthy keys and cascades to backup models in real time without dropping your clipping pipeline.
 
 ### 3. 🎬 Frame-Accurate Audio/Video Sync & Silence Defense
 * **No Video/Audio Drift:** Built with hardware-accelerated FFmpeg using `-accurate_seek` and `aresample=async=1000:first_pts=0` to ensure sound and picture are locked in microsecond sync.
@@ -84,17 +83,18 @@ Open **http://127.0.0.1:8765/app** in your browser.
 
 ---
 
-## 🔑 AI Setup & Free Keys Strategy
+## 🔑 AI Setup & Provider Options
 
 Inside PapiClips, navigate to **Settings ⚙️ ➔ AI**:
 
-| Role | Recommended Provider | Where to get Free Key |
-|---|---|---|
-| **Live Scout** | **Groq** (`llama-3.3-70b-versatile`) | [console.groq.com](https://console.groq.com) |
-| **Viral Director** | **Gemini** (`gemini-2.0-flash`) | [aistudio.google.com](https://aistudio.google.com) |
+| Provider | Type | Recommended Models | Cost & Setup |
+|---|---|---|---|
+| **Ollama** | **Local / Private** | `llama3.2`, `deepseek-r1`, `qwen2.5` | **100% Free** (No API key needed, runs on your machine from [ollama.com](https://ollama.com)) |
+| **Groq** | **Cloud (Ultra-Fast)** | `llama-3.3-70b-versatile`, `qwen/qwen3.8-27b` | **Free Tier** at [console.groq.com](https://console.groq.com) |
+| **Gemini** | **Cloud (Creative)** | `gemini-2.0-flash`, `gemini-1.5-flash` | **Free Tier** at [aistudio.google.com](https://aistudio.google.com) |
 
 > 💡 **Pro-Tip for 24/7 Unlimited Clipping:**  
-> Create 2 or 3 free accounts on Google AI Studio and GroqCloud using separate Gmail addresses. Add all the keys in the **Active API Keys Pool**. PapiClips will automatically cycle between them, giving you completely free, unlimited 24/7 clipping!
+> Either run **Ollama** locally for unlimited free clipping with no keys, OR create 2 to 3 free accounts on Google AI Studio / GroqCloud using separate Gmail addresses and add them to your pool. PapiClips will automatically cycle between them, giving you completely free, unlimited 24/7 clipping!
 
 ---
 

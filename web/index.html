@@ -2150,30 +2150,31 @@ async function drawSettings() {
     if (tab === "ai") {
       const k = S.ai = await api("/api/ai");
       const allKeys = k.all_keys || [];
+      const tm = k.team || {};
       body.innerHTML = `<section class="set-sec">
           <h2>AI Editing Team & Multi-Model Cascade</h2>
-          <p class="help">PapiClips powers your clipping using a collaborative AI Editing Team. Each model specializes in what it does best, and if any key or model hits a rate limit, the next one takes over immediately without dropping a single clip!</p>
+          <p class="help">PapiClips automatically analyzes your configured models (local Ollama or cloud APIs) and dynamically assigns each task to the model best suited for it. If any key or model reaches a limit, it instantly cascades to the next best model!</p>
           
           <div class="ai-state">
-            ${k.ready ? `<span class="pill ok">${ic("check")}AI Team Active</span><span class="sub">${esc(k.label)} · ${k.models.length} Models in Pool</span>` : `<span class="pill warn">Not set up</span><span class="sub">Add your API keys below to activate your AI Editing Team.</span>`}
+            ${k.ready ? `<span class="pill ok">${ic("check")}AI Team Active</span><span class="sub">${esc(k.label)} · ${k.models.length} Models in Pool</span>` : `<span class="pill warn">Not set up</span><span class="sub">Add your API keys or run Ollama locally to activate your AI Editing Team.</span>`}
           </div>
 
-          <!-- AI Team Roles Grid -->
+          <!-- AI Team Roles Grid (Auto-Detected & Assigned) -->
           <div class="ai-team-grid">
             <div class="ai-role-card">
               <b>🕵️ Live & Video Scout</b>
               <p>Lightning-fast transcript scanning, loudness spikes & high-energy reaction detector.</p>
-              <div class="role-models">Specialist: Groq / Fast LLMs</div>
+              <div class="role-models" title="${esc((tm.scout?.tags || []).join(', '))}">Auto-Assigned: <b>${esc(tm.scout?.model || 'Auto-detecting...')}</b></div>
             </div>
             <div class="ai-role-card">
               <b>🎬 Creative Director</b>
               <p>High-retention hooks, viral title crafting, click-worthy emojis & social descriptions.</p>
-              <div class="role-models">Specialist: Gemini 2.0 Flash / Pro</div>
+              <div class="role-models" title="${esc((tm.director?.tags || []).join(', '))}">Auto-Assigned: <b>${esc(tm.director?.model || 'Auto-detecting...')}</b></div>
             </div>
             <div class="ai-role-card">
               <b>✍️ Caption & Polish</b>
               <p>Grammar refinement, phonetic romanization (Hinglish/Urdu), and viral emoji placement.</p>
-              <div class="role-models">Specialist: Gemini / Multilingual</div>
+              <div class="role-models" title="${esc((tm.captioner?.tags || []).join(', '))}">Auto-Assigned: <b>${esc(tm.captioner?.model || 'Auto-detecting...')}</b></div>
             </div>
           </div>
 
@@ -2192,7 +2193,7 @@ async function drawSettings() {
                 </select>
               </label>
               <label class="f">API Key
-                <input id="new_key_val" type="password" placeholder="Paste your API key here (e.g. gsk_... or AIza...)" spellcheck="false" autocomplete="off">
+                <input id="new_key_val" type="password" placeholder="Paste your API key here (e.g. gsk_... or AIza... or leave blank for Ollama)" spellcheck="false" autocomplete="off">
               </label>
             </div>
             <div class="row" style="margin-top:12px;gap:8px">
@@ -2206,40 +2207,40 @@ async function drawSettings() {
             ${allKeys.length ? allKeys.map(key => `
               <div class="key-item">
                 <div class="key-info">
-                  <span class="key-badge" style="background:${key.provider === 'groq' ? '#F55036' : (key.provider === 'gemini' ? '#1A73E8' : 'var(--line)')};color:#fff">${esc(key.label)}</span>
+                  <span class="key-badge" style="background:${key.provider === 'groq' ? '#F55036' : (key.provider === 'gemini' ? '#1A73E8' : (key.provider === 'ollama' ? '#00A86B' : 'var(--line)'))};color:#fff">${esc(key.label)}</span>
                   <span class="key-text">${esc(key.key_masked)}</span>
                   ${key.is_active ? `<span class="pill sm ok">Active</span>` : `<span class="pill sm">Standby</span>`}
                 </div>
                 <button class="btn sm ghost danger" type="button" data-act="aikeyremove" data-p="${esc(key.provider)}" data-k="${esc(key.key_full)}" title="Remove key">${ic("trash")}Remove</button>
               </div>
-            `).join("") : `<div class="empty-note sub" style="padding:14px 0">No keys added yet. Add your free Groq or Gemini keys to start!</div>`}
+            `).join("") : `<div class="empty-note sub" style="padding:14px 0">No keys added yet. Add your free Groq or Gemini keys, or use local Ollama to start!</div>`}
           </div>
 
           <!-- Multi-Model Cascade Setting -->
           <div class="ai-form" style="margin-top:20px">
-            <label class="f">Multi-Model Cascade Order
+            <label class="f">Multi-Model Cascade Pool
               <span class="with">
                 <input id="ai_model" list="ai_models" value="${esc(k.models.join(", "))}" spellcheck="false">
                 <button class="btn" type="button" data-act="aimodels">Find models</button>
               </span>
               <datalist id="ai_models"></datalist>
-              <span class="hint">Comma-separated models in fallback order. PapiClips automatically cascades between these models if one hits rate limits!</span>
+              <span class="hint">Comma-separated models in your team pool (e.g. ollama:llama3.2, groq:openai/gpt-oss-120b, gemini:gemini-2.0-flash). PapiClips automatically detects the best model for each task and auto-cascades if one hits limits!</span>
             </label>
             <label class="f">Default Provider
               <select id="ai_provider">
                 ${k.providers.map(x => `<option value="${esc(x.id)}" ${x.id === k.provider ? "selected" : ""}>${esc(x.label)}</option>`).join("")}
               </select>
             </label>
-            <label class="f" id="ai_basewrap">Address<input id="ai_base" value="${esc(k.base_url || "")}" spellcheck="false"><span class="hint">Where the service answers. Only needed for a custom service.</span></label>
+            <label class="f" id="ai_basewrap">Address<input id="ai_base" value="${esc(k.base_url || "")}" spellcheck="false"><span class="hint">Where the service answers (default for Ollama: http://127.0.0.1:11434/v1).</span></label>
           </div>
 
           <!-- Pro-Tips Strategy Box -->
           <div class="pro-tips">
             <h4>💡 Pro-Tips for Unlimited Viral Clipping</h4>
             <ul>
-              <li><b>Infinite Free Tier Strategy:</b> Add 2 to 3 API keys per provider (e.g., from 2-3 different Gmail accounts on <a href="https://aistudio.google.com" target="_blank" rel="noopener">Google AI Studio</a> or <a href="https://console.groq.com" target="_blank" rel="noopener">GroqCloud</a>). PapiClips will automatically round-robin and switch between them when rate limits hit, giving you 24/7 uninterrupted clipping!</li>
-              <li><b>⚡ Groq (Scout):</b> Provides ultra-fast stream scanning & real-time live clipping (sub-second evaluation). Free keys at <a href="https://console.groq.com" target="_blank" rel="noopener">console.groq.com</a>.</li>
-              <li><b>✨ Gemini (Director):</b> Best for viral hooks, creative titles, punchy captions & emojis. Free keys at <a href="https://aistudio.google.com" target="_blank" rel="noopener">aistudio.google.com</a>.</li>
+              <li><b>🦙 Ollama (100% Free & Local):</b> Run unlimited AI models directly on your computer (supports Llama 3.2, DeepSeek-R1, Qwen 2.5, Mistral) with <b>zero API keys and 100% privacy</b>! Just install Ollama from <a href="https://ollama.com" target="_blank" rel="noopener">ollama.com</a>.</li>
+              <li><b>⚡ Infinite Free Cloud Tier Strategy:</b> Add 2 to 3 API keys per provider from different Gmail accounts (e.g. on <a href="https://aistudio.google.com" target="_blank" rel="noopener">Google AI Studio</a> or <a href="https://console.groq.com" target="_blank" rel="noopener">GroqCloud</a>). PapiClips automatically round-robins and switches between them when rate limits hit, giving you 24/7 uninterrupted clipping!</li>
+              <li><b>🚀 Dynamic AI Team Auto-Routing:</b> You don't have to manually configure which model does what! PapiClips benchmarks each model's speed, reasoning, and grammar power to dynamically assign the best model for stream scanning, viral hooks, and caption translation.</li>
             </ul>
           </div>
 
