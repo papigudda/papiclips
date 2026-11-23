@@ -165,11 +165,6 @@ class Gate:
             return await deny(401, "Please sign in.")
         if user and path in ("/login", "/signup"):
             return await deny(303, "", redirect="/app")
-        # This lists what is allowed rather than what is refused, so a new clip-studio route stays closed here by default
-        # (creators, settings and alerts would otherwise make this computer fetch channels or send messages for anyone).
-        if (config.EARN_ONLY and user and not user.is_admin and method not in ("GET", "HEAD")
-                and path.startswith("/api/") and not path.startswith(EARN_ONLY_WRITES)):
-            return await deny(403, "Clip-making runs on your own computer here. Download the free ClipKontrast clip studio from the Earn page, make your clips, then send the links back to earn.")
         scope.setdefault("state", {})["user"] = user
         if user and path in ("/api/upload", "/api/upload/start") and method == "POST":
             # decided before a single byte of the file is accepted: verified, has a free slot, has disk space
@@ -226,8 +221,6 @@ class Gate:
             await self.inner(scope, receive, send_with_headers)
         finally:
             ctx._uid.reset(token)
-            if method not in ("GET", "HEAD"):
-                _EARN_PUBLIC.clear()        # something may have changed: the next visitor sees the Earn page fresh
 
 
 app.add_middleware(Gate)
@@ -426,11 +419,6 @@ _LEGAL_HTML = ""
 @app.get("/app")
 @app.get("/app/{rest:path}")
 def app_page(request: Request, rest: str = ""):
-    """Every app address (/app/videos, /app/creators/<id>/setup ...) is the same page; it shows the right view.
-    On an Earn-only website the clip studio is the free download, so everyone but admins goes to Earn."""
-    u = getattr(request.state, "user", None)
-    if config.EARN_ONLY and not (u and u.is_admin):
-        return RedirectResponse("/earn#me", 303)
     return _page("index.html")
 
 
@@ -452,7 +440,8 @@ def healthz():
 def brand(name: str):
     if not re.fullmatch(r"[\w\-]+\.(svg|png|ico|webp|jpg|mp4)", name) or not (WEB / "brand" / name).is_file():
         raise HTTPException(404)
-    return FileResponse(WEB / "brand" / name, headers={"Cache-Control": "public, max-age=604800, stale-while-revalidate=86400"})
+    cc = "no-cache, must-revalidate" if "favicon" in name or "avatar" in name else "public, max-age=604800, stale-while-revalidate=86400"
+    return FileResponse(WEB / "brand" / name, headers={"Cache-Control": cc})
 
 
 @app.get("/brand/styles/{name}")
@@ -499,7 +488,10 @@ def asset(name: str):
 
 @app.get("/favicon.ico")
 def favicon():
-    return RedirectResponse("/brand/favicon.svg", 308)
+    f = WEB / "brand" / "favicon.ico" if (WEB / "brand" / "favicon.ico").is_file() else (WEB / "favicon.ico")
+    if f.is_file():
+        return FileResponse(f, media_type="image/x-icon", headers={"Cache-Control": "no-cache, must-revalidate"})
+    return RedirectResponse("/brand/favicon.svg?v=3", 307)
 
 
 # ================================================================ sign up, sign in, sign out

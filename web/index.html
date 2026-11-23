@@ -3,10 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PapiClips</title>
-<link rel="icon" type="image/svg+xml" href="/brand/favicon.svg">
-<link rel="alternate icon" href="/favicon.ico">
-<link rel="apple-touch-icon" href="/brand/avatar.png">
+<title>PapiClips Studio Pro</title>
+<link rel="icon" type="image/svg+xml" href="/brand/favicon.svg?v=papi3">
+<link rel="icon" type="image/png" sizes="64x64" href="/brand/favicon.png?v=papi3">
+<link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32.png?v=papi3">
+<link rel="shortcut icon" href="/favicon.ico?v=papi3">
+<link rel="apple-touch-icon" href="/brand/avatar.png?v=papi3">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Inter:wght@300&family=Archivo+Black&family=Anton&family=Poppins:wght@800&display=swap" rel="stylesheet">
@@ -1831,6 +1833,7 @@ function drawShell() {  const nav = (v, icon, label, extra = "") => `<button cla
   put($("#tpic"), pic); $("#tpic").classList.toggle("live", !!(c && (c.live_job || liveOn(c).length)));
   put($("#utabs"), tabs); moveInd(); $(".topbar").classList.toggle("tabbed", !!tabs);
   put($("#title"), `<span>${esc(title)}</span>`); put($("#subtitle"), subHtml ?? esc(sub)); put($("#actions"), act);
+  try { document.title = title ? `${title} · PapiClips PRO` : "PapiClips Studio Pro"; } catch {}
 }
 
 const ROUTES = {overview: "", library: "videos", settings: "settings", usage: "usage", campaigns: "campaigns"};
