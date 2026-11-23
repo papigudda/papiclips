@@ -1,15 +1,15 @@
-"""ClipKontrast as a desktop app on Windows: its own window, and no black console window behind it.
+"""PapiClips as a desktop app on Windows: its own window, and no black console window behind it.
 
-The desktop and Start menu shortcuts run `ClipKontrast.exe -m studio.desktop` (a copy of pythonw, which has no
-console, with ClipKontrast's name and icon). This starts the ClipKontrast server hidden, with its output in
-data/logs/clipkontrast.log, and shows ClipKontrast in a window of its own, made with pywebview on Microsoft's WebView2
+The desktop and Start menu shortcuts run `PapiClips.exe -m studio.desktop` (a copy of pythonw, which has no
+console, with PapiClips's name and icon). This starts the PapiClips server hidden, with its output in
+data/logs/clipkontrast.log, and shows PapiClips in a window of its own, made with pywebview on Microsoft's WebView2
 (the web engine Windows apps like Teams are built on; it comes with Windows 11 and with Edge on Windows 10). Its title
-bar, taskbar button and icon are ClipKontrast's. Closing the window stops ClipKontrast.
+bar, taskbar button and icon are PapiClips's. Closing the window stops PapiClips.
 
 Without WebView2, Edge's or Chrome's app mode is used instead (a window with no address bar), and without either,
 the normal browser.
 
-It also does what the console launcher (ClipKontrast.cmd, kept for troubleshooting) did: swaps in an update that was
+It also does what the console launcher (PapiClips.cmd, kept for troubleshooting) did: swaps in an update that was
 downloaded (app.new) and starts again, or runs the downloaded installer. See studio/selfupdate.py.
 """
 from __future__ import annotations
@@ -48,7 +48,7 @@ def _message(text: str, error: bool = False):
     """A plain Windows message box (there is no console to print to)."""
     if sys.platform == "win32":
         import ctypes
-        ctypes.windll.user32.MessageBoxW(None, text, "ClipKontrast", 0x10 if error else 0x40)
+        ctypes.windll.user32.MessageBoxW(None, text, "PapiClips", 0x10 if error else 0x40)
     else:
         print(text)
 
@@ -69,7 +69,7 @@ def _up() -> bool:
 
 
 def _swap():
-    """An update downloaded while ClipKontrast ran: put the new code in place (the old one kept aside)."""
+    """An update downloaded while PapiClips ran: put the new code in place (the old one kept aside)."""
     new, old = INSTALL / "app.new", INSTALL / "app.old"
     if (new / "studio" / "server.py").is_file():
         try:
@@ -95,7 +95,7 @@ def _browser():
 
 
 def _open_window(url: str):
-    """ClipKontrast's own window. Returns its process (to know when it is closed), or None if none could be opened."""
+    """PapiClips's own window. Returns its process (to know when it is closed), or None if none could be opened."""
     fake = os.environ.get("CLIPKONTRAST_WINDOW_CMD")         # the build's test stands in a process for the window
     if fake:
         return subprocess.Popen(fake, creationflags=NO_WINDOW)
@@ -120,7 +120,7 @@ def _note(text: str):
 
 def _webview2() -> bool:
     """Is Microsoft's WebView2 there (and .NET 4.6.2, which pywebview needs)? Without it pywebview would fall back
-    to Internet Explorer's engine, which can't show ClipKontrast, so the app window is used instead."""
+    to Internet Explorer's engine, which can't show PapiClips, so the app window is used instead."""
     if sys.platform != "win32":
         return False
     try:
@@ -173,16 +173,16 @@ def _starting() -> tuple:
     """What the server is busy with while it starts, read from the end of its log: (words for the window, whether it
     is moving the folder). Moving videos to another drive can take many minutes, and must not be given up on."""
     lines = [x.strip() for x in _tail(40).splitlines() if x.strip()]
-    start = max((i for i, x in enumerate(lines) if x.startswith("---- ClipKontrast starting")), default=-1)
+    start = max((i for i, x in enumerate(lines) if x.startswith("---- PapiClips starting")), default=-1)
     lines = lines[start + 1:]
-    moving = next((x for x in lines if x.startswith("Moving ClipKontrast's folder to ")), "")
+    moving = next((x for x in lines if x.startswith("Moving PapiClips's folder to ")), "")
     if moving and not any(x == "Moved." for x in lines):
-        where = moving[len("Moving ClipKontrast's folder to "):].split(" (")[0]
+        where = moving[len("Moving PapiClips's folder to "):].split(" (")[0]
         step = next((x for x in reversed(lines) if x.startswith("Moved ") and " of " in x), "")
-        return (f"Moving your ClipKontrast folder to {where}…\nYour videos and clips are being copied to the new place "
+        return (f"Moving your PapiClips folder to {where}…\nYour videos and clips are being copied to the new place "
                 f"you chose in Settings. This is done once and can take several minutes. Please don't close this window."
                 + (f"\n\n{step.split(':')[0]}" if step else ""), True)
-    return "Starting ClipKontrast…\nThis can take up to a minute.", False
+    return "Starting PapiClips…\nThis can take up to a minute.", False
 
 
 def _wait_for_server(server, show=None) -> None:
@@ -199,12 +199,12 @@ def _wait_for_server(server, show=None) -> None:
 
 
 def _run_native():
-    """ClipKontrast in its own pywebview window; the server is looked after on a second thread."""
+    """PapiClips in its own pywebview window; the server is looked after on a second thread."""
     import webview
     webview.settings["ALLOW_DOWNLOADS"] = True                 # the Download buttons save clips as usual
     webview.settings["OPEN_EXTERNAL_LINKS_IN_BROWSER"] = True  # Instagram, YouTube, the Earn site: the normal browser
     ico = INSTALL / "clipkontrast.ico"
-    window = webview.create_window("ClipKontrast", html=_page("Starting ClipKontrast…"), width=1380, height=880,
+    window = webview.create_window("PapiClips", html=_page("Starting PapiClips…"), width=1380, height=880,
                                    min_size=(960, 640), background_color="#1E1612", text_select=True)
     state = {"server": None, "closing": False}
 
@@ -215,7 +215,7 @@ def _run_native():
             server = state["server"] = _start_server()
             _wait_for_server(server, lambda text: window.load_html(_page(text)))
             if server.poll() is not None and server.returncode not in (RESTART_CODE, INSTALLER_CODE):
-                window.load_html(_page("ClipKontrast couldn't start.\n\n" + _tail(8)))
+                window.load_html(_page("PapiClips couldn't start.\n\n" + _tail(8)))
                 return
             if first and server.poll() is None:
                 window.load_url(URL)
@@ -226,18 +226,18 @@ def _run_native():
             if server.returncode == RESTART_CODE:          # updated: started again with the new code
                 continue
             if server.returncode == INSTALLER_CODE:
-                subprocess.Popen([str(INSTALL / "update" / "ClipKontrast-Setup.exe"), "/SILENT", "/SUPPRESSMSGBOXES",
+                subprocess.Popen([str(INSTALL / "update" / "PapiClips-Setup.exe"), "/SILENT", "/SUPPRESSMSGBOXES",
                                   "/NORESTART"])
                 window.destroy()
                 return
-            window.load_html(_page("ClipKontrast stopped unexpectedly. Close this window and open it again.\n\n"
+            window.load_html(_page("PapiClips stopped unexpectedly. Close this window and open it again.\n\n"
                                    + _tail(8)))
             return
 
     _note("window: native")
     webview.start(supervise, private_mode=False, storage_path=str(DATA / "window"),
                   icon=str(ico) if ico.is_file() else None)
-    state["closing"] = True                                      # the window was closed: ClipKontrast closes with it
+    state["closing"] = True                                      # the window was closed: PapiClips closes with it
     _stop(state["server"])
     os._exit(0)
 
@@ -247,7 +247,7 @@ def _start_server():
     if LOG.is_file() and LOG.stat().st_size > 5_000_000:
         LOG.replace(LOG.with_suffix(".old.log"))
     out = open(LOG, "a", encoding="utf-8", errors="replace")
-    out.write(f"\n---- ClipKontrast starting {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+    out.write(f"\n---- PapiClips starting {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
     out.flush()
     py = INSTALL / "python" / "python.exe"
     return subprocess.Popen([str(py if py.is_file() else sys.executable), "-m", "studio.server"], cwd=str(INSTALL),
@@ -265,15 +265,15 @@ def _stop(p):
 
 def main():
     if sys.platform == "win32":
-        try:                       # the taskbar shows ClipKontrast's own button and icon, not Python's
+        try:                       # the taskbar shows PapiClips's own button and icon, not Python's
             import ctypes
-            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("ClipKontrast.App")
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("PapiClips.App")
         except Exception:  # noqa: BLE001
             pass
     if _up():                      # already running (the icon was clicked again): just open its window
         if _native_ok():
             import webview
-            webview.create_window("ClipKontrast", URL, width=1380, height=880, min_size=(960, 640))
+            webview.create_window("PapiClips", URL, width=1380, height=880, min_size=(960, 640))
             ico = INSTALL / "clipkontrast.ico"
             webview.start(private_mode=False, storage_path=str(DATA / "window"), icon=str(ico) if ico.is_file() else None)
         elif not _open_window(URL):
@@ -292,17 +292,17 @@ def main():
         server = _start_server()
         _wait_for_server(server)
         if server.poll() is not None and server.returncode not in (RESTART_CODE, INSTALLER_CODE):
-            _message("ClipKontrast couldn't start.\n\n" + _tail(), error=True)
+            _message("PapiClips couldn't start.\n\n" + _tail(), error=True)
             return
         if window is None and server.poll() is None:
             window = _open_window(URL)
-            if window is None:     # no Edge or Chrome: the usual browser, and this box to close ClipKontrast
+            if window is None:     # no Edge or Chrome: the usual browser, and this box to close PapiClips
                 webbrowser.open(URL)
-                _message("ClipKontrast is open in your browser.\n\nPress OK when you're done to close ClipKontrast.")
+                _message("PapiClips is open in your browser.\n\nPress OK when you're done to close PapiClips.")
                 _stop(server)
                 return
         while server.poll() is None:
-            if window and window.poll() is not None:   # the window was closed: ClipKontrast closes with it
+            if window and window.poll() is not None:   # the window was closed: PapiClips closes with it
                 _stop(server)
                 return
             time.sleep(0.5)
@@ -310,12 +310,12 @@ def main():
         if code == RESTART_CODE:   # updated: the new code is swapped in, and the open window reconnects by itself
             continue
         if code == INSTALLER_CODE:
-            setup = INSTALL / "update" / "ClipKontrast-Setup.exe"
+            setup = INSTALL / "update" / "PapiClips-Setup.exe"
             _stop(window)
             subprocess.Popen([str(setup), "/SILENT", "/SUPPRESSMSGBOXES", "/NORESTART"])
             return
         _stop(window)
-        _message("ClipKontrast stopped unexpectedly.\n\n" + _tail(), error=True)
+        _message("PapiClips stopped unexpectedly.\n\n" + _tail(), error=True)
         return
 
 

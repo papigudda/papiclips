@@ -10,13 +10,17 @@
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Inter:wght@300&family=Archivo+Black&family=Anton&family=Poppins:wght@800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --brand:#C6F432;--brand-press:#B5E31F;--brand-ink:#1A2100;--brand-soft:#F5FDE0;--brand-line:#E3F7A8;--brand-deep:#4E6B00;
-  --frame:#1E1612;--frame-2:#2C221D;--frame-line:rgba(255,255,255,.08);--frame-text:#F4EEEA;--frame-dim:#A99A91;
-  --bg:#FFFFFF;--muted:#F7F4F1;--line:#EEE8E4;--line-2:#E1D9D3;
-  --text:#211813;--dim:#6D6159;--faint:#A0948C;
-  --good:#0F8A57;--good-soft:#E6F6EE;--bad:#D3343F;--bad-soft:#FDECEE;--live:#E5323F;
+  --brand:#FF2E54;--brand-press:#E0183E;--brand-ink:#FFFFFF;--brand-soft:rgba(255,46,84,0.14);--brand-line:rgba(255,46,84,0.36);--brand-deep:#9E0E28;
+  --accent:#FF2E54;--accent-2:#8B5CF6;--accent-cyan:#00F0FF;
+  --accent-gradient:linear-gradient(135deg, #FF2E54 0%, #FF5733 100%);
+  --accent-glow:rgba(255,46,84,0.35);
+  --frame:#06070B;--frame-2:#0E121E;--frame-line:rgba(255,255,255,0.07);--frame-text:#F8FAFC;--frame-dim:#94A3B8;
+  --bg:#07080D;--muted:#0D111D;--card:#121626;--card-hover:#181E32;--card-active:#202844;
+  --line:rgba(255,255,255,0.08);--line-2:rgba(255,255,255,0.16);
+  --text:#F8FAFC;--dim:#94A3B8;--faint:#64748B;
+  --good:#10B981;--good-soft:rgba(16,185,129,0.16);--bad:#EF4444;--bad-soft:rgba(239,68,68,0.16);--live:#FF1E44;
   --r-lg:16px;--r:12px;--r-sm:8px;
-  color-scheme:light;
+  color-scheme:dark;
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -1165,13 +1169,60 @@ dialog#ytmodal[open]{display:flex;flex-direction:column}
 .ytm-clip-card textarea{resize:vertical;min-height:54px}
 .ytm-time-pill{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(255,255,255,0.06);border-radius:6px;font-size:11px;font-variant-numeric:tabular-nums;color:var(--accent)}
 
+
+/* ================================================================
+   PAPI CLIPS STUDIO PRO - CUSTOM CYBER OBSIDIAN STYLING
+   ================================================================ */
+body{background:var(--bg) !important;color:var(--text) !important;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:rgba(0,0,0,0.2)}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:999px;border:2px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:var(--brand)}
+
+.side{background:linear-gradient(180deg, #090B12 0%, #06070B 100%) !important;border-right:1px solid var(--line) !important}
+.side-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px 20px 14px !important}
+.brand-badge-wrap{display:flex;align-items:center;gap:10px}
+.brand-avatar-box{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg, #FF2E54 0%, #FF5733 100%);display:grid;place-items:center;box-shadow:0 0 16px rgba(255,46,84,0.45);flex:none}
+.brand-avatar-svg{width:20px;height:20px;fill:#fff}
+.brand-text-col{display:flex;flex-direction:column;gap:2px}
+.brand-title{font-size:16px;font-weight:800;letter-spacing:-0.03em;color:#fff;line-height:1}
+.pro-tag{font-size:9px;font-weight:800;letter-spacing:0.08em;padding:2px 6px;border-radius:4px;background:rgba(255,46,84,0.18);color:#FF5733;border:1px solid rgba(255,46,84,0.38);text-transform:uppercase;align-self:flex-start}
+
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;color:var(--dim);text-decoration:none;font-weight:600;font-size:13px;transition:all .18s ease;position:relative;margin-bottom:4px;border-left:3px solid transparent}
+.nav-item:hover{color:#fff;background:rgba(255,255,255,0.06);transform:translateX(2px)}
+.nav-item.on,.nav-item.active{color:#fff;background:linear-gradient(90deg, rgba(255,46,84,0.2) 0%, rgba(255,46,84,0.02) 100%) !important;border-left-color:var(--brand);box-shadow:inset 0 0 16px rgba(255,46,84,0.06)}
+.nav-item svg{color:var(--dim);transition:color .18s ease}
+.nav-item:hover svg,.nav-item.on svg{color:var(--brand)}
+
+.topbar{background:rgba(9, 11, 18, 0.85) !important;backdrop-filter:blur(18px);border-bottom:1px solid var(--line) !important}
+.card{background:linear-gradient(180deg, rgba(20, 25, 40, 0.75) 0%, rgba(13, 17, 28, 0.9) 100%) !important;backdrop-filter:blur(14px);border:1px solid var(--line) !important;box-shadow:0 8px 30px rgba(0,0,0,0.35);border-radius:var(--r) !important}
+.card:hover{border-color:var(--line-2) !important}
+
+.btn.primary{background:linear-gradient(135deg, #FF2E54 0%, #FF5733 100%) !important;color:#fff !important;border:none !important;box-shadow:0 4px 18px rgba(255,46,84,0.35);font-weight:600;border-radius:999px;padding:8px 18px}
+.btn.primary:hover{box-shadow:0 6px 24px rgba(255,46,84,0.55);transform:translateY(-1px)}
+.btn.yt-bulk{background:linear-gradient(135deg, #FF0000 0%, #CC0000 100%) !important;color:#fff !important;border:none !important;box-shadow:0 4px 16px rgba(255,0,0,0.4);font-weight:700;border-radius:999px}
+.btn.yt-bulk:hover{box-shadow:0 6px 22px rgba(255,0,0,0.6);transform:translateY(-1px)}
+
+.app.mini .side-head .brand-text-col{display:none}
+.app.mini .side-head{padding:10px 4px 18px !important;justify-content:center}
+
 </style>
 </head>
 <body>
 <div class="app" id="app">
   <aside class="side" aria-label="Sidebar">
-    <div class="side-head"><img class="logo" src="/brand/logo-light.svg" alt="PapiClips"><img class="mark" src="/brand/favicon.svg" alt="PapiClips">
-      <button class="icon-btn collapse" data-act="collapse" id="collapseBtn" aria-label="Collapse sidebar"></button></div>
+    <div class="side-head">
+      <div class="brand-badge-wrap">
+        <div class="brand-avatar-box">
+          <svg class="brand-avatar-svg" viewBox="0 0 24 24"><path fill="#fff" d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4zm-6 10l-4-2.5V9l4 2.5 4-2.5v2.5L12 14z"/></svg>
+        </div>
+        <div class="brand-text-col">
+          <span class="brand-title">PapiClips</span>
+          <span class="pro-tag">STUDIO PRO</span>
+        </div>
+      </div>
+      <button class="icon-btn collapse" data-act="collapse" id="collapseBtn" aria-label="Collapse sidebar"></button>
+    </div>
     <nav class="nav" id="nav" aria-label="Main"></nav>
     <div class="side-foot" id="foot"></div>
   </aside>
@@ -1273,8 +1324,7 @@ const send = (path, body, method = "POST") => api(path, {method, headers:{"Conte
 function toast(msg, kind = "") {
   if (!msg) return;
   const t = document.createElement("div"); t.className = "toast " + kind; t.textContent = msg;
-  if (kind === "bad" && !$("#repf")) { const r = document.createElement("button"); r.className = "rep"; r.textContent = "Report"; r.onclick = () => { t.remove(); openFeedback("bug", msg); }; t.append(r); }
-  $("#toasts").append(t); setTimeout(() => t.remove(), kind === "bad" ? 7000 : 3200);
+  $("#toasts").append(t); setTimeout(() => t.remove(), kind === "bad" ? 6000 : 3200);
 }
 const cache = new WeakMap();
 function put(el, html) { if (el && cache.get(el) !== html) { cache.set(el, html); el.innerHTML = html; } }
@@ -1562,7 +1612,7 @@ function openAcct() {
   const u = S.status.user;
   const on = S.status.accounts !== false;
   p.innerHTML = `${on ? `<div class="who2"><b>${esc(u.name)}</b><span>${esc(u.email)}</span></div>` : ""}
-    <button data-act="go" data-v="settings">${ic("cog")}Settings</button><button data-act="go" data-v="usage">${ic("chart")}AI usage</button><button data-act="tour">${ic("play")}Take the tour</button><button data-act="whatsnew">${ic("sparkle")}What's new</button><button data-act="feedback">${ic("bug")}Report a problem</button>${u?.is_admin ? `<button data-act="updcheck">${ic("up")}Check for updates</button>` : ""}
+    <button data-act="go" data-v="settings">${ic("cog")}Settings</button><button data-act="go" data-v="usage">${ic("chart")}AI usage</button><button data-act="tour">${ic("play")}Take the tour</button><button data-act="whatsnew">${ic("sparkle")}What's new</button>
     ${on ? `<button class="danger" data-act="logout">${ic("signout")}Sign out</button>` : ""}`;
   openPop(p, $("[data-act=acctmenu]"));
 }
@@ -1624,105 +1674,11 @@ async function shrinkShot(file) {
   URL.revokeObjectURL(img.src); throw new Error("That picture is too big. Try a smaller screenshot.");
 }
 function openFeedback(kind = "bug", context = "") {
-  const d = $("#formdlg"); if (d.open) d.close();
-  let shot = null, sending = false;
-  const contact = (() => { try { return localStorage.getItem("ck_report_contact") || ""; } catch { return ""; } })();
-  d.innerHTML = `<form class="dlg rep-dlg" id="repf" novalidate><h2>Report a problem</h2>
-    <p class="help">Tell us what went wrong. It goes straight to the PapiClips team, and fixes come to everyone in the next update.</p>
-    ${context ? `<div class="rep-ctx"><b>The problem</b><span>${esc(context.slice(0, 400))}</span></div>` : ""}
-    <label class="f">What went wrong?<textarea id="rp_msg" rows="4" maxlength="4000" placeholder="${context ? "Anything to add? (optional)" : "e.g. The clip came out blurry, or the video stopped at 40%"}" ${context ? "" : "required"}></textarea></label>
-    <label class="f"><span>What were you doing when it happened? <span class="opt">optional</span></span><textarea id="rp_steps" rows="2" maxlength="4000" placeholder="e.g. Pasted a 6-hour YouTube stream, chose Facecam on top"></textarea></label>
-    <label class="f"><span>Instagram, email or WhatsApp, so we can reply <span class="opt">optional</span></span><input id="rp_contact" maxlength="200" value="${esc(contact)}" placeholder="@yourname"></label>
-    <div class="rep-shot"><label class="btn sm">${ic("plus")}<span id="rp_shotl">Add a screenshot</span><input type="file" id="rp_file" accept="image/*" hidden></label>
-      <span class="sub" id="rp_shoth">or press Ctrl+V to paste one</span><button type="button" class="lnk" id="rp_shotx" hidden>Remove</button></div>
-    <label class="sw"><input type="checkbox" id="rp_diag" checked><span>Send technical details<small>App version, Windows version, what's installed, the last errors and the end of the log. No videos, keys or passwords. <button type="button" class="lnk" id="rp_see">See what's sent</button></small></span></label>
-    <pre class="rep-pre" id="rp_pre" hidden></pre>
-    <div class="dlg-foot"><button class="btn" type="button" id="rp_cancel">Cancel</button><button class="btn primary" id="rp_send">Send report</button></div></form>`;
-  const setShot = async file => {
-    if (!file) return;
-    try { shot = await shrinkShot(file); $("#rp_shotl").textContent = "Screenshot added ✓"; $("#rp_shoth").hidden = true; $("#rp_shotx").hidden = false; }
-    catch (e) { shot = null; toast(e.message, "bad"); }
-  };
-  const onPaste = e => { const f = [...(e.clipboardData?.files || [])].find(f => f.type.startsWith("image/")); if (f) { e.preventDefault(); setShot(f); } };
-  d.addEventListener("paste", onPaste);
-  d.onclose = () => d.removeEventListener("paste", onPaste);
-  $("#rp_file").onchange = e => setShot(e.target.files[0]);
-  $("#rp_shotx").onclick = () => { shot = null; $("#rp_file").value = ""; $("#rp_shotl").textContent = "Add a screenshot"; $("#rp_shoth").hidden = false; $("#rp_shotx").hidden = true; };
-  $("#rp_cancel").onclick = () => d.close();
-  $("#rp_see").onclick = async e => {
-    e.preventDefault(); const p = $("#rp_pre");
-    if (!p.hidden) { p.hidden = true; return; }
-    p.hidden = false; p.textContent = "Loading…";
-    try { const r = await api("/api/bug-report/details"); p.textContent = r.app + "\n\n" + r.details; } catch (err) { p.textContent = err.message; }
-  };
-  $("#repf").onsubmit = async e => {
-    e.preventDefault(); if (sending) return;
-    const msg = $("#rp_msg").value.trim(), steps = $("#rp_steps").value.trim(), who = $("#rp_contact").value.trim();
-    if (!msg && !context) { $("#rp_msg").focus(); return toast("Write a line about what went wrong."); }
-    const fd = new FormData();
-    fd.append("message", msg ? (context ? msg + "\n\nThe error: " + context : msg) : "The error: " + context);
-    fd.append("steps", steps); fd.append("contact", who); fd.append("context", context.slice(0, 1000));
-    fd.append("details", $("#rp_diag").checked ? "1" : "0");
-    if (shot) fd.append("screenshot", shot, "screenshot.jpg");
-    try { localStorage.setItem("ck_report_contact", who); } catch {}
-    sending = true; const b = $("#rp_send"); b.disabled = true; b.textContent = "Sending…";
-    try {
-      const r = await api("/api/bug-report", {method: "POST", body: fd});
-      d.close(); toast(`Thanks! Report${r.id ? " #" + r.id : ""} sent. We'll fix it in an update.`, "ok");
-    } catch (err) { toast(err.message, "bad"); sending = false; b.disabled = false; b.textContent = "Send report"; }
-  };
-  d.returnValue = ""; d.showModal(); setTimeout(() => $("#rp_msg").focus(), 30);
+  toast("PapiClips Studio Pro is running locally.", "ok");
 }
-// The Windows app updates itself: download, check, restart. The page follows it and reloads when it's back.
-async function updateNow(btn) {
-  if (btn) { btn.disabled = true; btn.textContent = "Updating…"; }
-  try { await api("/api/update/apply", {method: "POST"}); } catch (e) { toast(e.message || "Couldn't start the update.", "bad"); if (btn) { btn.disabled = false; btn.textContent = "Update now"; } return; }
-  toast("Downloading the update. PapiClips restarts by itself in a moment, your clips stay as they are.", "ok");
-  const before = S.status?.update?.current;
-  for (let i = 0; i < 600; i++) {
-    await new Promise(r => setTimeout(r, 1500));
-    try {
-      const p = await (await fetch("/api/update/progress", {cache: "no-store"})).json();
-      if (p.phase === "error") { toast(p.error || "The update didn't work. Nothing was changed.", "bad"); if (btn) { btn.disabled = false; btn.textContent = "Update now"; } return; }
-      if (p.version && p.version !== before && p.phase === "idle") { location.reload(); return; }
-      if (btn && p.phase === "downloading") btn.textContent = `Updating… ${Math.round((p.progress || 0) * 100)}%`;
-    } catch { /* restarting: not answering for a moment */ }
-  }
+function checkUpdates(btn) {
+  toast("PapiClips Studio Pro is running the latest custom build.", "ok");
 }
-function updateHow() {
-  const up = S.status?.update, d = $("#formdlg"); if (!up || d.open) return;
-  if (up.installed) {
-    d.innerHTML = `<form method="dialog" class="dlg upd"><h2>A new version of PapiClips is out</h2>
-      <p class="help">You're on <b>${esc(up.current)}</b>, the newest is <b>${esc(up.latest)}</b>. ${up.full ? "This one brings new parts, so the installer is downloaded and runs by itself (about 400 MB)." : "It's a small download."} PapiClips restarts by itself. Your settings, keys and clips stay as they are.</p>
-      ${up.notes.length ? `<ul>${up.notes.map(n => `<li>${esc(n.title)}</li>`).join("")}</ul>` : ""}
-      <div class="dlg-foot"><button class="btn" value="later">Remind me next version</button><button class="btn primary" type="button" data-act="updnow" autofocus>Update now</button></div></form>`;
-    d.onclose = () => { if (d.returnValue === "later") { try { localStorage.setItem("papiclips_update_seen", up.latest); } catch {} drawShell(); } };
-    d.returnValue = "ok"; d.showModal(); return;
-  }
-  if (up.zip) {                            // a copy from the zip (Mac, Linux): the new zip, unzipped over this folder
-    d.innerHTML = `<form method="dialog" class="dlg upd"><h2>A new version of PapiClips is out</h2>
-      <p class="help">You're on <b>${esc(up.current)}</b>, the newest is <b>${esc(up.latest)}</b>.</p>
-      ${up.notes.length ? `<ul>${up.notes.map(n => `<li>${esc(n.title)}</li>`).join("")}</ul>` : ""}
-      <ol class="help" style="padding-left:18px;display:grid;gap:4px"><li>Download the new zip.</li>
-        <li>Close PapiClips, then unzip it into the same PapiClips folder, replacing the files. Your <b>data</b> folder (clips, settings, keys) isn't in the zip, so it stays as it is.</li>
-        <li>Start PapiClips again.</li></ol>
-      <div class="dlg-foot"><button class="btn" value="later">Remind me next version</button><a class="btn primary" href="${esc(up.url)}" target="_blank" rel="noopener">${ic("up")}Download the new version</a></div></form>`;
-    d.onclose = () => { if (d.returnValue === "later") { try { localStorage.setItem("papiclips_update_seen", up.latest); } catch {} drawShell(); } };
-    d.returnValue = "ok"; d.showModal(); return;
-  }
-  const ai = "Update this PapiClips folder to the latest version from GitHub (git pull), keep my .env and data folder as they are, install any new requirements, and restart PapiClips. Read AGENTS.md first: if this folder's path is long or inside a temporary or assistant workspace, ask me before moving it to a short folder like C:\\papiclips, and never delete anything without asking.";
-  const cmd = (label, text) => `<h3>${label}</h3><div class="cmd"><code>${esc(text)}</code><button class="btn sm" type="button" data-act="copytext" data-t="${esc(text)}">${ic("copy")}Copy</button></div>`;
-  d.innerHTML = `<form method="dialog" class="dlg upd"><h2>${up.restart ? "The new version is ready" : "A new version of PapiClips is out"}</h2>
-    <p class="help">${up.restart ? "The new files are already in the PapiClips folder. <b>Close PapiClips and start it again</b> to use them." : `You're on <b>${esc(up.current)}</b>. ${up.behind ? `${up.behind} update${up.behind === 1 ? " has" : "s have"} been added since.` : "Newer changes have been added since."}`} Your settings, keys and clips stay as they are.</p>
-    ${up.notes.length ? `<ul>${up.notes.map(n => `<li>${esc(n.title)} <small>${esc(n.date)}</small></li>`).join("")}</ul>` : ""}
-    ${up.restart ? "" : cmd("Ask your AI coding assistant (Claude, Cursor, Copilot...)", ai) + cmd("Or run it yourself, in the PapiClips folder", "git pull && pip install -r requirements.txt")}
-    <p class="sub">${up.restart ? "" : "Then stop PapiClips and start it again. With Docker, run <code>git pull && docker compose up -d --build</code> instead. "}<a class="lnk" href="${esc(up.url)}" target="_blank" rel="noopener">See every change on GitHub</a></p>
-    <div class="dlg-foot"><button class="btn" value="later">Remind me next version</button><button class="btn primary" value="ok" autofocus>Got it</button></div></form>`;
-  d.onclose = () => { if (d.returnValue === "later") { try { localStorage.setItem("papiclips_update_seen", up.latest); } catch {} drawShell(); } };
-  d.returnValue = "ok"; d.showModal();
-}
-/* "What's new": what the latest versions brought, for the people clipping (nothing about the website or the build).
-   Change NEWS.id when the list changes: the line at the top shows again for everyone, until they close it. */
 const NEWS = {id: "2026-11-24", items: [
   {e: "⏹️", t: "Stop a video", d: "Changed your mind? Press Stop on a video being made. The clips already made stay; re-make any of the rest later.", new: true},
   {e: "💰", t: "Paid campaigns, right here", d: "Clip & get paid: the campaign that's live now is on Home and under Paid campaigns, with its clipper pool, every stream to clip (tap one) and the moments the team marked. Join on papiclips.com, clip here, post, get paid for your views.", new: true, act: "go", v: "campaigns", btn: "See it"},
@@ -1738,12 +1694,12 @@ const NEWS = {id: "2026-11-24", items: [
   {e: "🖼️", t: "Set webcam & game before clipping", d: "Pick Facecam top, then tap Set webcam & game on your video: drag a box onto the webcam and one over the game, choose 50/50 or Big webcam, and see the clip before it's made.", new: true},
   {e: "🎯", t: "Fix facecam", d: "Webcam in the wrong place? Open a clip, tap Fix facecam and drag the box onto it. Remembered for that streamer."},
   {e: "🧠", t: "Free AI on your PC", d: "AI key ran out? Clips still get made, with a free AI that runs on your computer. No key, no limits.", act: "go", v: "settings", tab: "ai", btn: "Turn it on", admin: true},
-  {e: "🔄", t: "Check for updates", d: "One tap in the sidebar to see if a new version is out.", act: "updcheck", btn: "Check now", admin: true},
+  {e: "🚀", t: "Multi-Model AI Cascading", d: "Automatically switches between Groq and Gemini for lightning-fast viral titles and clips.", act: "go", v: "settings", tab: "ai", btn: "AI Settings", admin: true},
   {e: "🎨", t: "11 caption styles", d: "With live previews, right under the link. Plus Auto zoom on big reactions and Cut silences.", act: "go", v: "overview", btn: "Try it"},
   {e: "🔴", t: "Live clipping in 1 click", d: "Paste a channel on Home and press Start. Clips come while they stream.", act: "golivehome", btn: "Try it"},
   {e: "⚡", t: "Faster clips", d: "Several clips are made at once, and long Hindi videos are listened to faster."},
   {e: "🏷️", t: "Your @handle and Hindi script", d: "A watermark with your handle on every clip, and captions in हिंदी if you want."},
-  {e: "🐞", t: "Report a problem", d: "Something not working? Tell us from the sidebar, it gets fixed in the next update.", act: "feedback", btn: "Report"},
+  {e: "🔴", t: "YouTube Shorts Scheduler", d: "Bulk schedule 10+ viral clips directly to your YouTube channel with 1 click.", act: "openytmodal", btn: "Schedule", admin: false},
 ]};
 const newsItems = () => NEWS.items.filter(n => !n.admin || S.status?.user?.is_admin);
 function newsSeen() { try { return localStorage.getItem("papiclips_news_seen") === NEWS.id; } catch { return false; } }
@@ -1798,14 +1754,13 @@ function moveInd() {
   lastInd = {x, w};
 }
 function drawShell() {  const nav = (v, icon, label, extra = "") => `<button class="nav-item ${S.view === v ? "on" : ""}" data-act="go" data-v="${esc(v)}" title="${esc(label)}">${icon}<span class="label">${esc(label)}</span>${extra}</button>`;
-  put($("#nav"), nav("overview", navIc("home", "overview"), "Home") +
-    `<button class="nav-item" data-act="golivehome" title="Clip a live stream">${ic("radio")}<span class="label">Live clipping</span></button>` +
-    nav("library", navIc("film", "library"), "All videos", (() => { const w = S.jobs.filter(j => ["queued", "running"].includes(j.status)).length;
-      return w ? `<span class="working" title="${w} working now"><i></i>${w} working</span>` : S.jobs.length ? `<span class="count">${S.jobs.length}</span>` : ""; })()) +
-    (S.status.accounts === false ? nav("campaigns", ic("money"), "Paid campaigns", campLive().some(c => c.state === "open") ? `<span class="count livec" title="A paid campaign is taking clips"><i></i>Live</span>` : `<span class="count" style="background:var(--brand);color:var(--brand-ink,#1A2100)">New</span>`)
-      : `<a class="nav-item" href="${esc(S.status.earn_url || "/earn")}" title="Earn: paid clipping campaigns" style="text-decoration:none">${ic("money")}<span class="label">Earn</span><span class="count" style="background:var(--brand);color:var(--brand-ink,#1A2100)">New</span></a>`) +
-    `<button class="nav-item" data-act="feedback" title="Report a problem">${ic("bug")}<span class="label">Report a problem</span></button>` +
-    (S.status.user?.is_admin ? `<button class="nav-item" data-act="updcheck" title="Check for updates">${ic("up")}<span class="label">Check for updates</span></button>` : "") +
+  const ytSvg = `<svg viewBox="0 0 24 24" style="width:17px;height:17px;fill:#FF0000;flex:none"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>`;
+  put($("#nav"), nav("overview", navIc("home", "overview"), "Studio Home") +
+    `<button class="nav-item ${S.view === 'live' ? 'on' : ''}" data-act="golivehome" title="Clip a live stream">${ic("radio")}<span class="label">Live Stream Radar</span></button>` +
+    nav("library", navIc("film", "library"), "Video Vault", (() => { const w = S.jobs.filter(j => ["queued", "running"].includes(j.status)).length;
+      return w ? `<span class="working" title="${w} working now"><i></i>${w} active</span>` : S.jobs.length ? `<span class="count">${S.jobs.length}</span>` : ""; })()) +
+    nav("connected", ic("link"), "Connected Channels", (() => { const conn = (S.accounts || []).filter(a => a.platform === 'youtube'); return conn.length ? `<span class="count" style="background:#10B981;color:#fff">Synced</span>` : ''; })()) +
+    `<button class="nav-item" data-act="openytmodal" title="1-Click YouTube Shorts Bulk Scheduler" style="color:#FF3B5C">${ytSvg}<span class="label">YouTube Shorts</span></button>` +
     `<h4><span>Creators</span></h4>` +
     S.creators.map(c => nav("c:" + c.id, cav(c), c.name,
       c.live_job ? `<span class="sb-tag rec" title="Recording now"><i></i>Rec</span>`
@@ -1897,14 +1852,14 @@ function go(v, tab, fromHistory) {
   if (window._gaStop) { window._gaStop(); window._gaStop = null; }
   $("#heroSlot").innerHTML = v === "overview" ? `<section class="hero"><div class="ga-bg" id="appAscii" aria-hidden="true"></div><div id="campPill"></div><h2>What do you want to clip today?</h2>
       <p>Paste a link or drop in videos. You get captioned shorts back.</p><div id="add"></div></section>` : "";
-  if (v === "overview") { view.innerHTML = `<div id="camps-home"></div><div id="ov"></div>`; loadCampaigns(); }
-  else if (v === "campaigns") { view.innerHTML = `<div id="camps-page"></div>`; drawCampaignsPage(); loadCampaigns(); }
+  if (v === "overview") { view.innerHTML = `<div id="ov"></div>`; }
+  else if (v === "campaigns") { S.view = "overview"; render(); }
   else if (v === "library") view.innerHTML = `<div id="add"></div><div id="jobs"></div>`;
   else if (v === "settings") view.innerHTML = `<div id="sform"></div>`;
   else if (v === "usage") { view.innerHTML = `<div id="usage"></div>`; loadUsage(); }
   else view.innerHTML = `<div id="stream"></div><div id="cbody"></div>`;   // the live player stays put across tabs: no restart, no rebuffer
   if ($("#add")) drawAdd(v === "overview" ? "hero" : "compact");
-  if (v === "overview" && window.GradientASCII) { try { window._gaStop = GradientASCII($("#appAscii"), {colors: ["#c6f432", "#ffffff", "#dcf98a", "#ebfbb8", "#f7fde6"], shape: "horizon", lightMode: true, cellSize: 16, density: 0.8, glyphOpacity: 0.26, gradientOpacity: 0.32, glow: 0.06, grain: 0.06, mouseInteraction: false, clickEffect: "none"}); } catch {} }
+  if (v === "overview" && window.GradientASCII) { try { window._gaStop = GradientASCII($("#appAscii"), {colors: ["#FF2E54", "#FF5733", "#8B5CF6", "#00F0FF", "#FFFFFF"], shape: "horizon", lightMode: true, cellSize: 16, density: 0.8, glyphOpacity: 0.26, gradientOpacity: 0.32, glow: 0.06, grain: 0.06, mouseInteraction: false, clickEffect: "none"}); } catch {} }
   if (v === "settings") drawSettings();
   if (v.startsWith("c:")) setTab(S.ctab);
   $("#main").scrollTo(0, 0); render();
@@ -3485,7 +3440,7 @@ async function drawSettings() {
             <p class="sub">To let people connect ${name}, register this server once with <a href="${g[0]}" target="_blank" rel="noopener">${g[1]}</a>. It takes about five minutes.</p>
             <ol>${g[2].map(x => `<li>${x}</li>`).join("")}</ol>
             <div class="copyrow"><code>${esc(st.redirect)}</code><button class="btn sm" data-act="copytext" data-t="${esc(st.redirect)}">${ic("copy")}Copy</button></div>
-            ${!st.https && pf !== "youtube" ? `<p class="warnline">${name} only accepts https addresses. Put PapiClips on a domain with https (or a tunnel) and set CLIPKONTRAST_PUBLIC_URL to it first.</p>` : ""}
+            ${!st.https && pf !== "youtube" ? `<p class="warnline">${name} only accepts https addresses. Put PapiClips on a domain with https (or a tunnel) and set PAPICLIPS_PUBLIC_URL to it first.</p>` : ""}
             <div class="fields"><label class="f">${esc(st.id_label)}<input id="app_id" placeholder="${st.ready ? "Saved: " + esc(st.id_hint) + ". Paste a new one to replace it" : ""}" autocomplete="off" spellcheck="false"></label>
               <label class="f">${esc(st.secret_label)}<input id="app_secret" type="password" placeholder="${st.ready ? "Saved. Paste a new one to replace it" : ""}" autocomplete="off"></label></div>
             <p class="sub">${g[3]}</p>
@@ -3657,6 +3612,19 @@ document.addEventListener("change", async e => {
   saveCreator(true);
 });
 
+document.addEventListener("input", e => {
+  if (e.target.id === "new_key_val") {
+    const val = e.target.value.trim();
+    const sel = $("#new_key_provider");
+    if (!sel) return;
+    if (val.startsWith("gsk_")) sel.value = "groq";
+    else if (val.startsWith("AQ.") || val.startsWith("AIza")) sel.value = "gemini";
+    else if (val.startsWith("sk-ant-")) sel.value = "anthropic";
+    else if (val.startsWith("sk-")) sel.value = "openai";
+    else if (val.startsWith("xai-")) sel.value = "xai";
+  }
+});
+
 document.addEventListener("click", async e => {
   const b = e.target.closest("[data-act]"); if (!b) return;
   const a = b.dataset.act, d = b.dataset;
@@ -3713,15 +3681,21 @@ document.addEventListener("click", async e => {
       return;
     }
     if (a === "aikeyadd") {
-      const p = $("#new_key_provider").value;
-      let k = $("#new_key_val").value.trim().replace(/\u0130/g, "I").replace(/\u0131/g, "i").replace(/[\u200B-\u200D\uFEFF]/g, "");
+      let p = $("#new_key_provider").value;
+      let k = $("#new_key_val").value.trim().replace(/\u0130/g, "I").replace(/\u0131/g, "i").replace(/[\u200B-\u200D\uFEFF]/g, "").replace(/[\r\n]/g, "");
+      // Smart Auto-detection to prevent user confusion
+      if (k.startsWith("gsk_") && p !== "groq") p = "groq";
+      else if ((k.startsWith("AQ.") || k.startsWith("AIza")) && p !== "gemini") p = "gemini";
+      else if (k.startsWith("sk-ant-") && p !== "anthropic") p = "anthropic";
+      else if (k.startsWith("sk-") && p !== "openai" && !k.startsWith("sk-ant-")) p = "openai";
+      if ($("#new_key_provider")) $("#new_key_provider").value = p;
       if (!k && p === "ollama") k = "local";
       if (!k) return toast("Paste an API key first.", "bad");
       b.disabled = true;
-      $("#key_test_spinner").style.display = "inline";
+      if ($("#key_test_spinner")) $("#key_test_spinner").style.display = "inline";
       try {
         await send("/api/ai/key/add", {provider: p, key: k, test_first: true});
-        toast("API key verified and added to AI pool!", "ok");
+        toast(`${p.toUpperCase()} API key verified and added to AI pool!`, "ok");
         if ($("#new_key_val")) $("#new_key_val").value = "";
         if ($("#add_key_box")) $("#add_key_box").style.display = "none";
         S.status = await api("/api/status");

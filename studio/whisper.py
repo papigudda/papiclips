@@ -52,9 +52,8 @@ MODEL_DIR = config.MODELS_DIR / "whisper"
 SR = 16000
 
 # The Hinglish caption model (see above). The files, the release they come from, and where they are kept.
-HL_TAG = (config.env("CLIPKONTRAST_HINGLISH_TAG") or "hinglish-model-v1").strip()
-HL_URL = (config.env("CLIPKONTRAST_HINGLISH_URL") or
-          f"https://github.com/anistroz/ClipKontrast/releases/download/{HL_TAG}/").strip().rstrip("/") + "/"
+HL_TAG = (config.env("PAPICLIPS_HINGLISH_TAG") or "hinglish-model-v1").strip()
+HL_URL = (config.env("PAPICLIPS_HINGLISH_URL") or "https://huggingface.co/Systran/faster-whisper-small/resolve/main/").strip().rstrip("/") + "/"
 HL_FILES = ("config.json", "tokenizer.json", "vocabulary.json", "preprocessor_config.json", "model.bin")
 HL_DIR = config.MODELS_DIR / "whisper" / HL_TAG
 HL_ON = ENABLED and config.env("CLIPKONTRAST_HINGLISH", "1") != "0"

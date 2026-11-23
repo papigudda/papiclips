@@ -21,7 +21,7 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Redirect
 
 from . import admin as admins
 from . import account, load
-from . import (accounts, ai, alerts, auth, brain, config, creators, ctx, db, earn, jobs, live, media, posting,
+from . import (accounts, ai, alerts, auth, brain, config, creators, ctx, db, jobs, live, media, posting,
                profiles, render, safe, transcribe, usage, whisper)
 
 from . import tools as _tools  # noqa: E402
@@ -150,7 +150,7 @@ class Gate:
             # must have been asked for by its real address (a number, "localhost", or the address in settings),
             # so another website cannot reach it through a made-up name that points at this machine.
             if not _own_address(req.headers.get("host", "")):
-                return await deny(403, "Open ClipKontrast by its own address.")
+                return await deny(403, "Open PapiClips by its own address.")
             if path == "/" or path == "/reset" or path.startswith("/auth/"):
                 return await deny(303, "", redirect="/app")
             if path.startswith("/api/auth/") and path != "/api/auth/me":
@@ -401,9 +401,9 @@ def reset_page():
 
 
 LEGAL = {
-    "privacy": ("Privacy Policy", "How ClipKontrast collects, uses and protects your data, including Google user data, cookies and your privacy rights."),
-    "terms": ("Terms of Service", "The terms for using ClipKontrast, the AI clipping tool for streams and videos: accounts, availability and liability."),
-    "acceptable-use": ("Acceptable Use Policy", "What you may and may not do with ClipKontrast, the AI stream clipping tool."),
+    "privacy": ("Privacy Policy", "How PapiClips collects, uses and protects your data, including Google user data, cookies and your privacy rights."),
+    "terms": ("Terms of Service", "The terms for using PapiClips, the AI clipping tool for streams and videos: accounts, availability and liability."),
+    "acceptable-use": ("Acceptable Use Policy", "What you may and may not do with PapiClips, the AI stream clipping tool."),
 }
 
 
@@ -418,9 +418,9 @@ def legal_page(request: Request):
     contact = config.CONTACT_EMAIL
     who = (f'<a href="mailto:{_h.escape(contact)}">{_h.escape(contact)}</a>' if contact
            else "the contact details on our website")
-    name = _h.escape(config.LEGAL_NAME or "ClipKontrast")
+    name = _h.escape(config.LEGAL_NAME or "PapiClips")
     law = (f"the laws of {_h.escape(config.LEGAL_COUNTRY)}" if config.LEGAL_COUNTRY
-           else "the laws of the country where ClipKontrast's operator is established")
+           else "the laws of the country where PapiClips's operator is established")
     out = (_LEGAL_HTML or (WEB / "legal.html").read_text(encoding="utf-8"))
     for k, v in {"{{CONTACT}}": who, "{{PAGE}}": page, "{{PAGE_PATH}}": page, "{{SITE}}": _h.escape(config.PUBLIC_URL),
                  "{{NAME}}": name, "{{LAW}}": law, "{{TITLE}}": title, "{{DESC}}": desc}.items():
@@ -440,62 +440,6 @@ def app_page(request: Request, rest: str = ""):
     if config.EARN_ONLY and not (u and u.is_admin):
         return RedirectResponse("/earn#me", 303)
     return _page("index.html")
-
-
-@app.get("/admin/earn")
-@app.get("/admin/earn/{rest:path}")
-def admin_earn_page(request: Request, rest: str = ""):
-    _admin(request)
-    return _page("earn-admin.html")
-
-
-@app.get("/report")
-def report_page():
-    return _page("report.html", shared=True)
-
-
-@app.get("/download")
-def download_page():
-    return _page("download.html", shared=True)
-
-
-@app.get("/download/{system}")
-def download_app(system: str):
-    """The app for Windows, Mac or Linux: the browser is sent straight to the file of the newest version. Only these
-    three names are known, so this can't be used to send anyone anywhere else."""
-    name = config.APP_FILES.get(system)
-    if not name:
-        raise HTTPException(404, "Not found.")
-    return RedirectResponse(config.RELEASES_URL + name, 302, headers={"Cache-Control": "no-store"})
-
-
-_APP_VERSION: dict = {"at": 0.0, "v": None}
-
-
-@app.get("/api/public/app-version")
-def app_version():
-    """The newest app's version and the SHA-256 of the Windows installer, for the download page. Read from the
-    published latest.json at most once an hour, never per visitor."""
-    if time.time() - _APP_VERSION["at"] > 3600:
-        _APP_VERSION["at"] = time.time()
-        try:
-            import httpx
-            r = httpx.get(config.RELEASES_URL + "latest.json", timeout=8, follow_redirects=True)
-            m = json.loads(r.content.decode("utf-8-sig")) if r.status_code == 200 else {}
-            v, sha = str(m.get("version", ""))[:40], str(m.get("installer_sha256", ""))
-            if re.fullmatch(r"[\d.]+", v) and re.fullmatch(r"[0-9a-f]{64}", sha):
-                _APP_VERSION["v"] = {"version": v, "windows_sha256": sha}
-        except Exception:  # noqa: BLE001 - the page simply leaves the version out
-            pass
-    return _APP_VERSION["v"] or {}
-
-
-@app.get("/earn")
-def earn_page():
-    # The downloaded app has no shared database, so its Earn button goes to the public Earn website.
-    if not config.ACCOUNTS and config.env("CLIPKONTRAST_LOCAL_EARN") != "1":
-        return RedirectResponse(config.EARN_URL + "/earn", 303)
-    return _page("earn.html", shared=True)
 
 
 @app.get("/admin")
@@ -1307,208 +1251,8 @@ def clips_zip(ids: str = ""):
     except ValueError as e:
         raise HTTPException(400, str(e))
     from starlette.background import BackgroundTask
-    return FileResponse(f, filename=f"clipkontrast-clips-{len(pairs)}.zip", media_type="application/zip",
+    return FileResponse(f, filename=f"papiclips-clips-{len(pairs)}.zip", media_type="application/zip",
                         headers={"Cache-Control": "private, no-store"}, background=BackgroundTask(lambda: f.unlink(missing_ok=True)))
-
-
-@app.delete("/api/creators/{cid}")
-def delete_creator(cid: str):
-    _throttle("cdel:" + ctx.uid(), 30, 600)
-    try:
-        r = account.delete_creator(cid)
-    except account.Busy as e:
-        raise HTTPException(409, str(e))
-    if not r.get("ok"):
-        raise HTTPException(404, "No such creator")
-    return r
-
-
-@app.post("/api/account/delete")
-def delete_my_account(request: Request, body: dict = Body(...)):
-    """Deletes the signed-in account and everything in it. The page asks for the email to be typed, so it cannot
-    happen by a stray click or a request the person did not mean to make."""
-    me_ = _me(request)
-    if str(body.get("confirm") or "").strip().lower() != me_.email.lower():
-        raise HTTPException(400, "Type your email address exactly to confirm.")
-    try:
-        account.delete_account(me_.id)
-    except account.Busy as e:
-        raise HTTPException(409, str(e))
-    resp = JSONResponse({"ok": True})
-    resp.delete_cookie(auth.cookie_args("x")["key"], path="/")
-    return resp
-
-
-@app.get("/media/{jid}/{name}")
-def media_file(jid: str, name: str, download: int = 0):
-    if not re.fullmatch(r"[\w\-]+\.(mp4|jpg)", name):
-        raise HTTPException(404)
-    f = Path(_job_or_404(jid)["dir"]) / "clips" / name
-    if not f.is_file():
-        raise HTTPException(404)
-    return FileResponse(f, filename=name if download else None, headers={"Cache-Control": "private, max-age=300"})
-
-
-# ================================================================ creators and live recording
-def _channel_ok(body: dict):
-    links = [str(body.get("channel") or "").strip()]
-    chs = body.get("channels")
-    if chs is not None and not isinstance(chs, dict):
-        raise HTTPException(400, "Bad channel list.")
-    for plat, url in (chs or {}).items():
-        url = str(url or "").strip()
-        if url and creators.platform_key(url) != plat:
-            raise HTTPException(400, f"That link isn't a {plat.title()} channel.")
-        links.append(url)
-    for ch in links:
-        if ch and not media.site_allowed(live.normalize(ch)):
-            raise HTTPException(400, "Channel links must be from YouTube, Twitch or Kick.")
-
-
-@app.get("/api/admin/email-preview")
-def email_preview(request: Request, kind: str = "verify"):
-    """What account emails look like, for admins."""
-    from . import mailer
-    _admin(request)
-    if kind == "reset":
-        page = mailer.preview("Reset your password", "Someone asked to reset the password for this ClipKontrast account. If that was you, choose a new one below.",
-                              "Choose a new password", config.PUBLIC_URL + "/reset?t=example",
-                              "The link works for one hour. If you didn't ask for this, ignore this email and your password stays the same.")
-    else:
-        page = mailer.preview()
-    return HTMLResponse(page, headers={"Cache-Control": "no-store"})
-
-
-@app.post("/api/admin/test-email")
-def test_email(request: Request):
-    """Send the confirm-email template to the admin, to check the email service works."""
-    from . import mailer
-    me_ = _admin(request)
-    if not mailer.ready():
-        raise HTTPException(400, "No email service is set up yet. Add the CLIPKONTRAST_SMTP settings to .env first.")
-    mailer.send(me_.email, "ClipKontrast test email", "Your emails are working",
-                "This is a test from your ClipKontrast server. Account emails like this one will now reach people.",
-                "Open ClipKontrast", config.PUBLIC_URL + "/app", "You can ignore this message.")
-    return {"sent_to": me_.email}
-
-
-@app.post("/api/feedback")
-def send_feedback(request: Request, body: dict = Body(...)):
-    from . import feedback
-    u = _me(request)
-    try:
-        auth.throttle("feedback:" + u.id, 10, 3600)
-        return feedback.submit(u.id, str(body.get("kind", "")), str(body.get("message", "")),
-                               str(body.get("page", "")), str(body.get("context", "")))
-    except auth.AuthError:
-        raise HTTPException(429, "You've sent a lot of messages in the last hour. Try again a bit later.")
-    except feedback.Refused as e:
-        raise HTTPException(400, str(e))
-
-
-@app.post("/api/public/bug-report")
-async def public_bug_report(request: Request, message: str = Form(""), steps: str = Form(""), contact: str = Form(""),
-                            app_info: str = Form("", alias="app"), diag: str = Form(""), context: str = Form(""),
-                            source: str = Form("website"), screenshot: UploadFile | None = File(None)):
-    """A bug report: from the clip maker on anyone's computer (sent on by its own server, so no account is needed),
-    or from the website's report page. Limited per address, and in all, so it can't be used to flood the admins."""
-    from . import feedback
-    ip = _ip(request)
-    try:
-        auth.throttle("bug-ip:" + ip, 6, 3600)
-        auth.throttle("bug-ip-day:" + ip, 25, 86400)
-        auth.throttle("bug-all", 500, 86400)
-    except auth.AuthError:
-        raise HTTPException(429, "Lots of reports were sent from here recently. Try again in a while.")
-    data = await screenshot.read(6 * 1024 * 1024 + 1) if screenshot is not None else b""
-    me_ = getattr(request.state, "user", None)
-    try:
-        return await run_in_threadpool(feedback.submit_report, message, steps, contact, app_info, diag, context,
-                                       "app" if source == "app" else "website", data, me_.id if me_ else None)
-    except feedback.Refused as e:
-        raise HTTPException(400, str(e))
-
-
-@app.get("/api/bug-report/details")
-def bug_report_details(request: Request):
-    """What a report from this clip maker would carry, shown to the person before they send it."""
-    from . import diagnose
-    return {"app": diagnose.app_line(), "details": diagnose.details() if _may_see_diag(_me(request)) else
-            "(Technical details are only sent from the ClipKontrast app on your own computer.)"}
-
-
-def _may_see_diag(user) -> bool:
-    """The log and the recent errors are about everyone on this server: on the app on someone's own computer that is
-    just them, on a shared server only its admins may see or send them."""
-    return not config.ACCOUNTS or bool(user and user.is_admin)
-
-
-@app.post("/api/bug-report")
-async def bug_report(request: Request, message: str = Form(""), steps: str = Form(""), contact: str = Form(""),
-                     details: str = Form("1"), context: str = Form(""), screenshot: UploadFile | None = File(None)):
-    """The clip maker's "Report a problem": the person's words, and if they agree the technical details, sent on to the
-    ClipKontrast website (this computer runs its own server, so the report goes from here, not from the page)."""
-    user = _me(request)
-    import httpx
-    from . import diagnose
-    data = await screenshot.read(6 * 1024 * 1024 + 1) if screenshot is not None else b""
-    form = {"message": message, "steps": steps, "contact": contact, "context": context[:1000], "source": "app",
-            "app": diagnose.app_line(), "diag": diagnose.details() if details == "1" and _may_see_diag(user) else ""}
-    files = {"screenshot": ("screenshot.jpg", data, "image/jpeg")} if data else None
-
-    def send():
-        return httpx.post(config.EARN_URL + "/api/public/bug-report", data=form, files=files, timeout=45,
-                          headers={"User-Agent": "ClipKontrast-bug-report"})
-    try:
-        r = await run_in_threadpool(send)
-    except Exception:  # noqa: BLE001
-        raise HTTPException(502, "Couldn't reach the ClipKontrast website. Check the internet connection and try again.")
-    try:
-        body = r.json()
-    except ValueError:
-        body = {}
-    if r.status_code != 200:
-        raise HTTPException(r.status_code if r.status_code in (400, 413, 429) else 502,
-                            str(body.get("detail") or "The report couldn't be sent. Try again in a minute."))
-    return {"id": body.get("id")}
-
-
-@app.get("/api/admin/feedback/{fid}/shot")
-def admin_feedback_shot(request: Request, fid: int):
-    _admin(request)
-    from . import feedback
-    p = feedback.shot_path(fid)
-    if not p:
-        raise HTTPException(404, "Not found.")
-    return FileResponse(p, media_type="image/jpeg", headers={"Cache-Control": "private, no-store"})
-
-
-@app.get("/api/admin/feedback")
-def admin_feedback(request: Request, status: str = ""):
-    from . import feedback
-    _admin(request)
-    return feedback.listing(status)
-
-
-@app.get("/api/admin/feedback.csv")
-def admin_feedback_csv(request: Request, status: str = ""):
-    """Every bug report as a CSV file (the ones with this status, or all), with the technical details."""
-    from . import feedback
-    _admin(request)
-    name = f"clipkontrast-bug-reports-{status if status in feedback.STATUSES else 'all'}-{time.strftime('%Y-%m-%d')}.csv"
-    return Response(feedback.csv_text(status), media_type="text/csv; charset=utf-8",
-                    headers={"Content-Disposition": f'attachment; filename="{name}"', "Cache-Control": "private, no-store"})
-
-
-@app.post("/api/admin/feedback/{fid}")
-def admin_feedback_status(request: Request, fid: int, body: dict = Body(...)):
-    from . import feedback
-    _admin(request)
-    try:
-        feedback.set_status(fid, str(body.get("status", "")))
-    except feedback.Refused as e:
-        raise HTTPException(400, str(e))
-    return {"ok": True}
 
 
 @app.get("/api/notifications")
@@ -1761,6 +1505,112 @@ def ai_get(request: Request):
     return ai.public()
 
 
+@app.delete("/api/creators/{cid}")
+def delete_creator(cid: str):
+    _throttle("cdel:" + ctx.uid(), 30, 600)
+    try:
+        r = account.delete_creator(cid)
+    except account.Busy as e:
+        raise HTTPException(409, str(e))
+    if not r.get("ok"):
+        raise HTTPException(404, "No such creator")
+    return r
+
+
+@app.post("/api/account/delete")
+def delete_my_account(request: Request, body: dict = Body(...)):
+    """Deletes the signed-in account and everything in it. The page asks for the email to be typed, so it cannot
+    happen by a stray click or a request the person did not mean to make."""
+    me_ = _me(request)
+    if str(body.get("confirm") or "").strip().lower() != me_.email.lower():
+        raise HTTPException(400, "Type your email address exactly to confirm.")
+    try:
+        account.delete_account(me_.id)
+    except account.Busy as e:
+        raise HTTPException(409, str(e))
+    resp = JSONResponse({"ok": True})
+    resp.delete_cookie(auth.cookie_args("x")["key"], path="/")
+    return resp
+
+
+@app.get("/media/{jid}/{name}")
+def media_file(jid: str, name: str, download: int = 0):
+    if not re.fullmatch(r"[\w\-]+\.(mp4|jpg)", name):
+        raise HTTPException(404)
+    f = Path(_job_or_404(jid)["dir"]) / "clips" / name
+    if not f.is_file():
+        raise HTTPException(404)
+    return FileResponse(f, filename=name if download else None, headers={"Cache-Control": "private, max-age=300"})
+
+
+# ================================================================ creators and live recording
+def _channel_ok(body: dict):
+    links = [str(body.get("channel") or "").strip()]
+    chs = body.get("channels")
+    if chs is not None and not isinstance(chs, dict):
+        raise HTTPException(400, "Bad channel list.")
+    for plat, url in (chs or {}).items():
+        url = str(url or "").strip()
+        if url and creators.platform_key(url) != plat:
+            raise HTTPException(400, f"That link isn't a {plat.title()} channel.")
+        links.append(url)
+    for ch in links:
+        if ch and not media.site_allowed(live.normalize(ch)):
+            raise HTTPException(400, "Channel links must be from YouTube, Twitch or Kick.")
+
+
+@app.get("/api/admin/email-preview")
+def email_preview(request: Request, kind: str = "verify"):
+    """What account emails look like, for admins."""
+    from . import mailer
+    _admin(request)
+    if kind == "reset":
+        page = mailer.preview("Reset your password", "Someone asked to reset the password for this PapiClips account. If that was you, choose a new one below.",
+                              "Choose a new password", config.PUBLIC_URL + "/reset?t=example",
+                              "The link works for one hour. If you didn't ask for this, ignore this email and your password stays the same.")
+    else:
+        page = mailer.preview()
+    return HTMLResponse(page, headers={"Cache-Control": "no-store"})
+
+
+@app.post("/api/admin/test-email")
+def test_email(request: Request):
+    """Send the confirm-email template to the admin, to check the email service works."""
+    from . import mailer
+    me_ = _admin(request)
+    if not mailer.ready():
+        raise HTTPException(400, "No email service is set up yet. Add the CLIPKONTRAST_SMTP settings to .env first.")
+    mailer.send(me_.email, "PapiClips test email", "Your emails are working",
+                "This is a test from your PapiClips server. Account emails like this one will now reach people.",
+                "Open PapiClips", config.PUBLIC_URL + "/app", "You can ignore this message.")
+    return {"sent_to": me_.email}
+
+
+@app.post("/api/feedback")
+def send_feedback(request: Request, body: dict = Body(...)):
+    from . import feedback
+    u = _me(request)
+    try:
+        auth.throttle("feedback:" + u.id, 10, 3600)
+        return feedback.submit(u.id, str(body.get("kind", "")), str(body.get("message", "")),
+                               str(body.get("page", "")), str(body.get("context", "")))
+    except auth.AuthError:
+        raise HTTPException(429, "You've sent a lot of messages in the last hour. Try again a bit later.")
+    except feedback.Refused as e:
+        raise HTTPException(400, str(e))
+
+
+
+def _ai_error(e) -> str:
+    return safe.friendly(e, 300).replace(ai.key() or "\0", "<key>")
+
+
+@app.get("/api/ai")
+def ai_get(request: Request):
+    _admin(request)
+    return ai.public()
+
+
 @app.put("/api/ai")
 def ai_put(request: Request, body: dict = Body(...)):
     _admin(request)
@@ -1958,7 +1808,7 @@ def storage_open(request: Request):
     from . import storage
     _admin(request)
     if not _on_this_computer(request):
-        raise HTTPException(400, "The folder can only be opened on the computer ClipKontrast runs on.")
+        raise HTTPException(400, "The folder can only be opened on the computer PapiClips runs on.")
     try:
         storage.open_folder()
     except OSError as e:
@@ -1971,7 +1821,7 @@ def storage_pick(request: Request):
     from . import storage
     _admin(request)
     if not _on_this_computer(request):
-        raise HTTPException(400, "Type the folder's path instead: a folder window can only be shown on the computer ClipKontrast runs on.")
+        raise HTTPException(400, "Type the folder's path instead: a folder window can only be shown on the computer PapiClips runs on.")
     return {"path": storage.pick_folder()}
 
 
@@ -2038,7 +1888,7 @@ def test_alert():
         auth_problem = str(e)
     if auth_problem:
         raise HTTPException(429, auth_problem)
-    problems = alerts.send("ClipKontrast: test message. Alerts are working.")
+    problems = alerts.send("PapiClips: test message. Alerts are working.")
     if problems:
         raise HTTPException(400, "; ".join(problems))
     return {"ok": True}
@@ -2109,595 +1959,6 @@ def _open_browser_when_ready():
             except Exception:
                 time.sleep(1)
     threading.Thread(target=wait_then_open, daemon=True).start()
-
-
-# ================================================================ Earn: paid clipping campaigns
-def _earn(fn, *a, **k):
-    """Runs an Earn action; problems the person can fix come back as a plain message."""
-    try:
-        out = fn(*a, **k)
-    except earn.EarnError as e:
-        raise HTTPException(400, str(e))
-    if fn in (earn.save_campaign, earn.delete_campaign, earn.set_order, earn.save_cover):
-        _APP_FEED.clear()                    # what the app shows follows the admin's change at once
-    return out
-
-
-def _uid_or_none(request: Request) -> str:
-    u = getattr(request.state, "user", None)
-    return u.id if u else ""
-
-
-@app.get("/earn/cover/{cid}.jpg")
-def earn_cover(cid: str):
-    f = earn.COVERS / f"{cid}.jpg"
-    if not re.fullmatch(r"[\w\-]{3,30}", cid) or not f.is_file():
-        raise HTTPException(404)
-    return FileResponse(f, media_type="image/jpeg", headers={"Cache-Control": "public, max-age=86400"})
-
-
-_EARN_PUBLIC: dict = {}      # the Earn page as a visitor sees it, kept for a few seconds so a rush of visitors is cheap
-
-
-@app.get("/api/earn/public/overview")
-def earn_overview(request: Request):
-    me_ = getattr(request.state, "user", None)
-    if not me_:
-        # everyone who isn't signed in sees the same page: worked out at most every 10 seconds, not once per visitor
-        hit = _EARN_PUBLIC.get("v")
-        if hit and time.time() - hit[0] < 10:
-            return hit[1]
-    out = {"overview": earn.overview(), "campaigns": earn.campaigns(uid=_uid_or_none(request)), "leaderboard": earn.leaderboard(),
-           "user": auth.public(me_) if me_ else None, "accounts": config.ACCOUNTS,
-           "earn_only": config.EARN_ONLY, "download_url": config.DOWNLOAD_URL, "guide_url": config.GUIDE_URL}
-    if not me_:
-        _EARN_PUBLIC["v"] = (time.time(), out)
-    return out
-
-
-_MOMENTS_CACHE: dict = {}
-
-
-@app.get("/api/earn/public/moments")
-def earn_open_moments():
-    """The best moments of the campaigns taking clips, for the ClipKontrast app's home screen. The same for everyone,
-    so it is worked out at most once a minute."""
-    hit = _MOMENTS_CACHE.get("v")
-    if hit and time.time() - hit[0] < 60:
-        return hit[1]
-    out = {"campaigns": earn.open_moments(), "earn_url": config.EARN_URL}
-    _MOMENTS_CACHE["v"] = (time.time(), out)
-    return out
-
-
-_APP_FEED: dict = {}
-
-
-@app.get("/api/earn/public/app")
-def earn_app_feed():
-    """The campaigns as the ClipKontrast app shows them (home screen, Paid campaigns page). Kept a minute."""
-    hit = _APP_FEED.get("v")
-    if hit and time.time() - hit[0] < 60:
-        return hit[1]
-    out = {**earn.app_feed(), "earn_url": config.EARN_URL}
-    _APP_FEED["v"] = (time.time(), out)
-    return out
-
-
-@app.post("/api/admin/earn/moments-preview")
-def earn_moments_preview(request: Request, body: dict = Body(...)):
-    """How the admin's pasted timestamps are read, while typing: which stream each group opens."""
-    _admin(request)
-    groups = earn.parse_moments(str(body.get("moments", ""))[:12000], str(body.get("sources", ""))[:4000])
-    return {"groups": [{"title": g["title"], "url": g["url"], "count": len(g["moments"])} for g in groups],
-            "count": sum(len(g["moments"]) for g in groups)}
-
-
-_APP_MOMENTS: dict = {}
-
-
-@app.get("/api/campaign-moments")
-def campaign_moments(request: Request):
-    """The clip maker's view of the Earn campaigns: their best moments, read from the ClipKontrast website (kept five
-    minutes), so they can be clipped from the home screen. Nothing when the website can't be reached."""
-    _me(request)
-    hit = _APP_MOMENTS.get("v")
-    if hit and time.time() - hit[0] < 300:
-        return hit[1]
-    import httpx
-    try:
-        r = httpx.get(config.EARN_URL + "/api/earn/public/moments", timeout=8, headers={"User-Agent": "ClipKontrast"})
-        data = r.json() if r.status_code == 200 else {}
-    except Exception:  # noqa: BLE001 - offline: no campaigns shown, nothing else changes
-        data = {}
-    camps = []
-    for c in (data.get("campaigns") or [])[:10] if isinstance(data, dict) else []:
-        try:
-            groups = [{"title": str(g["title"])[:120], "url": str(g["url"])[:300],
-                       "moments": [{"t": int(m["t"]), "end": int(m["end"]) if m.get("end") else None, "label": str(m.get("label") or "")[:140]}
-                                   for m in g["moments"][:200]]}
-                      for g in c["moments"][:40] if re.match(r"https://", str(g.get("url", "")))]
-            camps.append({"slug": re.sub(r"[^\w-]", "", str(c["slug"]))[:80], "title": str(c["title"])[:120],
-                          "creator_name": str(c.get("creator_name") or "")[:120], "notice": str(c.get("notice") or "")[:1000],
-                          "rate_per_1k": float(c.get("rate_per_1k") or 0), "moments": groups})
-        except (KeyError, TypeError, ValueError):
-            continue                       # one odd entry is skipped, never the page
-    out = {"campaigns": camps, "earn_url": config.EARN_URL}
-    _APP_MOMENTS["v"] = (time.time(), out)
-    return out
-
-
-# ---------------------------------------------------------------- the campaigns in the app: home screen, Paid campaigns
-_APP_CAMPS: dict = {}
-_COVER_PATH = re.compile(r"/earn/cover/[\w\-]{3,30}\.jpg(?:\?v=\d{1,12})?")
-_SLUG = re.compile(r"[^\w-]")
-
-
-def _s(v, n):
-    return str(v if v is not None else "")[:n]
-
-
-def _f(v):
-    try:
-        x = float(v or 0)
-        return x if x == x and abs(x) < 1e12 else 0.0
-    except (TypeError, ValueError):
-        return 0.0
-
-
-def _when(v):
-    x = _f(v)
-    return x if x > 0 else None
-
-
-def _cover(v) -> str:
-    """A campaign's picture, through this app (the page may only show pictures from here): only the website's own."""
-    v = str(v or "")
-    return "/api/campaign-cover?p=" + quote(v, safe="") if _COVER_PATH.fullmatch(v) else ""
-
-
-def _moment(m) -> dict:
-    t = int(_f(m.get("t")))
-    end = int(_f(m.get("end"))) if m.get("end") else None
-    return {"t": t, "end": end if end and end > t else None, "label": _s(m.get("label"), 140)}
-
-
-def _app_stream(x) -> dict:
-    url = str(x.get("url") or "")
-    if not media.site_allowed(url) and not re.match(r"https://", url):
-        raise ValueError
-    kind = x.get("kind") if x.get("kind") in ("youtube", "kick", "twitch", "instagram", "drive", "other") else "other"
-    return {"name": _s(x.get("name") or x.get("title"), 120) or "Stream", "url": url[:300], "kind": kind,
-            "latest": bool(x.get("latest")), "clip": media.site_allowed(url),
-            "moments": [_moment(m) for m in (x.get("moments") or [])[:300] if isinstance(m, dict)]}
-
-
-def _app_live(c) -> dict:
-    st = c.get("state") if c.get("state") in ("open", "starts", "soon") else "open"
-    streams = []
-    for x in (c.get("streams") or [])[:30]:
-        try:
-            streams.append(_app_stream(x))
-        except (ValueError, TypeError, AttributeError):
-            continue
-    plats = [p for p in (c.get("platforms") or []) if p in ("youtube", "instagram", "x", "tiktok")]
-    return {"slug": _SLUG.sub("", _s(c["slug"], 80)), "title": _s(c["title"], 120), "creator_name": _s(c.get("creator_name"), 120),
-            "tagline": _s(c.get("tagline"), 200), "brief": _s(c.get("brief"), 1500), "notice": _s(c.get("notice"), 1000),
-            "rules": [_s(r, 300) for r in (c.get("rules") or [])[:8]], "platforms": plats,
-            "required_tag": _s(c.get("required_tag"), 80), "category": _s(c.get("category"), 40),
-            "rate_per_1k": _f(c.get("rate_per_1k")), "min_views": int(_f(c.get("min_views"))), "max_per_clip": _f(c.get("max_per_clip")),
-            "budget": _f(c.get("budget")), "remaining": _f(c.get("remaining")), "used_pct": min(100.0, _f(c.get("used_pct"))),
-            "state": st, "starts_at": _when(c.get("starts_at")), "ends_at": _when(c.get("ends_at")), "cover": _cover(c.get("cover")),
-            "accent": c["accent"] if re.fullmatch(r"#[0-9a-fA-F]{6}", str(c.get("accent") or "")) else "#C6F432",
-            "clippers": int(_f(c.get("clippers"))), "clips": int(_f(c.get("clips"))), "views": int(_f(c.get("views"))),
-            "hold_days": int(_f(c.get("hold_days"))), "streams": streams}
-
-
-def _app_ended(c) -> dict:
-    return {"slug": _SLUG.sub("", _s(c["slug"], 80)), "title": _s(c["title"], 120), "creator_name": _s(c.get("creator_name"), 120),
-            "category": _s(c.get("category"), 40), "cover": _cover(c.get("cover")),
-            "accent": c["accent"] if re.fullmatch(r"#[0-9a-fA-F]{6}", str(c.get("accent") or "")) else "#C6F432",
-            "ends_at": _when(c.get("ends_at")), "budget": _f(c.get("budget")), "views": int(_f(c.get("views"))),
-            "clips": int(_f(c.get("clips"))), "clippers": int(_f(c.get("clippers"))), "top_views": int(_f(c.get("top_views")))}
-
-
-def _feed_from_old_site(get) -> dict:
-    """A website not updated yet has no /api/earn/public/app: the same is put together from its Earn page and its
-    best moments (the streams without best moments can't be known that way)."""
-    ov = get("/api/earn/public/overview") or {}
-    moments = {c.get("slug"): c for c in ((get("/api/earn/public/moments") or {}).get("campaigns") or []) if isinstance(c, dict)}
-    live, ended = [], []
-    for c in ov.get("campaigns") or []:
-        if not isinstance(c, dict):
-            continue
-        if c.get("state") in ("open", "starts", "soon"):
-            m = moments.get(c.get("slug")) or {}
-            live.append({**c, "streams": [{"name": g.get("title"), "url": g.get("url"), "kind": "youtube" if media.is_youtube(str(g.get("url"))) else "other",
-                                           "moments": g.get("moments")} for g in (m.get("moments") or []) if isinstance(g, dict)]})
-        elif c.get("state") == "ended":
-            sc = c.get("showcase") or {}
-            ended.append({**c, "views": sc.get("views"), "clips": sc.get("clips"), "clippers": sc.get("clippers"), "top_views": sc.get("top_views")})
-    o = ov.get("overview") or {}
-    return {"live": live, "ended": ended, "totals": {"paid_out": o.get("paid_out"), "clippers": o.get("clippers"),
-                                                    "ended_budget": sum(_f(x.get("budget")) for x in ended), "ended_count": len(ended)}}
-
-
-@app.get("/api/campaigns")
-def app_campaigns(request: Request, fresh: int = 0):
-    """The paid campaigns, read from the ClipKontrast website (kept five minutes): what's taking clips now, with every
-    stream it can be clipped from, and what ended. Everything from the site is checked and cleaned here; nothing is
-    shown when the website can't be reached, and nothing else changes."""
-    _me(request)
-    hit = _APP_CAMPS.get("v")
-    if hit and time.time() - hit[0] < (60 if fresh else 300):
-        return hit[1]
-    import httpx
-
-    def get(path):
-        try:
-            r = httpx.get(config.EARN_URL + path, timeout=8, headers={"User-Agent": "ClipKontrast"})
-            d = r.json() if r.status_code == 200 else None
-            return d if isinstance(d, dict) else None
-        except Exception:  # noqa: BLE001 - offline, or not JSON
-            return None
-
-    data = get("/api/earn/public/app")
-    if data is None or not isinstance(data.get("live"), list):
-        data = _feed_from_old_site(get)
-    live, ended = [], []
-    for c in (data.get("live") or [])[:6]:
-        try:
-            live.append(_app_live(c))
-        except (KeyError, TypeError, AttributeError):
-            continue                       # one odd entry is skipped, never the page
-    for c in (data.get("ended") or [])[:24]:
-        try:
-            ended.append(_app_ended(c))
-        except (KeyError, TypeError, AttributeError):
-            continue
-    t = data.get("totals") if isinstance(data.get("totals"), dict) else {}
-    out = {"live": live, "ended": ended, "earn_url": config.EARN_URL,
-           "totals": {"paid_out": _f(t.get("paid_out")), "clippers": int(_f(t.get("clippers"))),
-                      "ended_budget": _f(t.get("ended_budget")) or sum(x["budget"] for x in ended), "ended_count": len(ended)},
-           "reached": bool(live or ended or t)}
-    _APP_CAMPS["v"] = (time.time(), out)
-    return out
-
-
-_IMG_CACHE: dict = {}
-
-
-def _img_cached(key: str, fetch):
-    """A picture fetched once and kept: in memory (the last 200) and in the working folder (a day)."""
-    hit = _IMG_CACHE.get(key)
-    if hit:
-        return hit
-    d = config.TMP_DIR / "pictures"
-    f = d / (hashlib.sha1(key.encode()).hexdigest() + ".img")
-    data = b""
-    try:
-        if f.is_file() and time.time() - f.stat().st_mtime < 86400:
-            data = f.read_bytes()
-    except OSError:
-        data = b""
-    if not data:
-        data = fetch() or b""
-        if not data:
-            return None
-        try:
-            d.mkdir(parents=True, exist_ok=True)
-            f.write_bytes(data)
-        except OSError:
-            pass
-    kind = _img_kind(data)
-    if not kind:
-        return None
-    if len(_IMG_CACHE) > 200:
-        _IMG_CACHE.pop(next(iter(_IMG_CACHE)))
-    _IMG_CACHE[key] = (data, kind)
-    return _IMG_CACHE[key]
-
-
-def _img_kind(data: bytes) -> str:
-    if data[:3] == b"\xff\xd8\xff":
-        return "image/jpeg"
-    if data[:8] == b"\x89PNG\r\n\x1a\n":
-        return "image/png"
-    if data[:4] == b"RIFF" and data[8:12] == b"WEBP":
-        return "image/webp"
-    return ""
-
-
-def _get_img(url: str) -> bytes:
-    import httpx
-    try:
-        r = httpx.get(url, timeout=8, headers={"User-Agent": "Mozilla/5.0 ClipKontrast"}, follow_redirects=False)
-        return r.content if r.status_code == 200 and len(r.content) <= 3_000_000 and _img_kind(r.content) else b""
-    except Exception:  # noqa: BLE001
-        return b""
-
-
-def _picture(hit):
-    if not hit:
-        raise HTTPException(404)
-    return Response(hit[0], media_type=hit[1], headers={"Cache-Control": "private, max-age=86400"})
-
-
-@app.get("/api/campaign-cover")
-def campaign_cover(request: Request, p: str = ""):
-    """A campaign's picture from the ClipKontrast website: only its own campaign pictures, never another address."""
-    _me(request)
-    if not _COVER_PATH.fullmatch(p or ""):
-        raise HTTPException(404)
-    return _picture(_img_cached("cover:" + p, lambda: _get_img(config.EARN_URL + p)))
-
-
-def _yt_id(url: str) -> str:
-    u = urlparse(url)
-    host = (u.hostname or "").lower()
-    if host == "youtu.be" or host.endswith(".youtu.be"):
-        m = re.match(r"^/([\w-]{11})", u.path)
-    else:
-        m = re.match(r"^/(?:live|shorts|embed)/([\w-]{11})", u.path) or re.search(r"(?:^|&)v=([\w-]{11})", u.query)
-    return m.group(1) if m else ""
-
-
-def link_thumb_bytes(url: str) -> bytes:
-    """The picture of a video link: a YouTube video's from its id (no asking YouTube about the video), any other
-    site's (Kick, Twitch) the one its page names."""
-    if media.is_youtube(url):
-        vid = _yt_id(url)
-        if not vid:
-            return b""
-        return _get_img(f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg") or _get_img(f"https://i.ytimg.com/vi/{vid}/mqdefault.jpg")
-    try:
-        t = media.preview(url).get("thumb") or ""
-    except Exception:  # noqa: BLE001 - no picture: the page shows the site's own badge instead
-        return b""
-    import base64
-    try:
-        return base64.b64decode(t.split(",", 1)[1]) if t.startswith("data:image/") else b""
-    except (ValueError, IndexError):
-        return b""
-
-
-@app.get("/api/link-thumb")
-def link_thumb(request: Request, url: str = ""):
-    """The picture of a stream or video link (the campaigns' streams, the admin's stream boxes). Only links to the
-    video sites ClipKontrast clips from. On the website, only the admin may ask (it isn't a picture fetcher for all)."""
-    me_ = _me(request)
-    if config.ACCOUNTS and not me_.is_admin:
-        raise HTTPException(404)
-    url = (url or "").strip()[:500]
-    if not media.site_allowed(url):
-        raise HTTPException(404)
-    key = "thumb:" + url
-    if key not in _IMG_CACHE:
-        try:
-            auth.throttle(f"thumb:{me_.id}", 60, 60)
-        except auth.AuthError:
-            raise HTTPException(429, "Too many pictures at once.")
-    return _picture(_img_cached(key, lambda: link_thumb_bytes(url)))
-
-
-@app.get("/api/earn/public/campaigns/{key}")
-def earn_campaign(request: Request, key: str):
-    return _earn(earn.campaign, key, uid=_uid_or_none(request))
-
-
-@app.get("/api/earn/me")
-def earn_me(request: Request):
-    return earn.mine(_me(request).id)
-
-
-@app.put("/api/earn/profile")
-def earn_profile(request: Request, body: dict = Body(...)):
-    return _earn(earn.save_profile, _me(request).id, body)
-
-
-@app.post("/api/earn/campaigns/{key}/join")
-def earn_join(request: Request, key: str):
-    _need_verified()
-    return _earn(earn.join, _me(request).id, key)
-
-
-@app.post("/api/earn/submissions")
-def earn_submit(request: Request, body: dict = Body(...)):
-    _need_verified()
-    try:
-        auth.throttle("earn-submit:" + _me(request).id, 40, 3600)
-    except auth.AuthError:
-        raise HTTPException(429, "That's a lot of clips in one hour. Wait a bit, then send the rest.")
-    return _earn(earn.submit, _me(request).id, str(body.get("campaign", "")), str(body.get("url", "")), str(body.get("note", "")))
-
-
-@app.delete("/api/earn/submissions/{sid}")
-def earn_withdraw(request: Request, sid: int):
-    _earn(earn.withdraw, _me(request).id, sid)
-    return {"ok": True}
-
-
-@app.post("/api/earn/submissions/{sid}/proof")
-async def earn_proof(request: Request, sid: int, file: UploadFile = File(...)):
-    data = await file.read(9 * 1024 * 1024)
-    uid = _me(request).id
-    return await run_in_threadpool(_earn, earn.save_proof, uid, sid, data)
-
-
-@app.get("/api/earn/proof/{sid}")
-def earn_proof_file(request: Request, sid: int):
-    u = _me(request)
-    p = _earn(earn.proof_path, sid, u.id, bool(u.is_admin))
-    return FileResponse(p, media_type="image/jpeg", headers={"Cache-Control": "private, max-age=300"})
-
-
-@app.get("/api/admin/earn/summary")
-def earn_admin_summary(request: Request):
-    _admin(request)
-    return earn.admin_summary()
-
-
-@app.get("/api/admin/earn/campaigns")
-def earn_admin_campaigns(request: Request):
-    _admin(request)
-    return earn.campaigns(admin=True)
-
-
-@app.post("/api/admin/earn/campaigns")
-def earn_admin_create(request: Request, body: dict = Body(...)):
-    _admin(request)
-    return _earn(earn.save_campaign, body)
-
-
-@app.post("/api/admin/earn/campaigns/order")
-def earn_admin_order(request: Request, body: dict = Body(...)):
-    _admin(request)
-    ids = [str(x)[:40] for x in (body.get("ids") or [])][:500]
-    return {"campaigns": _earn(earn.set_order, ids)}
-
-
-@app.put("/api/admin/earn/campaigns/{cid}")
-def earn_admin_update(request: Request, cid: str, body: dict = Body(...)):
-    _admin(request)
-    return _earn(earn.save_campaign, body, cid)
-
-
-@app.delete("/api/admin/earn/campaigns/{cid}")
-def earn_admin_delete(request: Request, cid: str):
-    _admin(request)
-    _earn(earn.delete_campaign, cid)
-    return {"ok": True}
-
-
-@app.post("/api/admin/earn/campaigns/{cid}/cover")
-async def earn_admin_cover(request: Request, cid: str, file: UploadFile = File(...)):
-    _admin(request)
-    data = await file.read(9 * 1024 * 1024)
-    await run_in_threadpool(_earn, earn.save_cover, cid, data)
-    return _earn(earn.campaign, cid, admin=True)
-
-
-@app.post("/api/update/check")
-def update_check(request: Request):
-    """The "Check for updates" button: asks right away instead of waiting for the next look."""
-    u = getattr(request.state, "user", None)
-    if not u or not u.is_admin:
-        raise HTTPException(404, "Not found.")
-    from . import updates
-    return updates.check_now()
-
-
-@app.post("/api/update/apply")
-def update_apply(request: Request):
-    u = getattr(request.state, "user", None)
-    if not u or not u.is_admin:
-        raise HTTPException(404, "Not found.")
-    from . import selfupdate
-    try:
-        return selfupdate.apply()
-    except RuntimeError as e:
-        raise HTTPException(400, str(e))
-
-
-@app.get("/api/update/progress")
-def update_progress(request: Request):
-    u = getattr(request.state, "user", None)
-    if not u or not u.is_admin:
-        raise HTTPException(404, "Not found.")
-    from . import selfupdate
-    return {**selfupdate.progress(), "version": config.APP_VERSION}
-
-
-@app.get("/api/admin/earn/submissions")
-def earn_admin_queue(request: Request, campaign: str = "", status: str = "pending", q: str = ""):
-    _admin(request)
-    return earn.review_queue(campaign, status, q)
-
-
-@app.get("/api/admin/earn/submissions.csv")
-def earn_admin_queue_csv(request: Request, campaign: str = "", status: str = "", q: str = ""):
-    _admin(request)
-    return Response(earn.submissions_csv(campaign, status, q), media_type="text/csv",
-                    headers={"Content-Disposition": f'attachment; filename="clipkontrast-clips-{time.strftime("%Y-%m-%d")}.csv"'})
-
-
-@app.post("/api/admin/earn/submissions/bulk")
-def earn_admin_bulk(request: Request, body: dict = Body(...)):
-    _admin(request)
-    done, problems = 0, []
-    for sid in [int(x) for x in (body.get("ids") or [])][:500]:
-        try:
-            earn.decide(sid, str(body.get("action", "")), str(body.get("note", "")))
-            done += 1
-        except earn.EarnError as e:
-            problems.append(f"#{sid}: {e}")
-    return {"done": done, "problems": problems[:20]}
-
-
-@app.post("/api/admin/earn/submissions/{sid}")
-def earn_admin_decide(request: Request, sid: int, body: dict = Body(...)):
-    _admin(request)
-    return _earn(earn.decide, sid, str(body.get("action", "")), str(body.get("note", "")), body.get("views"))
-
-
-@app.post("/api/admin/earn/submissions/{sid}/views")
-def earn_admin_views(request: Request, sid: int, body: dict = Body(...)):
-    _admin(request)
-    return _earn(earn.set_views, sid, body.get("views"))
-
-
-@app.post("/api/admin/earn/submissions/{sid}/proof")
-async def earn_admin_proof(request: Request, sid: int, file: UploadFile = File(...)):
-    u = _admin(request)
-    data = await file.read(9 * 1024 * 1024)
-    return await run_in_threadpool(_earn, earn.save_proof, u.id, sid, data, True)
-
-
-@app.post("/api/admin/earn/refresh")
-def earn_admin_refresh(request: Request, body: dict = Body(default={})):
-    _admin(request)
-    if not earn.youtube_key():
-        raise HTTPException(400, "Add a YouTube API key in Earn settings first.")
-    return {"updated": _earn(earn.refresh_views, [int(x) for x in (body.get("ids") or [])] or None)}
-
-
-@app.get("/api/admin/earn/clippers")
-def earn_admin_clippers(request: Request):
-    _admin(request)
-    return {"clippers": earn.clippers_admin()}
-
-
-@app.get("/api/admin/earn/owed")
-def earn_admin_owed(request: Request):
-    _admin(request)
-    return {"owed": earn.owed(), "payouts": earn.payouts()}
-
-
-@app.get("/api/admin/earn/owed.csv")
-def earn_admin_owed_csv(request: Request):
-    _admin(request)
-    return Response(earn.owed_csv(), media_type="text/csv",
-                    headers={"Content-Disposition": f'attachment; filename="clipkontrast-payouts-{time.strftime("%Y-%m-%d")}.csv"'})
-
-
-@app.post("/api/admin/earn/payouts")
-def earn_admin_pay(request: Request, body: dict = Body(...)):
-    u = _admin(request)
-    return _earn(earn.mark_paid, str(body.get("user_id", "")), str(body.get("ref", "")), u.id)
-
-
-@app.get("/api/admin/earn/settings")
-def earn_admin_settings(request: Request):
-    _admin(request)
-    return earn.public_settings()
-
-
-@app.put("/api/admin/earn/settings")
-def earn_admin_save_settings(request: Request, body: dict = Body(...)):
-    _admin(request)
-    return _earn(earn.save_settings, str(body.get("youtube_key", "")))
-
-
 
 
 def _speech_lang(lang: str) -> str:
@@ -2860,7 +2121,7 @@ def main():
     print(f"\n  PapiClips is running:  {config.PUBLIC_URL}\n")
     if not config.ACCOUNTS and (config.HTTPS or config.HOST not in ("127.0.0.1", "localhost", "::1")):
         print("  Sign-in is off, so anyone who can reach this address can use PapiClips and its AI key.\n"
-              "  On a server other people can reach, set CLIPKONTRAST_ACCOUNTS=1 in .env.\n", flush=True)
+              "  On a server other people can reach, set PEAKCUT_ACCOUNTS=1 in .env.\n", flush=True)
     if (config.env("PAPICLIPS_OPEN_BROWSER") or config.env("CLIPKONTRAST_OPEN_BROWSER")) == "1":
         _open_browser_when_ready()
     if (config.env("PAPICLIPS_AUTO_RELOAD") or config.env("CLIPKONTRAST_AUTO_RELOAD")) == "1":
