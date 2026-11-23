@@ -1,0 +1,663 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Earn admin · PapiClips</title>
+<link rel="icon" type="image/svg+xml" href="/brand/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--brand:#C6F432;--brand-hi:#D4FA5A;--ink:#1A2100;--soft:#F5FDE0;--line-b:#E3F7A8;--deep:#4E6B00;
+  --frame:#1E1612;--frame-2:#2C221D;--frame-line:rgba(255,255,255,.08);--frame-text:#F4EEEA;--frame-dim:#A99A91;
+  --muted:#F7F4F1;--line:#EEE8E4;--line-2:#E1D9D3;--text:#211813;--dim:#6D6159;--faint:#A0948C;
+  --good:#0F8A57;--good-soft:#E6F6EE;--bad:#D3343F;--bad-soft:#FDECEE;--warn:#B86E00;--warn-soft:#FFF4E0;--r-lg:16px;--r:12px;color-scheme:light}
+*{box-sizing:border-box}[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--frame);color:var(--text);font:14px/1.5 "Geist","Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4,p{margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+svg{width:17px;height:17px;flex:none;fill:currentColor}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.app{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:100vh}
+.side{background:var(--frame);color:var(--frame-text);padding:14px 10px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+.side img{height:34px;margin:4px 6px 22px}
+.side h4{font-size:12px;font-weight:500;color:var(--frame-dim);padding:12px 10px 4px}
+.ni{display:flex;align-items:center;gap:10px;min-height:36px;padding:0 10px;border-radius:8px;border:0;background:transparent;color:var(--frame-text);font-weight:500;cursor:pointer;text-decoration:none;width:100%;text-align:left;transition:background-color .15s ease}
+.ni:hover{background:var(--frame-2)}.ni.on{background:var(--frame-2);color:#fff}.ni.on svg{color:var(--brand)}
+.ni svg{color:var(--frame-dim)}
+.ni .cnt{margin-left:auto;font-size:12px;background:var(--brand);color:var(--ink);padding:0 7px;border-radius:999px;font-weight:600}
+.side .foot{margin-top:auto;display:grid;gap:2px}
+.main{background:#fff;min-width:0;border-radius:16px 0 0 16px;margin:8px 0;padding:0 0 60px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:22px 32px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff;z-index:5;border-radius:16px 0 0 0}
+.top h1{font-size:22px;letter-spacing:-.03em;font-weight:650}
+.top p{color:var(--dim);font-size:13px}
+.view{padding:24px 32px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:38px;padding:0 14px;border-radius:10px;border:1px solid var(--line-2);background:#fff;font-weight:600;cursor:pointer;text-decoration:none;white-space:nowrap;transition:background-color .15s ease,border-color .15s ease}
+.btn:hover{background:var(--muted)}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:var(--ink)}.btn.primary:hover{background:var(--brand-hi)}
+.btn.dark{background:var(--frame);border-color:var(--frame);color:#fff}.btn.dark:hover{background:#3A2C25}
+.btn.good{background:var(--good);border-color:var(--good);color:#fff}.btn.good:hover{background:#0b7449}
+.btn.bad{color:var(--bad)}.btn.bad:hover{background:var(--bad-soft)}
+.btn.xs{height:28px;padding:0 9px;font-size:12px;border-radius:7px}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.kpi{border:1px solid var(--line);border-radius:var(--r-lg);padding:16px 18px}
+.kpi span{color:var(--dim);font-size:13px}.kpi b{display:block;font-size:28px;letter-spacing:-.04em;font-weight:700;margin-top:2px}
+.kpi.hi{background:var(--frame);border-color:var(--frame)}.kpi.hi span{color:var(--frame-dim)}.kpi.hi b{color:var(--brand)}
+.card{border:1px solid var(--line);border-radius:var(--r-lg);padding:20px;margin-top:16px}
+.card h3{font-size:16px;margin-bottom:12px}
+.note{border-radius:10px;padding:12px 14px;display:flex;gap:12px;align-items:center;margin-top:16px}
+.note.warn{background:var(--warn-soft);color:#6B4200}.note.info{background:var(--soft);color:var(--deep)}
+.note .btn{margin-left:auto}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-weight:500;color:var(--faint);font-size:12px;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:12px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:hover td{background:#FCFBFA}
+.tw{overflow-x:auto}
+.meter{height:7px;border-radius:99px;background:var(--muted);overflow:hidden;width:120px;border:1px solid var(--line)}
+.meter i{display:block;height:100%;background:var(--brand)}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.chip.live{background:var(--brand);color:var(--ink)}.chip.soon{background:var(--soft);color:var(--deep)}.chip.draft{background:var(--muted);color:var(--dim)}.chip.paused{background:var(--warn-soft);color:var(--warn)}.chip.ended{background:var(--frame);color:#fff}
+.chip.pending{background:var(--warn-soft);color:var(--warn)}.chip.approved{background:var(--good-soft);color:var(--good)}.chip.rejected{background:var(--bad-soft);color:var(--bad)}.chip.paid{background:var(--frame);color:var(--brand)}
+.chip.ready{background:var(--soft);color:var(--deep)}
+.cks{display:flex;gap:4px;flex-wrap:wrap}
+.cks span{font-size:11px;font-weight:600;padding:2px 7px;border-radius:6px;background:var(--muted);color:var(--dim);cursor:help}
+.cks span.y{background:var(--good-soft);color:var(--good)}.cks span.n{background:var(--bad-soft);color:var(--bad)}
+.who b{display:block;font-weight:600}.who small{color:var(--faint);display:block;font-size:12px}
+.link a{font-weight:500;text-decoration:none;display:block;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.link a:hover{color:var(--deep)}
+.link small{color:var(--faint);font-size:12px;display:block}
+.vin{width:96px;height:30px;border:1px solid var(--line-2);border-radius:7px;padding:0 8px;text-align:right;font-variant-numeric:tabular-nums}
+.vin:focus{border-color:var(--brand);outline:0}
+.num{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+.thumb{width:44px;height:44px;border-radius:8px;object-fit:cover;border:1px solid var(--line);display:block}
+.filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.seg{display:flex;border:1px solid var(--line-2);border-radius:10px;overflow:hidden}
+.seg button{border:0;background:#fff;padding:0 12px;height:36px;cursor:pointer;font-weight:500;color:var(--dim);border-right:1px solid var(--line-2)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--frame);color:#fff}
+.seg .c{font-size:11px;opacity:.75;margin-left:4px}
+.inp{height:36px;border:1px solid var(--line-2);border-radius:10px;padding:0 12px;background:#fff;outline:0}
+.inp:focus{border-color:var(--brand)}
+.bulk{position:sticky;bottom:16px;margin-top:14px;background:var(--frame);color:#fff;border-radius:12px;padding:10px 12px 10px 16px;display:flex;gap:10px;align-items:center}
+.bulk .btn{height:34px}
+/* form */
+.modal-bg{position:fixed;inset:0;background:rgba(30,22,18,.5);z-index:50;display:flex;justify-content:flex-end}
+.modal{width:min(780px,100%);height:100%;background:#fff;overflow-y:auto}
+.modal .mh{position:sticky;top:0;background:#fff;display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-bottom:1px solid var(--line);z-index:2}
+.modal .mb{padding:22px 24px 40px}
+.sect{font-size:12px;font-weight:600;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;margin:22px 0 10px}
+.sect:first-child{margin-top:0}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:13px;font-weight:500;color:var(--dim);margin-bottom:5px}
+.field .hint{font-size:12px;color:var(--faint);margin-top:4px}
+.field input,.field select,.field textarea{width:100%;height:40px;border:1px solid var(--line-2);border-radius:10px;padding:0 12px;background:#fff;outline:0}
+.field textarea{height:auto;min-height:90px;padding:10px 12px;resize:vertical}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--brand)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.checks{display:flex;gap:8px;flex-wrap:wrap}
+.checks label{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line-2);border-radius:10px;padding:8px 12px;cursor:pointer;font-weight:500}
+.checks input{accent-color:var(--deep)}
+.preview{background:var(--soft);border-radius:10px;padding:12px 14px;color:var(--deep);font-size:13px}
+.cover-prev{width:100%;aspect-ratio:16/7;border-radius:12px;object-fit:cover;border:1px solid var(--line);background:var(--muted);display:block}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--frame);color:#fff;padding:11px 16px;border-radius:10px;z-index:99;max-width:90vw}
+.toast.bad{background:var(--bad)}.toast.good{background:var(--good)}
+.empty{border:1px dashed var(--line-2);border-radius:var(--r-lg);padding:40px;text-align:center;color:var(--dim)}
+.empty b{display:block;color:var(--text);font-size:16px;margin-bottom:4px}
+code{background:var(--muted);padding:1px 6px;border-radius:5px;font-size:13px}
+ol.steps{padding-left:18px;color:var(--dim);display:grid;gap:6px;margin:10px 0 0}
+@media (max-width:900px){.app{grid-template-columns:1fr}.side{position:static;height:auto;flex-direction:row;flex-wrap:wrap;gap:4px}.side img,.side h4,.side .foot{display:none}.ni{width:auto}.main{border-radius:0;margin:0}.kpis{grid-template-columns:1fr 1fr}.view,.top{padding-left:16px;padding-right:16px}.g3,.g2{grid-template-columns:1fr}}
+@media (max-width:700px){.kpis{grid-template-columns:1fr 1fr!important}.kpi{min-width:0}.tw{overflow-x:auto}.card{overflow-x:auto}#view table{display:block;overflow-x:auto;white-space:nowrap}}
+.order{display:flex;align-items:center;gap:6px}
+.order .grip{cursor:grab;color:var(--faint);font-size:16px;letter-spacing:-3px;padding:4px 2px;user-select:none}
+.order .arrows{display:flex;flex-direction:column;gap:2px}
+.order .arrows .btn{height:20px;min-width:24px;padding:0 6px;font-size:11px}
+.drag-row.dragging{opacity:.45}
+.drag-row.over td{background:var(--soft)}
+.bug .bh{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.bug .bpill{font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--soft);color:var(--deep)}
+.bug .bpill.isapp{background:var(--frame);color:#fff}
+.bug .dimt{color:var(--dim);font-size:13px}
+.bug .bmsg{white-space:pre-wrap;margin-top:12px;font-size:15px;line-height:1.5;overflow-wrap:anywhere}
+.bug pre.diag{margin-top:12px;background:#0f1115;color:#d8dee9;border-radius:10px;padding:12px;font-size:12px;max-height:420px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere}
+.mprev{margin-top:8px;font-size:13px;display:flex;flex-direction:column;gap:4px}
+.mprev:empty{display:none}
+.mprev .ok{color:var(--deep)}.mprev .warn{color:#9A5B00}
+.mprev a{color:inherit}
+.srow{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;display:flex;flex-direction:column;gap:8px}
+.srow-h{display:grid;grid-template-columns:96px minmax(120px,1fr) 2.2fr auto;gap:8px;align-items:center}
+.s-thumb{width:96px;aspect-ratio:16/9;border-radius:8px;background:#17110E center/cover no-repeat;position:relative;overflow:hidden;display:grid;place-items:center;color:rgba(255,255,255,.45);font-size:10.5px;font-weight:600;text-align:center;line-height:1.2}
+.s-thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.s-thumb img.broken{display:none}
+.inapp{display:flex;gap:10px;align-items:flex-start;background:#F5FDE0;border:1px solid #E3F7A8;color:#2B3A00;border-radius:12px;padding:10px 12px;font-size:13px;margin:0 0 12px}
+.srow textarea{min-height:70px;font-size:13.5px}
+.s-info{font-size:12.5px;color:var(--dim)}
+@media (max-width:700px){.srow-h{grid-template-columns:1fr}.s-thumb{width:160px}}
+.srow textarea.inp{height:auto;padding:8px 12px;line-height:1.5;resize:vertical}
+.s-url.need{border-color:#E8A100;background:#FFF8E6}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <img src="/brand/logo-light.svg" alt="PapiClips">
+    <h4>Earn</h4>
+    <div id="nav"></div>
+    <div class="foot">
+      <a class="ni" href="/earn" target="_blank"><svg viewBox="0 0 256 256"><path d="M224,104a8,8,0,0,1-16,0V59.32l-66.33,66.34a8,8,0,0,1-11.32-11.32L196.68,48H152a8,8,0,0,1,0-16h64a8,8,0,0,1,8,8Zm-40,24a8,8,0,0,0-8,8v72H48V80h72a8,8,0,0,0,0-16H48A16,16,0,0,0,32,80V208a16,16,0,0,0,16,16H176a16,16,0,0,0,16-16V136A8,8,0,0,0,184,128Z"/></svg>Open the Earn page</a>
+      <a class="ni" href="/admin"><svg viewBox="0 0 256 256"><path d="M224,128a8,8,0,0,1-8,8H59.31l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L59.31,120H216A8,8,0,0,1,224,128Z"/></svg>Admin dashboard</a>
+      <a class="ni" href="/app"><svg viewBox="0 0 256 256"><path d="M224,128a8,8,0,0,1-8,8H59.31l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L59.31,120H216A8,8,0,0,1,224,128Z"/></svg>Back to the app</a>
+    </div>
+  </aside>
+  <main class="main">
+    <header class="top"><div><h1 id="title">Earn</h1><p id="subtitle"></p></div><div id="actions" style="display:flex;gap:8px"></div></header>
+    <div class="view" id="view"></div>
+  </main>
+</div>
+<div id="modal"></div>
+<script>
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const inr = (n, d) => "₹" + Number(n || 0).toLocaleString("en-IN", {maximumFractionDigits: d ?? (Number(n) % 1 ? 2 : 0), minimumFractionDigits: d ?? (Number(n) % 1 ? 2 : 0)});
+const num = n => Number(n || 0).toLocaleString("en-IN");
+const safeUrl = u => /^https?:\/\//i.test(u || "") ? u : "#";
+const PLAT = {youtube: "YouTube", instagram: "Instagram", x: "X", tiktok: "TikTok"};
+const date = t => t ? new Date(t * 1000).toLocaleString("en-IN", {day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"}) : "—";
+const ago = t => { const s = Date.now() / 1000 - t; return s < 3600 ? Math.max(1, Math.floor(s / 60)) + "m ago" : s < 86400 ? Math.floor(s / 3600) + "h ago" : Math.floor(s / 86400) + "d ago"; };
+const IC = {
+  users: '<path d="M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.53,195.63a8,8,0,1,0,13.4,8.74,80,80,0,0,1,134.14,0,8,8,0,0,0,13.4-8.74A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Zm210.14,98.7a8,8,0,0,1-11.07-2.33A79.83,79.83,0,0,0,172,168a8,8,0,0,1,0-16,44,44,0,1,0-16.34-84.87,8,8,0,1,1-5.94-14.85,60,60,0,0,1,55.53,105.64,95.83,95.83,0,0,1,47.22,37.71A8,8,0,0,1,250.14,206.7Z"/>',
+  home: '<path d="M219.31,108.68l-80-80a16,16,0,0,0-22.62,0l-80,80A15.87,15.87,0,0,0,32,120v96a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V160h32v56a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V120A15.87,15.87,0,0,0,219.31,108.68ZM208,208H160V152a8,8,0,0,0-8-8H104a8,8,0,0,0-8,8v56H48V120l80-80,80,80Z"/>',
+  flag: '<path d="M34.76,42A8,8,0,0,0,32,48V216a8,8,0,0,0,16,0V171.77c26.79-21.16,49.87-9.75,76.45,3.41,16.4,8.11,34.06,16.85,53,16.85,13.93,0,28.54-4.75,43.82-18a8,8,0,0,0,2.76-6V48A8,8,0,0,0,210.76,42c-28,24.23-51.72,12.49-79.21-1.12C103.07,26.76,70.78,10.79,34.76,42ZM208,164.25c-26.79,21.16-49.87,9.74-76.45-3.41-25-12.38-52.81-26.13-83.55-8.4V51.79c26.79-21.16,49.87-9.75,76.45,3.4,25,12.38,52.82,26.14,83.55,8.4Z"/>',
+  check: '<path d="M173.66,98.34a8,8,0,0,1,0,11.32l-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35A8,8,0,0,1,173.66,98.34ZM232,128A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128Z"/>',
+  money: '<path d="M128,88a40,40,0,1,0,40,40A40,40,0,0,0,128,88Zm0,64a24,24,0,1,1,24-24A24,24,0,0,1,128,152ZM240,56H16a8,8,0,0,0-8,8V192a8,8,0,0,0,8,8H240a8,8,0,0,0,8-8V64A8,8,0,0,0,240,56ZM193.65,184H62.35A56.78,56.78,0,0,0,24,145.65v-35.3A56.78,56.78,0,0,0,62.35,72h131.3A56.78,56.78,0,0,0,232,110.35v35.3A56.78,56.78,0,0,0,193.65,184ZM232,93.37A40.81,40.81,0,0,1,210.63,72H232ZM45.37,72A40.81,40.81,0,0,1,24,93.37V72ZM24,162.63A40.81,40.81,0,0,1,45.37,184H24ZM210.63,184A40.81,40.81,0,0,1,232,162.63V184Z"/>',
+  gear: '<path d="M128,80a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Zm88-29.84q.06-2.16,0-4.32l14.92-18.64a8,8,0,0,0,1.48-7.06,107.21,107.21,0,0,0-10.88-26.25,8,8,0,0,0-6-3.93l-23.72-2.64q-1.48-1.56-3-3L186,40.54a8,8,0,0,0-3.94-6,107.71,107.71,0,0,0-26.25-10.87,8,8,0,0,0-7.06,1.49L130.16,40Q128,40,125.84,40L107.2,25.11a8,8,0,0,0-7.06-1.48A107.6,107.6,0,0,0,73.89,34.51a8,8,0,0,0-3.93,6L67.32,64.27q-1.56,1.49-3,3L40.54,70a8,8,0,0,0-6,3.94,107.71,107.71,0,0,0-10.87,26.25,8,8,0,0,0,1.49,7.06L40,125.84Q40,128,40,130.16L25.11,148.8a8,8,0,0,0-1.48,7.06,107.21,107.21,0,0,0,10.88,26.25,8,8,0,0,0,6,3.93l23.72,2.64q1.49,1.56,3,3L70,215.46a8,8,0,0,0,3.94,6,107.71,107.71,0,0,0,26.25,10.87,8,8,0,0,0,7.06-1.49L125.84,216q2.16.06,4.32,0l18.64,14.92a8,8,0,0,0,7.06,1.48,107.21,107.21,0,0,0,26.25-10.88,8,8,0,0,0,3.93-6l2.64-23.72q1.56-1.48,3-3L215.46,186a8,8,0,0,0,6-3.94,107.71,107.71,0,0,0,10.87-26.25,8,8,0,0,0-1.49-7.06Zm-16.1-6.5a73.93,73.93,0,0,1,0,8.68,8,8,0,0,0,1.74,5.48l14.19,17.73a91.57,91.57,0,0,1-6.23,15L187,173.11a8,8,0,0,0-5.1,2.64,74.11,74.11,0,0,1-6.14,6.14,8,8,0,0,0-2.64,5.1l-2.51,22.58a91.32,91.32,0,0,1-15,6.23l-17.74-14.19a8,8,0,0,0-5-1.75h-.48a73.93,73.93,0,0,1-8.68,0,8,8,0,0,0-5.48,1.74L100.45,215.8a91.57,91.57,0,0,1-15-6.23L82.89,187a8,8,0,0,0-2.64-5.1,74.11,74.11,0,0,1-6.14-6.14,8,8,0,0,0-5.1-2.64L46.43,170.6a91.32,91.32,0,0,1-6.23-15l14.19-17.74a8,8,0,0,0,1.74-5.48,73.93,73.93,0,0,1,0-8.68,8,8,0,0,0-1.74-5.48L40.2,100.45a91.57,91.57,0,0,1,6.23-15L69,82.89a8,8,0,0,0,5.1-2.64,74.11,74.11,0,0,1,6.14-6.14A8,8,0,0,0,82.89,69L85.4,46.43a91.32,91.32,0,0,1,15-6.23l17.74,14.19a8,8,0,0,0,5.48,1.74,73.93,73.93,0,0,1,8.68,0,8,8,0,0,0,5.48-1.74L155.55,40.2a91.57,91.57,0,0,1,15,6.23L173.11,69a8,8,0,0,0,2.64,5.1,74.11,74.11,0,0,1,6.14,6.14,8,8,0,0,0,5.1,2.64l22.58,2.51a91.32,91.32,0,0,1,6.23,15l-14.19,17.74A8,8,0,0,0,199.87,123.66Z"/>'};
+IC.bug = '<path d="M144,92a12,12,0,1,1,12,12A12,12,0,0,1,144,92ZM100,80a12,12,0,1,0,12,12A12,12,0,0,0,100,80Zm116,64a87.76,87.76,0,0,1-3,22.88l19.29,8.43a8,8,0,1,1-6.42,14.66l-19.1-8.35a88,88,0,0,1-157.54,0l-19.1,8.35A8,8,0,0,1,23.71,175.3L43,166.87A87.76,87.76,0,0,1,40,144v-8H16a8,8,0,0,1,0-16H40v-8a87.76,87.76,0,0,1,3-22.88L23.71,80.69a8,8,0,1,1,6.42-14.66l19.1,8.35a88,88,0,0,1,157.54,0l19.1-8.35a8,8,0,1,1,6.42,14.66L213,89.12A87.76,87.76,0,0,1,216,112v8h24a8,8,0,0,1,0,16H216ZM56,120H200v-8a72,72,0,0,0-144,0Zm64,95.54V136H56v8A72.08,72.08,0,0,0,120,215.54ZM200,144v-8H136v79.54A72.08,72.08,0,0,0,200,144Z"/>';
+IC.down = '<path d="M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H208V144a8,8,0,0,1,16,0Zm-101.66,5.66a8,8,0,0,0,11.32,0l40-40a8,8,0,0,0-11.32-11.32L136,124.69V32a8,8,0,0,0-16,0v92.69L93.66,98.34a8,8,0,0,0-11.32,11.32Z"/>';
+const ic = n => `<svg viewBox="0 0 256 256">${IC[n]}</svg>`;
+const TABS = {overview: ["Overview", "home", "Campaigns, clips waiting for review, and money owed"],
+  campaigns: ["Campaigns", "flag", "Create campaigns, set budgets and rates, and go live"],
+  review: ["Review clips", "check", "Check each clip, set its views, then approve or reject it"],
+  clippers: ["Clippers", "users", "Everyone who signed up: payout details, account handles and campaigns"],
+  payouts: ["Payouts", "money", "What each clipper is owed, and the record of what was sent"],
+  bugs: ["Bug reports", "bug", "Problems people reported from the app and the website, with what their app sent along"],
+  settings: ["Settings", "gear", "The YouTube key that counts views automatically"]};
+const S = {tab: (location.pathname.split("/")[3] || "overview"), bugs: null, bStatus: "new", open: new Set(), sum: null, camps: [], queue: null, qStatus: "pending", qCamp: "", q: "", owed: null, sel: new Set()};
+if (!TABS[S.tab]) S.tab = "overview";
+
+async function api(path, opts = {}) {
+  const o = {method: opts.method || "GET", headers: {}};
+  if (opts.body instanceof FormData) o.body = opts.body;
+  else if (opts.body !== undefined) { o.body = JSON.stringify(opts.body); o.headers["Content-Type"] = "application/json"; }
+  const r = await fetch(path, o); let d = null; try { d = await r.json(); } catch {}
+  if (r.status === 413 || (r.status === 502 && opts.body instanceof FormData)) throw new Error("That file is too big. Use an image under 8 MB.");
+  if (!r.ok) throw new Error((d && d.detail) || "Something went wrong.");
+  return d;
+}
+function toast(m, k = "") { $$(".toast").forEach(t => t.remove()); const t = document.createElement("div"); t.className = "toast " + k; t.textContent = m; document.body.appendChild(t); setTimeout(() => t.remove(), 4000); }
+
+function nav() {
+  const pend = S.sum?.pending, owedN = S.sum?.owed_people;
+  $("#nav").innerHTML = Object.entries(TABS).map(([k, [l, i]]) => `<a class="ni ${S.tab === k ? "on" : ""}" href="/admin/earn/${k}" data-tab="${k}">${ic(i)}${l}${k === "review" && pend ? `<span class="cnt">${pend}</span>` : ""}${k === "payouts" && owedN ? `<span class="cnt">${owedN}</span>` : ""}${k === "bugs" && S.bugs && S.bugs.counts.new ? `<span class="cnt">${S.bugs.counts.new}</span>` : ""}</a>`).join("");
+  const [t, , sub] = TABS[S.tab]; $("#title").textContent = t; $("#subtitle").textContent = sub;
+  $("#actions").innerHTML = S.tab === "campaigns" || S.tab === "overview" ? `<button class="btn primary" data-act="new">+ New campaign</button>` :
+    S.tab === "review" ? `<a class="btn" href="/api/admin/earn/submissions.csv" title="Every clip from every campaign, with clipper details, checks and views">Export all clips (CSV)</a><button class="btn" data-act="yt-refresh">Refresh YouTube views</button>` :
+    S.tab === "payouts" ? `<a class="btn" href="/api/admin/earn/owed.csv">Download CSV</a>` : "";
+}
+const STATUS_LABEL = {soon: "Coming soon"};
+const chip = s => `<span class="chip ${esc(s)}">${esc(STATUS_LABEL[s] || s[0].toUpperCase() + s.slice(1))}</span>`;
+const fmtWhen = t => new Date(t * 1000).toLocaleString("en-IN", {day: "numeric", month: "short", hour: "numeric", minute: "2-digit"});
+function whyNotOpen(c) {
+  return c.state === "starts" ? `opens ${fmtWhen(c.starts_at)}. Clippers see it as locked until then`
+    : c.state === "full" ? "the budget is used up" : c.state === "ended" ? "the end date has passed" : "";
+}
+
+// ---------------------------------------------------------------- overview
+function drawOverview() {
+  const s = S.sum, o = s.overview;
+  return `${!s.settings.youtube_ready ? `<div class="note warn" style="margin:0 0 16px">No YouTube API key yet, so YouTube views have to be typed in by hand. Adding a key takes 2 minutes.<button class="btn" data-tab="settings">Add key</button></div>` : ""}
+    <div class="kpis"><div class="kpi hi"><span>Waiting for review</span><b>${num(s.pending)}</b></div><div class="kpi"><span>Owed to clippers</span><b>${inr(s.owed_total)}</b></div>
+      <div class="kpi"><span>Paid out, all time</span><b>${inr(o.paid_out)}</b></div><div class="kpi"><span>Open budget</span><b>${inr(o.live_budget)}</b></div></div>
+    <div class="card"><h3>Campaigns</h3>${campTable(S.camps.slice(0, 6))}</div>
+    <div class="card"><h3>Clips by status</h3><div class="kpis">${["pending", "approved", "paid", "rejected"].map(k => `<div class="kpi"><span>${chip(k)}</span><b>${num(s.counts[k])}</b></div>`).join("")}</div></div>`;
+}
+
+// ---------------------------------------------------------------- campaigns
+function campTable(cs) {
+  if (!cs.length) return `<div class="empty"><b>No campaigns yet</b>Create one, set the budget and rate, and go live.</div>`;
+  return `<div class="hint" style="margin:0 0 10px">Drag a campaign by <b>⋮⋮</b> (or use the arrows) to set the order it's shown in on the website.</div>
+  <div class="tw"><table><thead><tr><th style="width:64px"></th><th>Campaign</th><th>Status</th><th>Rate</th><th>Budget used</th><th>Clippers</th><th>Clips</th><th>To review</th><th></th></tr></thead><tbody>
+    ${cs.map((c, i) => `<tr class="drag-row" draggable="true" data-cid="${esc(c.id)}"><td><div class="order"><span class="grip" title="Drag to reorder" aria-hidden="true">⋮⋮</span>
+        <span class="arrows"><button class="btn xs" data-act="move" data-id="${esc(c.id)}" data-d="-1" ${i === 0 ? "disabled" : ""} aria-label="Move up">↑</button><button class="btn xs" data-act="move" data-id="${esc(c.id)}" data-d="1" ${i === cs.length - 1 ? "disabled" : ""} aria-label="Move down">↓</button></span></div></td>
+      <td><b>${esc(c.title)}</b><div style="color:var(--faint);font-size:12px">${esc(c.creator_name)} · /earn#c=${esc(c.slug)}</div></td>
+      <td>${chip(c.status)}${c.status === "live" && !c.open ? `<div style="color:var(--warn);font-size:12px;margin-top:4px;max-width:200px">Not open yet: ${esc(whyNotOpen(c))}</div>` : ""}${c.status === "soon" ? '<div style="color:var(--faint);font-size:12px;margin-top:4px">Shown locked on the site</div>' : ""}</td>
+      <td class="num">${inr(c.rate_per_1k)}/1K</td>
+      <td><div class="meter"><i style="width:${c.used_pct}%"></i></div><div style="font-size:12px;color:var(--dim)">${inr(c.committed)} of ${inr(c.budget)}</div></td>
+      <td class="num">${num(c.clippers)}</td><td class="num">${num(c.clips)}</td>
+      <td>${c.pending ? `<button class="btn xs" data-act="review-camp" data-id="${esc(c.id)}">${c.pending} to review</button>` : "—"}</td>
+      <td><div style="display:flex;gap:6px;justify-content:flex-end">
+        ${c.status !== "live" ? `<button class="btn xs primary" data-act="status" data-id="${esc(c.id)}" data-s="live">Go live</button>` : `<button class="btn xs" data-act="status" data-id="${esc(c.id)}" data-s="paused">Pause</button>`}
+        ${c.status !== "ended" ? `<button class="btn xs" data-act="status" data-id="${esc(c.id)}" data-s="ended">End</button>` : ""}
+        <button class="btn xs" data-act="edit" data-id="${esc(c.id)}">Edit</button>
+        <a class="btn xs" href="/earn#c=${esc(c.slug)}" target="_blank">View</a></div></td></tr>`).join("")}</tbody></table></div>`;
+}
+const drawCampaigns = () => `<div class="card" style="margin-top:0">${campTable(S.camps)}</div>`;
+
+function toLocalInput(t) { if (!t) return ""; const d = new Date(t * 1000); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 16); }
+function openForm(c) {
+  c = c || {title: "", creator_name: "", creator_url: "", tagline: "", category: "Gaming", brief: "", raw_rules: "Hook the viewer in the first 2 seconds, with text on screen\nBurned-in captions, readable on a phone\nCredit the creator and link their channel in the caption\nNo in-game radio or copyrighted music\nNo big story spoilers in the hook or thumbnail\nNo botted or bought views",
+    raw_sources: "", platforms: ["youtube", "instagram", "x"], required_tag: "", rate_per_1k: 20, min_views: 1000, max_per_clip: 0, budget: 45000, hold_days: 7, status: "draft", starts_at: null, ends_at: null, accent: "#C6F432"};
+  const pl = new Set(c.platforms);
+  $("#modal").innerHTML = `<div class="modal-bg" data-act="close-bg"><div class="modal"><div class="mh"><h3 style="font-size:18px">${c.id ? "Edit campaign" : "New campaign"}</h3><div style="display:flex;gap:8px">
+      ${c.id ? `<button class="btn bad" data-act="delete" data-id="${esc(c.id)}">Delete</button>` : ""}<button class="btn" data-act="close">Cancel</button><button class="btn primary" form="cf">Save</button></div></div>
+    <form class="mb" id="cf" data-id="${esc(c.id || "")}">
+      <div class="sect">The campaign</div>
+      <div class="g2"><div class="field"><label>Campaign name *</label><input name="title" value="${esc(c.title)}" placeholder="GTA 6 Launch" required></div>
+        <div class="field"><label>Creator or brand</label><input name="creator_name" value="${esc(c.creator_name)}" placeholder="Creator name"></div></div>
+      <div class="g2"><div class="field"><label>Creator's channel link</label><input name="creator_url" value="${esc(c.creator_url)}" placeholder="https://youtube.com/@creator"></div>
+        <div class="field"><label>Category</label><input name="category" value="${esc(c.category)}" placeholder="Gaming"></div></div>
+      <div class="field"><label>One-line pitch</label><input name="tagline" value="${esc(c.tagline)}" maxlength="200" placeholder="Live-clip the GTA 6 launch streams and get paid per view"></div>
+      <div class="field"><label>Important note for clippers</label><textarea name="notice" rows="2" maxlength="1000" placeholder="e.g. Only send clips of Mizo Plays. Clips of other creators will be rejected.">${esc(c.notice || "")}</textarea><div class="hint">Shown in a yellow box at the top of the campaign and on the Send a clip form.</div></div>
+      <div class="field"><label>Brief</label><textarea name="brief" rows="5" placeholder="What to clip, what kind of moments work, tone, language…">${esc(c.brief)}</textarea></div>
+      <div class="field"><label>Rules (one per line)</label><textarea name="rules" rows="6">${esc(c.raw_rules ?? (c.rules || []).join("\n"))}</textarea></div>
+      <div class="sect">Resource library</div>
+      <div class="field"><label>Raw clips folder (Google Drive)</label><input name="raw_clips" value="${esc(c.raw_clips || "")}" placeholder="https://drive.google.com/drive/folders/…"><div class="hint">Moments already cut, for clippers to edit their own way. Share the folder as <b>Anyone with the link can view</b>, so its files show right on the campaign. Only clippers who joined see it.</div></div>
+      <div class="sect">Streams and videos to clip</div>
+      <div class="inapp"><b>📱</b><span>While the campaign is <b>Live</b> (or Opening soon), it's shown in the PapiClips app too: on everyone's Home screen and under <b>Paid campaigns</b>, with its pool, rate and end date, every stream below with its picture and a <b>Clip it</b> button, and its best moments. Ended campaigns show there under <b>Our previous campaigns</b>, with their budget and results. Changes show in the app within a few minutes.</span></div>
+      <p class="hint" style="margin:-6px 0 10px">One box per stream or video, oldest first (the last one is marked <b>Latest</b>). Paste a stream's best moments in its own box, straight from the mod's message. Each time then opens that stream at that second, and clippers can clip it in the app with one click. Clippers who joined see every stream; everyone sees the ones with best moments.</p>
+      <div id="streams">${streamRows(c).map(streamRow).join("")}</div>
+      <button type="button" class="btn" data-act="addstream" style="margin-top:8px">+ Add a stream or video</button>
+      <input type="hidden" name="sources"><input type="hidden" name="moments">
+      <div class="sect">Where and how clips are checked</div>
+      <div class="field"><label>Platforms that pay</label><div class="checks">${Object.entries(PLAT).map(([k, l]) => `<label><input type="checkbox" name="platforms" value="${k}" ${pl.has(k) ? "checked" : ""}>${l}</label>`).join("")}</div></div>
+      <div class="g2"><div class="field"><label>Required in the caption</label><input name="required_tag" value="${esc(c.required_tag)}" placeholder="@creatorhandle"><div class="hint">Checked automatically on YouTube.</div></div>
+        <div class="field"><label>Days before views are counted</label><input name="hold_days" type="number" min="0" max="60" value="${c.hold_days}"></div></div>
+      <div class="sect">Money</div>
+      <div class="g2"><div class="field"><label>Total budget for clippers (₹) *</label><input name="budget" type="number" min="0" step="1" value="${c.budget}"></div>
+        <div class="field"><label>Rate per 1,000 views (₹) *</label><input name="rate_per_1k" type="number" min="0" step="0.5" value="${c.rate_per_1k}"></div></div>
+      <div class="g2"><div class="field"><label>Minimum views for a clip to earn</label><input name="min_views" type="number" min="0" value="${c.min_views}"></div>
+        <div class="field"><label>Most one clip can earn (₹, 0 = no limit)</label><input name="max_per_clip" type="number" min="0" value="${c.max_per_clip}"></div></div>
+      <div class="preview" id="mathPrev"></div>
+      <div class="sect">Results (shown once the campaign has ended)</div>
+      <div class="hint" style="margin:-4px 0 10px">An ended campaign becomes a showcase on the website: its views, clips, clippers and budget, never who clipped what. Fill these in from the campaign's report; empty fields use what was counted here.</div>
+      <div class="g3"><div class="field"><label>Total views</label><input name="r_views" type="number" min="0" value="${esc(c.results?.views ?? "")}" placeholder="8981011"></div>
+        <div class="field"><label>Clips posted</label><input name="r_clips" type="number" min="0" value="${esc(c.results?.clips ?? "")}" placeholder="669"></div>
+        <div class="field"><label>Clippers</label><input name="r_clippers" type="number" min="0" value="${esc(c.results?.clippers ?? "")}" placeholder="210"></div></div>
+      <div class="g3"><div class="field"><label>Instagram views</label><input name="r_instagram" type="number" min="0" value="${esc(c.results?.platforms?.instagram ?? "")}"></div>
+        <div class="field"><label>YouTube views</label><input name="r_youtube" type="number" min="0" value="${esc(c.results?.platforms?.youtube ?? "")}"></div>
+        <div class="field"><label>X views</label><input name="r_x" type="number" min="0" value="${esc(c.results?.platforms?.x ?? "")}"></div></div>
+      <div class="g2"><div class="field"><label>TikTok views</label><input name="r_tiktok" type="number" min="0" value="${esc(c.results?.platforms?.tiktok ?? "")}"></div>
+        <div class="field"><label>Views on the best clip</label><input name="r_top_views" type="number" min="0" value="${esc(c.results?.top_views ?? "")}"></div></div>
+      <div class="sect">Dates and look</div>
+      <div class="g3"><div class="field"><label>Starts</label><input name="starts_at" type="datetime-local" value="${toLocalInput(c.starts_at)}"></div>
+        <div class="field"><label>Ends</label><input name="ends_at" type="datetime-local" value="${toLocalInput(c.ends_at)}"></div>
+        <div class="field"><label>Status</label><select name="status">${[["draft", "Draft (hidden)"], ["soon", "Coming soon (shown locked)"], ["live", "Live"], ["paused", "Paused"], ["ended", "Ended"]].map(([v, l]) => `<option value="${v}" ${c.status === v ? "selected" : ""}>${l}</option>`).join("")}</select>
+          <div class="hint" style="margin-top:6px">Live opens at the start time. Leave Starts empty to open right away.</div></div></div>
+      <div class="g2"><div class="field"><label>Accent colour (used when there's no cover)</label><input name="accent" type="color" value="${esc(c.accent)}" style="padding:4px;height:40px"></div>
+        <div class="field"><label>Cover image (16:9)</label>${c.id ? `<input type="file" accept="image/png,image/jpeg,image/webp" data-cover="${esc(c.id)}" style="padding-top:8px">` : `<input type="file" name="cover_new" accept="image/png,image/jpeg,image/webp" style="padding-top:8px"><div class="hint">Uploaded when you press Save.</div>`}</div></div>
+      ${c.cover ? `<img class="cover-prev" src="${esc(c.cover)}" alt="">` : ""}
+    </form></div></div>`;
+  mathPreview();
+
+}
+function mathPreview() {
+  const f = $("#cf"); if (!f) return;
+  const b = +f.budget.value || 0, r = +f.rate_per_1k.value || 0, cap = +f.max_per_clip.value || 0;
+  $("#mathPrev").innerHTML = r ? `This budget pays for about <b>${num(Math.round(b / r * 1000))}</b> views. A clip with 50,000 views earns <b>${inr(Math.min(50 * r, cap || 1e12))}</b>. The campaign closes by itself when the budget is used up.` : "Set a rate to see what the budget buys.";
+}
+
+
+// ---------------------------------------------------------------- the order campaigns are shown in
+async function saveOrder(ids) {
+  try { S.camps = (await api("/api/admin/earn/campaigns/order", {method: "POST", body: {ids}})).campaigns; draw(); toast("Order saved.", "good"); }
+  catch (err) { toast(err.message, "bad"); }
+}
+let dragId = null;
+document.addEventListener("dragstart", e => { const r = e.target.closest?.(".drag-row"); if (!r) return; dragId = r.dataset.cid; r.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", dragId); });
+document.addEventListener("dragend", e => { e.target.closest?.(".drag-row")?.classList.remove("dragging"); $$(".drag-row.over").forEach(x => x.classList.remove("over")); });
+document.addEventListener("dragover", e => { const r = e.target.closest?.(".drag-row"); if (!r || !dragId) return; e.preventDefault(); $$(".drag-row.over").forEach(x => x !== r && x.classList.remove("over")); r.classList.add("over"); });
+document.addEventListener("drop", async e => {
+  const r = e.target.closest?.(".drag-row"); if (!r || !dragId) return;
+  e.preventDefault();
+  const from = S.camps.findIndex(x => x.id === dragId), to = S.camps.findIndex(x => x.id === r.dataset.cid);
+  const ids = S.camps.map(x => x.id).filter(x => x !== dragId);
+  ids.splice(ids.indexOf(r.dataset.cid) + (from < to ? 1 : 0), 0, dragId);
+  dragId = null;
+  if (from !== to) await saveOrder(ids);
+});
+
+// ---------------------------------------------------------------- clippers
+const HANDLE_URL = {youtube: h => "https://www.youtube.com/" + (h.startsWith("@") ? h : "@" + h), instagram: h => "https://www.instagram.com/" + h.replace(/^@/, ""),
+  x: h => "https://x.com/" + h.replace(/^@/, ""), tiktok: h => "https://www.tiktok.com/@" + h.replace(/^@/, "")};
+const HANDLE_LABEL = {youtube: "YT", instagram: "IG", x: "X", tiktok: "TT"};
+// a ready-to-send WhatsApp welcome: the clipper's name and the campaign's real numbers, nothing typed by hand
+function waWelcome(c) {
+  const camp = S.camps.find(x => c.campaigns.includes(x.title)) || S.camps.find(x => x.open) || null;
+  const first = (c.name || "").split(" ")[0];
+  const lines = [`Hi${first ? " " + first : ""}! Thanks for joining the PapiClips campaign 🎬 I'm here to help you with anything you need.`, ""];
+  if (camp) {
+    lines.push(`Your campaign: ${camp.title}`);
+    if (camp.budget) lines.push(`Clipper pool: ${inr(camp.budget)}`);
+    if (camp.rate_per_1k) lines.push(`You earn: ${inr(camp.rate_per_1k)} per 1,000 views` + (camp.max_per_clip ? ` (up to ${inr(camp.max_per_clip)} a clip)` : ""));
+    const src = (camp.raw_sources || "").split("\n").map(x => x.trim()).filter(Boolean)[0];
+    if (src) lines.push(`Streamer to clip: ${src}`);
+    if (camp.required_tag) lines.push(`Put ${camp.required_tag} in every caption`);
+    lines.push("");
+  }
+  lines.push(`Send your clip links here: ${location.origin}/earn#me`, "", "DM me for any queries!");
+  return lines.join("\n");
+}
+const waLink = c => `https://wa.me/${c.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(waWelcome(c))}`;
+function drawClippers() {
+  if (!S.clippers) return "Loading…";
+  const q = (S.cq || "").toLowerCase();
+  const list = S.clippers.filter(c => !q || [c.name, c.email, c.upi, c.whatsapp, c.city, ...Object.values(c.handles)].join(" ").toLowerCase().includes(q));
+  const ready = S.clippers.filter(c => c.profile_complete).length;
+  return `<div class="kpis" style="margin-bottom:16px"><div class="kpi"><span>Signed up</span><b>${num(S.clippers.length)}</b></div>
+      <div class="kpi"><span>Email confirmed</span><b>${num(S.clippers.filter(c => c.email_confirmed).length)}</b></div>
+      <div class="kpi hi"><span>Payout profile done</span><b>${num(ready)}</b></div>
+      <div class="kpi"><span>In a campaign</span><b>${num(S.clippers.filter(c => c.campaigns.length).length)}</b></div></div>
+    <div class="card" style="margin-top:0">
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px"><input id="cq" placeholder="Search name, email, UPI, WhatsApp or handle" value="${esc(S.cq || "")}" style="width:100%;max-width:380px;height:40px;border:1px solid var(--line-2);border-radius:10px;padding:0 12px;background:#fff;outline:0"><span style="color:var(--faint);font-size:13px">${list.length} of ${S.clippers.length}</span></div>
+      ${list.length ? `<div class="tw"><table><thead><tr><th>Clipper</th><th>WhatsApp</th><th>UPI</th><th>Accounts</th><th>Campaigns</th><th class="num">Clips</th><th class="num">Views</th><th class="num">Owed</th><th class="num">Paid</th></tr></thead><tbody>
+      ${list.map(c => `<tr>
+        <td><b>${esc(c.name || "—")}</b>${c.email_confirmed ? "" : ' <span class="chip pending">Email not confirmed</span>'}${c.profile_complete ? "" : ' <span class="chip draft">No payout profile</span>'}
+          <div style="color:var(--faint);font-size:12px">${esc(c.email)}${c.city ? " · " + esc(c.city) : ""}</div></td>
+        <td>${c.whatsapp ? `<div style="font-size:13px">${esc(c.whatsapp)}</div><a class="btn xs primary" style="margin-top:6px" href="${esc(waLink(c))}" target="_blank" rel="noopener" title="Opens WhatsApp with the welcome message typed in">WhatsApp welcome</a>` : "—"}</td>
+        <td>${c.upi ? `<span class="mono">${esc(c.upi)}</span>` : "—"}</td>
+        <td>${Object.entries(c.handles).filter(([, h]) => h).map(([k, h]) => `<a href="${esc(HANDLE_URL[k](h))}" target="_blank" rel="noopener" style="display:block;font-size:13px"><b>${HANDLE_LABEL[k]}</b> ${esc(h)}</a>`).join("") || "—"}</td>
+        <td style="font-size:13px">${c.campaigns.length ? c.campaigns.map(esc).join("<br>") : "—"}</td>
+        <td class="num">${num(c.clips)}${c.pending ? `<div style="font-size:11px;color:var(--warn)">${c.pending} to review</div>` : ""}</td>
+        <td class="num">${num(c.views)}</td><td class="num">${inr(c.owed)}</td><td class="num">${inr(c.paid)}</td></tr>`).join("")}
+      </tbody></table></div>` : `<div class="empty"><b>No one yet</b>People who sign up on the Earn page show up here with their payout details and accounts.</div>`}
+    </div>`;
+}
+
+// ---------------------------------------------------------------- review
+function checkChips(c) {
+  const t = s => esc(s || "");
+  const one = (v, y, n, q, tip) => v === true ? `<span class="y" title="${t(tip)}">✓ ${y}</span>` : v === false ? `<span class="n" title="${t(tip)}">✕ ${n}</span>` : q ? `<span title="${t(tip)}">? ${q}</span>` : "";
+  return `<div class="cks">${one(c.owner, "Owner", "Owner", "Owner", c.owner_detail)}${one(c.after_start, "On time", "Early", "", "")}${one(c.tag, "Tag", "No tag", "", "")}</div>${c.title ? `<div style="font-size:12px;color:var(--faint);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${t(c.title)}">${t(c.title)}</div>` : ""}`;
+}
+function drawReview() {
+  const q = S.queue; if (!q) return "Loading…";
+  const c = q.counts;
+  return `<div class="filters">
+      <div class="seg">${["pending", "approved", "paid", "rejected", "all"].map(s => `<button class="${S.qStatus === s ? "on" : ""}" data-act="qstatus" data-s="${s}">${s[0].toUpperCase() + s.slice(1)}${c[s] !== undefined ? `<span class="c">${c[s]}</span>` : ""}</button>`).join("")}</div>
+      <select class="inp" data-act="qcamp"><option value="">All campaigns</option>${S.camps.map(x => `<option value="${esc(x.id)}" ${S.qCamp === x.id ? "selected" : ""}>${esc(x.title)}</option>`).join("")}</select>
+      <input class="inp" id="qsearch" placeholder="Search clipper or link" value="${esc(S.q)}" style="min-width:220px">
+    </div>
+    ${q.items.length ? `<div class="tw"><table><thead><tr><th><input type="checkbox" data-act="selall"></th><th>Clipper</th><th>Clip</th><th>Cross-check</th><th>Views</th><th>Earns</th><th>Proof</th><th>Status</th><th></th></tr></thead><tbody>
+      ${q.items.map(s => `<tr>
+        <td>${["pending"].includes(s.status) ? `<input type="checkbox" data-sel="${s.id}" ${S.sel.has(s.id) ? "checked" : ""}>` : ""}</td>
+        <td class="who"><b>${esc(s.clipper.name || s.clipper.email.split("@")[0])}</b><small>${esc(s.clipper.email)}</small><small>${esc(s.clipper.handle)} · ${s.clipper.whatsapp ? `<a href="https://wa.me/${esc(s.clipper.whatsapp.replace(/\D/g, ""))}" target="_blank" rel="noopener">${esc(s.clipper.whatsapp)}</a>` : "no WhatsApp"}</small></td>
+        <td class="link"><a href="${esc(safeUrl(s.url))}" target="_blank" rel="noopener">${esc(PLAT[s.platform])} ↗ ${esc(s.url.replace(/^https?:\/\/(www\.)?/, ""))}</a><small>${esc(s.campaign)} · sent ${esc(ago(s.submitted_at))}${s.posted_at ? " · posted " + esc(date(s.posted_at)) : ""}</small>${s.note ? `<small style="color:var(--dim)">“${esc(s.note)}”</small>` : ""}</td>
+        <td>${checkChips(s.checks)}</td>
+        <td>${s.status === "pending" ? `<input class="vin" type="number" min="0" value="${s.views}" data-views="${s.id}">` : `<span class="num">${num(s.views)}</span>`}<div style="font-size:11px;color:var(--faint)">${s.views_source === "api" ? "from YouTube " + esc(ago(s.views_at)) : s.views_source === "manual" ? "typed in" : "not counted yet"}</div></td>
+        <td class="num">${s.status === "approved" || s.status === "paid" ? inr(s.amount) : "~" + inr(s.estimate)}</td>
+        <td>${s.has_proof ? `<a href="/api/earn/proof/${s.id}" target="_blank"><img class="thumb" src="/api/earn/proof/${s.id}" alt="proof" loading="lazy"></a>` : `<span style="color:var(--faint);font-size:12px">${s.platform === "youtube" ? "not needed" : "none yet"}</span>`}</td>
+        <td>${s.status === "pending" ? (s.ready ? '<span class="chip ready">Ready</span>' : `<span class="chip pending" title="Views are counted ${esc(date(s.ready_at))}">Holding</span>`) : chip(s.status)}${s.review_note ? `<div style="font-size:11px;color:var(--faint);max-width:160px">${esc(s.review_note)}</div>` : ""}</td>
+        <td><div style="display:flex;gap:6px;justify-content:flex-end">${s.status === "pending" ? `<button class="btn xs good" data-act="approve" data-id="${s.id}">Approve</button><button class="btn xs bad" data-act="reject" data-id="${s.id}">Reject</button>`
+          : s.status !== "paid" ? `<button class="btn xs" data-act="reopen" data-id="${s.id}">Back to review</button>` : ""}</div></td></tr>`).join("")}</tbody></table></div>`
+      : `<div class="empty"><b>Nothing here</b>${S.qStatus === "pending" ? "No clips are waiting for review." : "No clips match."}</div>`}
+    ${S.sel.size ? `<div class="bulk"><b>${S.sel.size} selected</b><span style="color:var(--frame-dim);font-size:13px">Approves with the views shown in each row</span><span style="flex:1"></span><button class="btn good" data-act="bulk-approve">Approve selected</button><button class="btn" data-act="bulk-reject">Reject selected</button><button class="btn" data-act="clear-sel">Clear</button></div>` : ""}`;
+}
+
+// ---------------------------------------------------------------- payouts
+function drawPayouts() {
+  const o = S.owed; if (!o) return "Loading…";
+  return `<div class="card" style="margin-top:0"><h3>Owed now</h3>${o.owed.length ? `<div class="tw"><table><thead><tr><th>Clipper</th><th>UPI ID</th><th>WhatsApp</th><th>Clips</th><th>Views</th><th style="text-align:right">Amount</th><th></th></tr></thead><tbody>
+      ${o.owed.map(x => `<tr><td class="who"><b>${esc(x.name || x.email.split("@")[0])}</b><small>${esc(x.email)}</small></td>
+        <td><code>${esc(x.upi || "missing")}</code> ${x.upi ? `<button class="btn xs" data-act="copy" data-v="${esc(x.upi)}">Copy</button>` : ""}</td>
+        <td>${x.whatsapp ? `<a href="https://wa.me/${esc(x.whatsapp.replace(/\D/g, ""))}" target="_blank" rel="noopener">${esc(x.whatsapp)}</a>` : "—"}</td>
+        <td class="num">${x.clips}</td><td class="num">${num(x.views)}</td><td class="num" style="text-align:right;font-size:16px">${inr(x.amount)}</td>
+        <td><div style="display:flex;justify-content:flex-end"><button class="btn xs dark" data-act="pay" data-id="${esc(x.user_id)}" data-amt="${x.amount}" data-name="${esc(x.name || x.email)}">Mark paid</button></div></td></tr>`).join("")}</tbody></table></div>
+      <div class="note info">Send the money from your UPI app first, then press <b>Mark paid</b> and paste the UTR number. The clipper gets a notification.</div>`
+      : `<div class="empty"><b>Nobody is owed anything</b>Approved clips show up here.</div>`}</div>
+    <div class="card"><h3>Sent</h3>${o.payouts.length ? `<div class="tw"><table><thead><tr><th>Date</th><th>Clipper</th><th>UPI</th><th>Clips</th><th>UTR / reference</th><th style="text-align:right">Amount</th></tr></thead><tbody>
+      ${o.payouts.map(p => `<tr><td>${esc(date(p.created_at))}</td><td class="who"><b>${esc(p.name || p.email)}</b></td><td><code>${esc(p.upi)}</code></td><td>${p.clips}</td><td>${esc(p.ref || "—")}</td><td class="num" style="text-align:right">${inr(p.amount)}</td></tr>`).join("")}</tbody></table></div>`
+      : `<div class="empty"><b>No payouts yet</b></div>`}</div>`;
+}
+
+// ---------------------------------------------------------------- settings
+function drawSettings() {
+  const s = S.sum.settings;
+  return `<div class="card" style="margin-top:0;max-width:720px"><h3>YouTube API key</h3>
+    <p style="color:var(--dim)">With a key, every YouTube Short that's sent in is checked automatically: whose channel it's on, when it was posted, whether the caption has the required tag, and its views (refreshed every few hours). Without one, YouTube views are typed in by hand like the others.</p>
+    ${s.youtube_ready ? `<div class="note info">A key is set (${esc(s.youtube_hint)})${s.youtube_from_env ? ", read from .env" : ""}. Views refresh by themselves.</div>` : `<div class="note warn">No key yet.</div>`}
+    <form id="ytf" style="margin-top:16px;display:flex;gap:8px"><input class="inp" name="key" placeholder="AIza…" style="flex:1" autocomplete="off"><button class="btn primary">Save and test</button>${s.youtube_ready && !s.youtube_from_env ? `<button class="btn" type="button" data-act="yt-clear">Remove</button>` : ""}</form>
+    <ol class="steps"><li>Open <a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank" rel="noopener">YouTube Data API v3</a> in Google Cloud and press <b>Enable</b>.</li>
+      <li>Go to <b>APIs &amp; Services → Credentials → Create credentials → API key</b>.</li>
+      <li>Restrict the key to <b>YouTube Data API v3</b>, then paste it above. The free quota covers about 500,000 view checks a day.</li></ol></div>
+    <div class="card" style="max-width:720px"><h3>Email confirmation (sign-up codes)</h3><p style="color:var(--dim)">Clippers must confirm their email before they can join or send clips. Emails are sent through SMTP: set <code>CLIPKONTRAST_SMTP_HOST</code>, <code>CLIPKONTRAST_SMTP_USER</code>, <code>CLIPKONTRAST_SMTP_PASSWORD</code>, <code>CLIPKONTRAST_MAIL_FROM</code> and <code>CLIPKONTRAST_VERIFY_EMAIL=1</code> in <code>.env</code>. Brevo, Resend or a Gmail app password all work. Sign in with Google needs no email confirmation.</p>
+    <div class="note ${S.mail ? "info" : "warn"}">${S.mail ? "Email sending is set up." : "Email sending isn't set up yet, so confirmation emails can't go out."}</div></div>`;
+}
+
+// ---------------------------------------------------------------- streams, each with its own best moments
+const TS_LINE = /^\s*(\d{1,2}:)?\d{1,2}:\d{2}/;
+function streamRows(c) {
+  if (c.stream_rows && c.stream_rows.length) return c.stream_rows;
+  return [{name: "", url: "", timestamps: ""}];
+}
+function streamRow(r) {
+  const n = (r.timestamps || "").split("\n").filter(l => TS_LINE.test(l)).length;
+  return `<div class="srow">
+    <div class="srow-h"><div class="s-thumb" title="The picture clippers see in the app">${thumbImg(r.url)}</div><input class="inp s-name" value="${esc(r.name || "")}" placeholder="Name, e.g. Day 2" maxlength="60">
+      <input class="inp s-url${r.url ? "" : " need"}" value="${esc(r.url || "")}" placeholder="Link: https://youtube.com/live/…" maxlength="300">
+      <button type="button" class="btn xs" data-act="delstream" title="Remove this stream">Remove</button></div>
+    <textarea class="inp s-ts" rows="4" placeholder="Best moments of this stream, one per line (optional):&#10;2:37:12 heavy driving race to the club&#10;2:44:30-2:45:53">${esc(r.timestamps || "")}</textarea>
+    <div class="s-info">${n ? `✓ ${n} moments` : "No best moments yet"}</div></div>`;
+}
+// The picture of a stream's link, as the PapiClips app shows it (read by this server: YouTube, Twitch, Kick).
+function thumbImg(url) {
+  url = (url || "").trim();
+  if (!/^https?:\/\/([\w-]+\.)*(youtube\.com|youtu\.be|twitch\.tv|kick\.com)\//i.test(url)) return url ? "No picture" : "Add a link";
+  return `<img src="/api/link-thumb?url=${encodeURIComponent(url)}" alt="" loading="lazy">No picture`;
+}
+let thumbTimer = 0;
+document.addEventListener("error", e => { if (e.target?.closest?.(".s-thumb")) e.target.classList.add("broken"); }, true);
+function readStreams() {
+  return $$("#streams .srow").map(row => ({name: row.querySelector(".s-name").value.trim().replace(/[|\n]/g, " "),
+    url: row.querySelector(".s-url").value.trim(), timestamps: row.querySelector(".s-ts").value}))
+    .filter(r => r.url || r.timestamps.trim());
+}
+// The boxes go to the server as the two texts it keeps: the streams, one "Name | link" per line, and the best moments,
+// each stream's times under a line with its name and link, so every time is tied to its own stream.
+function serializeStreams(f) {
+  const rows = readStreams();
+  for (const r of rows) {
+    if (r.url && !/^https?:\/\//i.test(r.url)) r.url = "https://" + r.url;
+    if (r.timestamps.trim() && !r.url) throw new Error(`Add the link of "${r.name || "the stream"}", so its best moments open it.`);
+  }
+  // the same link in two boxes is one stream: its times are put together
+  const byUrl = new Map();
+  for (const r of rows) {
+    const k = r.url.toLowerCase();
+    if (r.url && byUrl.has(k)) { const o = byUrl.get(k); o.timestamps = [o.timestamps.trim(), r.timestamps.trim()].filter(Boolean).join("\n"); o.name = o.name || r.name; }
+    else byUrl.set(r.url ? k : Symbol(), r);
+  }
+  rows.length = 0; rows.push(...byUrl.values());
+  f.sources.value = rows.filter(r => r.url).map(r => (r.name ? r.name + " | " : "") + r.url).join("\n");
+  f.moments.value = rows.filter(r => r.timestamps.trim()).map(r => `${r.name || "Stream"} | ${r.url}\n${r.timestamps.trim()}`).join("\n\n");
+}
+document.addEventListener("input", e => {
+  const row = e.target.closest?.(".srow"); if (!row) return;
+  if (e.target.classList.contains("s-url")) {
+    clearTimeout(thumbTimer);
+    thumbTimer = setTimeout(() => { const t = row.querySelector(".s-thumb"); if (t) t.innerHTML = thumbImg(e.target.value); }, 600);
+  }
+  const n = row.querySelector(".s-ts").value.split("\n").filter(l => TS_LINE.test(l)).length;
+  row.querySelector(".s-info").textContent = n ? `✓ ${n} moments` : "No best moments yet";
+});
+
+// ---------------------------------------------------------------- how the pasted best moments are read
+let mpTimer = 0;
+function momentsPreview() {
+  clearTimeout(mpTimer);
+  mpTimer = setTimeout(async () => {
+    const f = $("#cf"), box = $("#mprev"); if (!f || !box) return;
+    if (!f.moments.value.trim()) { box.innerHTML = ""; return; }
+    try {
+      const r = await api("/api/admin/earn/moments-preview", {method: "POST", body: {moments: f.moments.value, sources: f.sources.value}});
+      box.innerHTML = `<b>${r.count} moments read</b>` + r.groups.map(g => `<div class="${g.url ? "ok" : "warn"}">${g.url ? "✓" : "⚠"} <b>${esc(g.title)}</b> · ${g.count} · ${g.url
+        ? `opens <a href="${esc(g.url)}" target="_blank" rel="noopener">${esc(g.url.replace(/^https?:\/\/(www\.)?/, "").slice(0, 60))}</a>`
+        : "no stream link: write its name like under Streams and footage, or put its link after a |"}</div>`).join("");
+    } catch (err) { box.textContent = err.message; }
+  }, 350);
+}
+
+
+// ---------------------------------------------------------------- bug reports
+function drawBugs() {
+  const b = S.bugs; if (!b) return "Loading…";
+  const c = b.counts, all = Object.values(c).reduce((x, y) => x + y, 0);
+  const items = b.items.filter(x => S.bStatus === "all" || x.status === S.bStatus);
+  return `<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <div class="seg">${[["new", "New"], ["seen", "Looking into it"], ["done", "Fixed"], ["all", "All"]].map(([k, l]) => `<button class="${S.bStatus === k ? "on" : ""}" data-act="bstatus" data-s="${k}">${l}<span class="c">${k === "all" ? all : c[k] || 0}</span></button>`).join("")}</div>
+      <span style="color:var(--frame-dim);font-size:13px;flex:1">People report from the app's <b>Report a problem</b> button, or at <a href="/report" target="_blank">papiclips.com/report</a>.</span>
+      <a class="btn" href="/api/admin/feedback.csv?status=${S.bStatus === "all" ? "" : S.bStatus}" download title="Every report in this list, with the technical details, as a spreadsheet">${ic("down")}Download CSV</a></div>
+    ${items.length ? items.map(x => `<div class="card bug">
+      <div class="bh"><span class="bpill ${x.source === "app" ? "isapp" : ""}">${x.source === "app" ? "App" : x.source === "website" ? "Website" : esc(x.kind)}</span>
+        <b>#${x.id}</b><span class="dimt">${ago(x.t)}</span>
+        <span class="dimt">${esc(x.name || x.email || x.contact || "no contact given")}${x.contact && (x.name || x.email) ? " · " + esc(x.contact) : ""}</span>
+        <span style="flex:1"></span>
+        ${x.contact ? `<button class="btn xs" data-act="copy" data-v="${esc(x.contact)}" data-what="Contact">Copy contact</button>` : ""}
+        ${x.status !== "seen" ? `<button class="btn xs" data-act="bset" data-id="${x.id}" data-s="seen">Looking into it</button>` : ""}
+        ${x.status !== "done" ? `<button class="btn xs good" data-act="bset" data-id="${x.id}" data-s="done">Fixed</button>` : `<button class="btn xs" data-act="bset" data-id="${x.id}" data-s="new">Reopen</button>`}</div>
+      <div class="bmsg">${esc(x.message)}</div>
+      ${x.app ? `<div class="dimt" style="margin-top:8px">${esc(x.app)}</div>` : ""}
+      ${x.page && !x.source ? `<div class="dimt">Page: ${esc(x.page)}</div>` : ""}
+      ${x.context && x.source !== "website" ? `<div class="dimt">While: ${esc(x.context)}</div>` : ""}
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        ${x.shot ? `<a class="btn xs" href="/api/admin/feedback/${x.id}/shot" target="_blank" rel="noopener">See screenshot</a>` : ""}
+        ${x.diag ? `<button class="btn xs" data-act="bdiag" data-id="${x.id}">${S.open.has(x.id) ? "Hide" : "Show"} technical details</button><button class="btn xs" data-act="copy" data-v="${esc("Report #" + x.id + "\n" + x.message + "\n\n" + x.app + "\n\n" + x.diag)}" data-what="Report">Copy all</button>` : ""}</div>
+      ${x.diag && S.open.has(x.id) ? `<pre class="diag">${esc(x.diag)}</pre>` : ""}
+    </div>`).join("") : `<div class="card" style="text-align:center;color:var(--frame-dim)">${S.bStatus === "new" ? "No new reports. 🎉" : "Nothing here."}</div>`}`;
+}
+
+// ---------------------------------------------------------------- drawing and loading
+function draw() {
+  nav();
+  $("#view").innerHTML = !S.sum ? "Loading…" : {overview: drawOverview, campaigns: drawCampaigns, review: drawReview, clippers: drawClippers, payouts: drawPayouts, bugs: drawBugs, settings: drawSettings}[S.tab]();
+}
+async function loadQueue() { S.queue = await api(`/api/admin/earn/submissions?status=${S.qStatus === "all" ? "" : S.qStatus}&campaign=${encodeURIComponent(S.qCamp)}&q=${encodeURIComponent(S.q)}`); }
+async function load() {
+  [S.sum, S.camps] = await Promise.all([api("/api/admin/earn/summary"), api("/api/admin/earn/campaigns")]);
+  if (S.tab === "review") await loadQueue();
+  if (S.tab === "payouts") S.owed = await api("/api/admin/earn/owed");
+  if (S.tab === "clippers") S.clippers = (await api("/api/admin/earn/clippers")).clippers;
+  if (S.tab === "bugs") S.bugs = await api("/api/admin/feedback");
+  else if (!S.bugs) api("/api/admin/feedback").then(b => { S.bugs = b; nav(); }).catch(() => {});
+  if (S.tab === "settings") { try { S.mail = (await api("/api/public")).mail; } catch {} }
+  draw();
+}
+function go(tab) { S.tab = tab; S.sel.clear(); history.pushState(null, "", "/admin/earn/" + tab); draw(); load().catch(e => toast(e.message, "bad")); }
+addEventListener("popstate", () => { S.tab = location.pathname.split("/")[3] || "overview"; load(); });
+
+document.addEventListener("click", async e => {
+  const t = e.target.closest("[data-tab]"); if (t) { e.preventDefault(); go(t.dataset.tab); return; }
+  const a = e.target.closest("[data-act]"); if (!a) return;
+  const act = a.dataset.act, id = a.dataset.id;
+  try {
+    if (act === "new") openForm();
+    else if (act === "edit") openForm(S.camps.find(c => c.id === id));
+    else if (act === "close" || (act === "close-bg" && e.target === a)) $("#modal").innerHTML = "";
+    else if (act === "status") {
+      const c = await api("/api/admin/earn/campaigns/" + id, {method: "PUT", body: {status: a.dataset.s}});
+      toast(c && c.state === "open" ? "Live and open. Clippers can join now." : c && c.state === "starts" ? `Live. It opens ${fmtWhen(c.starts_at)}, and shows locked until then.` : "Campaign is now " + (STATUS_LABEL[a.dataset.s] || a.dataset.s).toLowerCase() + ".", c && c.state === "starts" ? "" : "good");
+      await load(); }
+    else if (act === "move") {
+      const ids = S.camps.map(x => x.id), i = ids.indexOf(id), j = i + Number(a.dataset.d);
+      if (j < 0 || j >= ids.length) return;
+      [ids[i], ids[j]] = [ids[j], ids[i]];
+      await saveOrder(ids);
+    }
+    else if (act === "delete") { if (!confirm("Delete this campaign and every clip sent to it? This can't be undone.")) return; await api("/api/admin/earn/campaigns/" + id, {method: "DELETE"}); $("#modal").innerHTML = ""; toast("Deleted."); await load(); }
+    else if (act === "review-camp") { S.qCamp = id; S.qStatus = "pending"; go("review"); }
+    else if (act === "qstatus") { S.qStatus = a.dataset.s; S.sel.clear(); await loadQueue(); draw(); }
+    else if (act === "approve" || act === "reject" || act === "reopen") {
+      let note = "";
+      if (act === "reject") { note = prompt("Why isn't it approved? The clipper sees this.", "Doesn't follow the campaign rules."); if (note === null) return; }
+      const vin = $(`[data-views="${id}"]`), body = {action: act, note};
+      if (vin && act === "approve") body.views = vin.value;
+      const r = await api("/api/admin/earn/submissions/" + id, {method: "POST", body});
+      toast(act === "approve" ? `Approved: ${inr(r.amount)}` : act === "reject" ? "Rejected." : "Back in review.", act === "approve" ? "good" : "");
+      S.sel.delete(+id); await load();
+    }
+    else if (act === "bulk-approve" || act === "bulk-reject") {
+      let note = "";
+      if (act === "bulk-reject") { note = prompt("Reason shown to the clippers:", "Doesn't follow the campaign rules."); if (note === null) return; }
+      for (const sid of S.sel) { const v = $(`[data-views="${sid}"]`); if (v) await api(`/api/admin/earn/submissions/${sid}/views`, {method: "POST", body: {views: v.value}}); }
+      const r = await api("/api/admin/earn/submissions/bulk", {method: "POST", body: {ids: [...S.sel], action: act === "bulk-approve" ? "approve" : "reject", note}});
+      toast(`${r.done} done${r.problems.length ? ". " + r.problems[0] : ""}`, r.problems.length ? "bad" : "good"); S.sel.clear(); await load();
+    }
+    else if (act === "clear-sel") { S.sel.clear(); draw(); }
+    else if (act === "selall") { S.queue.items.filter(s => s.status === "pending").forEach(s => a.checked ? S.sel.add(s.id) : S.sel.delete(s.id)); draw(); }
+    else if (act === "yt-refresh") { const r = await api("/api/admin/earn/refresh", {method: "POST", body: {}}); toast(`${r.updated} YouTube clips updated.`, "good"); await load(); }
+    else if (act === "copy") { await navigator.clipboard.writeText(a.dataset.v); toast((a.dataset.what || "UPI ID") + " copied."); }
+    else if (act === "bstatus") { S.bStatus = a.dataset.s; draw(); }
+    else if (act === "addstream") { $("#streams").insertAdjacentHTML("beforeend", streamRow({name: "", url: "", timestamps: ""})); $("#streams .srow:last-child .s-name").focus(); }
+    else if (act === "delstream") { const row = a.closest(".srow"); if (!row.querySelector(".s-ts").value.trim() || confirm("Remove this stream and its best moments?")) row.remove(); }
+    else if (act === "bdiag") { const n = Number(id); S.open.has(n) ? S.open.delete(n) : S.open.add(n); draw(); }
+    else if (act === "bset") { await api("/api/admin/feedback/" + id, {method: "POST", body: {status: a.dataset.s}}); S.bugs = await api("/api/admin/feedback"); draw(); toast(a.dataset.s === "done" ? "Marked fixed." : a.dataset.s === "seen" ? "Marked as looking into it." : "Reopened."); }
+    else if (act === "pay") {
+      const ref = prompt(`Send ${inr(+a.dataset.amt)} to ${a.dataset.name} from your UPI app first.\n\nThen paste the UTR / transaction reference here:`);
+      if (ref === null) return;
+      const r = await api("/api/admin/earn/payouts", {method: "POST", body: {user_id: id, ref}}); toast(`Recorded ${inr(r.amount)} for ${r.clips} clips.`, "good"); await load();
+    }
+    else if (act === "yt-clear") { await api("/api/admin/earn/settings", {method: "PUT", body: {youtube_key: ""}}); toast("Key removed."); await load(); }
+  } catch (err) { toast(err.message, "bad"); }
+});
+document.addEventListener("change", async e => {
+  if (e.target.dataset.sel) { e.target.checked ? S.sel.add(+e.target.dataset.sel) : S.sel.delete(+e.target.dataset.sel); draw(); return; }
+  if (e.target.dataset.act === "qcamp") { S.qCamp = e.target.value; await loadQueue(); draw(); return; }
+  if (e.target.dataset.views) {
+    try { await api(`/api/admin/earn/submissions/${e.target.dataset.views}/views`, {method: "POST", body: {views: e.target.value}}); toast("Views saved."); await loadQueue(); draw(); } catch (err) { toast(err.message, "bad"); }
+    return;
+  }
+  if (e.target.dataset.cover && e.target.files[0]) {
+    const fd = new FormData(); fd.append("file", e.target.files[0]);
+    try { const c = await api(`/api/admin/earn/campaigns/${e.target.dataset.cover}/cover`, {method: "POST", body: fd}); toast("Cover saved.", "good"); await load(); openForm(S.camps.find(x => x.id === c.id)); } catch (err) { toast(err.message, "bad"); }
+  }
+});
+document.addEventListener("input", e => {
+  if (e.target.closest("#cf")) mathPreview();
+  if (e.target.id === "qsearch") { clearTimeout(S.qt); S.q = e.target.value; S.qt = setTimeout(async () => { await loadQueue(); draw(); const i = $("#qsearch"); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }, 350); }
+});
+document.addEventListener("input", e => {
+  if (e.target.id !== "cq") return;
+  S.cq = e.target.value; const pos = e.target.selectionStart; draw();
+  const i = $("#cq"); if (i) { i.focus(); i.setSelectionRange(pos, pos); }
+});
+document.addEventListener("submit", async e => {
+  e.preventDefault();
+  const f = e.target;
+  try {
+    if (f.id === "cf") {
+      serializeStreams(f);
+      const all = Object.fromEntries(new FormData(f).entries());
+      // the showcase numbers travel together, as "results"
+      const d = Object.fromEntries(Object.entries(all).filter(([k]) => !k.startsWith("r_")));
+      d.results = {views: all.r_views, clips: all.r_clips, clippers: all.r_clippers, top_views: all.r_top_views,
+                   platforms: {instagram: all.r_instagram, youtube: all.r_youtube, x: all.r_x, tiktok: all.r_tiktok}};
+      d.platforms = $$('input[name="platforms"]:checked', f).map(x => x.value);
+      d.starts_at = d.starts_at ? new Date(d.starts_at).getTime() / 1000 : null;
+      d.ends_at = d.ends_at ? new Date(d.ends_at).getTime() / 1000 : null;
+      const file = f.cover_new && f.cover_new.files[0]; delete d.cover_new;
+      const c = await api("/api/admin/earn/campaigns" + (f.dataset.id ? "/" + f.dataset.id : ""), {method: f.dataset.id ? "PUT" : "POST", body: d});
+      if (file) { const fd = new FormData(); fd.append("file", file); try { await api(`/api/admin/earn/campaigns/${c.id}/cover`, {method: "POST", body: fd}); } catch (err) { toast("Saved, but the cover didn't upload: " + err.message, "bad"); } }
+      toast(f.dataset.id ? "Saved." : (c.status === "live" ? "Campaign created and live." : "Campaign created. Press Go live when it's ready."), "good");
+      await load();
+      if (!f.dataset.id) openForm(S.camps.find(x => x.id === c.id)); else $("#modal").innerHTML = "";
+    }
+    if (f.id === "ytf") { await api("/api/admin/earn/settings", {method: "PUT", body: {youtube_key: f.key.value}}); toast("Key works and is saved.", "good"); await load(); }
+  } catch (err) { toast(err.message, "bad"); }
+});
+draw();
+load().catch(e => toast(e.message, "bad"));
+</script>
+</body>
+</html>

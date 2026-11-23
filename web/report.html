@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Report a problem · PapiClips</title>
+<meta name="description" content="Something not working in PapiClips? Tell us and we'll fix it in the next update.">
+<meta name="theme-color" content="#1E1612">
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/svg+xml" href="/brand/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--brand:#C6F432;--ink:#1A2100;--soft:#F5FDE0;--deep:#4E6B00;
+  --frame:#1E1612;--frame-2:#2C221D;--frame-text:#F4EEEA;--frame-dim:#A99A91;
+  --muted:#F7F4F1;--line:#EEE8E4;--line-2:#E1D9D3;--text:#211813;--dim:#6D6159;--faint:#A0948C;
+  --warn-soft:#FFF4E0;--r-lg:18px;--r:12px;color-scheme:light}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--muted);color:var(--text);font:16px/1.55 "Geist","Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+h1,h2,p{margin:0}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.wrap{max-width:640px;margin:0 auto;padding:0 20px}
+header{background:var(--frame);color:var(--frame-text)}
+header .bar{display:flex;align-items:center;gap:16px;height:64px;max-width:1080px;margin:0 auto;padding:0 20px}
+header .bar img{height:28px;width:auto}
+header .bar nav{margin-left:auto;display:flex;gap:6px}
+header .bar nav a{color:var(--frame-dim);text-decoration:none;font-size:14px;font-weight:500;padding:8px 12px;border-radius:10px}
+header .bar nav a:hover{color:var(--frame-text);background:var(--frame-2)}
+.hero{background:var(--frame);color:var(--frame-text);padding:28px 0 72px}
+.hero h1{font-size:clamp(30px,5vw,42px);line-height:1.1;letter-spacing:-.02em;font-weight:800}
+.hero p{color:var(--frame-dim);margin-top:10px;font-size:17px}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);padding:24px;margin-top:-48px;display:flex;flex-direction:column;gap:18px}
+label.f{display:flex;flex-direction:column;gap:7px;font-size:14px;font-weight:600}
+label.f .opt{font-weight:400;color:var(--faint)}
+input,textarea,select{font:inherit;color:inherit;border:1px solid var(--line-2);border-radius:var(--r);padding:11px 13px;background:#fff;width:100%}
+textarea{resize:vertical;min-height:52px}
+input:focus,textarea:focus,select:focus{outline:none;border-color:#9BC21A;box-shadow:0 0 0 3px rgba(198,244,50,.35)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 22px;border-radius:var(--r);border:1px solid var(--line-2);
+  background:#fff;color:var(--text);font:inherit;font-weight:600;font-size:15px;cursor:pointer;text-decoration:none}
+.btn:hover{background:var(--muted)}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:var(--ink)}
+.btn.primary:hover{background:#D4FA5A}
+.btn:disabled{opacity:.6;cursor:default}
+.shot{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:14px;color:var(--dim)}
+.shot img{max-height:64px;border-radius:8px;border:1px solid var(--line)}
+.lnk{border:0;background:none;padding:0;font:inherit;font-weight:600;text-decoration:underline;cursor:pointer;color:var(--deep)}
+.tip{background:var(--soft);color:var(--deep);border-radius:var(--r);padding:14px 16px;font-size:14.5px}
+.err{background:#FFF1F2;color:#7A1020;border-radius:var(--r);padding:12px 14px;font-size:14.5px}
+.done{text-align:center;padding:24px 8px}
+.done b{display:block;font-size:24px;margin-bottom:6px}
+.done p{color:var(--dim)}
+.foot{color:var(--dim);font-size:14px;text-align:center;padding:24px 0 48px}
+</style>
+</head>
+<body>
+<header><div class="bar">
+  <a href="/" aria-label="PapiClips home"><img src="/brand/logo-light.svg" alt="PapiClips"></a>
+  <nav><a href="/download">Download app</a><a href="/#campaigns">Campaigns</a></nav>
+</div></header>
+
+<section class="hero"><div class="wrap">
+  <h1>Report a problem</h1>
+  <p>Something not working? Tell us. Fixes go out to everyone in the next app update.</p>
+</div></section>
+
+<main class="wrap">
+  <form class="card" id="f" novalidate>
+    <div class="tip">Using the PapiClips app? Its <b>Report a problem</b> button (left side, or under your name) sends the error details too, so we can fix it faster.</div>
+    <label class="f">Where's the problem?
+      <select id="where">
+        <option value="App">The PapiClips app (making clips)</option>
+        <option value="Install">Downloading or installing the app</option>
+        <option value="Earn">The website: campaigns, clips or payouts</option>
+        <option value="Other">Something else</option>
+      </select></label>
+    <label class="f">What went wrong?<textarea id="msg" rows="5" maxlength="4000" required placeholder="e.g. The installer says 'Windows protected your PC' and nothing happens, or my clip shows rejected"></textarea></label>
+    <label class="f"><span>What were you doing when it happened? <span class="opt">optional</span></span><textarea id="steps" rows="2" maxlength="4000" placeholder="The steps, the link you pasted, the error you saw"></textarea></label>
+    <label class="f"><span>Instagram, email or WhatsApp, so we can reply <span class="opt">optional</span></span><input id="contact" maxlength="200" placeholder="@yourname"></label>
+    <div class="shot"><label class="btn" style="height:40px;font-size:14px">Add a screenshot<input type="file" id="file" accept="image/png,image/jpeg,image/webp" hidden></label>
+      <span id="shotInfo">A picture of the error helps a lot.</span><img id="prev" alt="" hidden><button type="button" class="lnk" id="shotX" hidden>Remove</button></div>
+    <div class="err" id="err" role="alert" hidden></div>
+    <button class="btn primary" id="send">Send report</button>
+  </form>
+  <div class="card done" id="done" hidden><b>Thanks, report <span id="rid"></span> sent!</b><p>We read every report. If you left a contact, we may message you about it.</p>
+    <p style="margin-top:18px"><a class="btn" href="/">Back to PapiClips</a></p></div>
+  <p class="foot">Never send passwords, OTPs or your UPI PIN in a report. We'll never ask for them.</p>
+</main>
+
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  let shot = null, sending = false;
+  // A screenshot is made smaller here first (at most 1600 px, under about 900 KB), so it sends quickly on mobile data.
+  async function shrink(file) {
+    const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error("That file isn't a picture.")); i.src = URL.createObjectURL(file); });
+    let w = img.naturalWidth, h = img.naturalHeight, q = 0.85;
+    const k = Math.min(1, 1600 / w, 1600 / h); w = Math.round(w * k); h = Math.round(h * k);
+    const cv = document.createElement("canvas");
+    for (let n = 0; n < 6; n++) {
+      cv.width = w; cv.height = h; const g = cv.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, w, h); g.drawImage(img, 0, 0, w, h);
+      const b = await new Promise(r => cv.toBlob(r, "image/jpeg", q));
+      if (b && b.size < 900 * 1024) return b;
+      q = Math.max(0.5, q - 0.12); w = Math.round(w * 0.8); h = Math.round(h * 0.8);
+    }
+    throw new Error("That picture is too big. Try a smaller screenshot.");
+  }
+  function clearShot() { shot = null; $("file").value = ""; $("prev").hidden = true; $("shotX").hidden = true; $("shotInfo").textContent = "A picture of the error helps a lot."; }
+  async function setShot(file) {
+    if (!file) return;
+    try { shot = await shrink(file); $("prev").src = URL.createObjectURL(shot); $("prev").hidden = false; $("shotX").hidden = false; $("shotInfo").textContent = "Screenshot added."; }
+    catch (e) { clearShot(); showErr(e.message); }
+  }
+  function showErr(m) { $("err").textContent = m; $("err").hidden = !m; }
+  $("file").onchange = e => setShot(e.target.files[0]);
+  $("shotX").onclick = clearShot;
+  document.addEventListener("paste", e => { const f = [...(e.clipboardData && e.clipboardData.files || [])].find(f => f.type.startsWith("image/")); if (f) { e.preventDefault(); setShot(f); } });
+  try { $("contact").value = localStorage.getItem("ck_report_contact") || ""; } catch (e) {}
+  $("f").onsubmit = async e => {
+    e.preventDefault(); if (sending) return; showErr("");
+    const msg = $("msg").value.trim();
+    if (msg.length < 3) { $("msg").focus(); return showErr("Write a few words about what went wrong."); }
+    const ua = navigator.userAgent || "";
+    const sys = /Windows NT 10/.test(ua) ? "Windows 10/11" : /Windows/.test(ua) ? "Windows" : /Android/.test(ua) ? "Android" : /iPhone|iPad/.test(ua) ? "iPhone/iPad" : /Mac OS X/.test(ua) ? "Mac" : /Linux/.test(ua) ? "Linux" : "unknown";
+    const br = /Edg\//.test(ua) ? "Edge" : /OPR\//.test(ua) ? "Opera" : /Chrome\//.test(ua) ? "Chrome" : /Firefox\//.test(ua) ? "Firefox" : /Safari\//.test(ua) ? "Safari" : "browser";
+    const fd = new FormData();
+    fd.append("message", "[" + $("where").value + "] " + msg);
+    fd.append("steps", $("steps").value.trim());
+    fd.append("contact", $("contact").value.trim());
+    fd.append("app", "Website · " + sys + " · " + br + " · screen " + screen.width + "x" + screen.height);
+    fd.append("context", $("where").value);
+    fd.append("source", "website");
+    if (shot) fd.append("screenshot", shot, "screenshot.jpg");
+    try { localStorage.setItem("ck_report_contact", $("contact").value.trim()); } catch (e) {}
+    sending = true; $("send").disabled = true; $("send").textContent = "Sending…";
+    try {
+      const r = await fetch("/api/public/bug-report", {method: "POST", body: fd});
+      let d = {}; try { d = await r.json(); } catch (e) {}
+      if (!r.ok) throw new Error(typeof d.detail === "string" ? d.detail : "The report couldn't be sent. Try again in a minute.");
+      $("rid").textContent = d.id ? "#" + d.id : ""; $("f").hidden = true; $("done").hidden = false; scrollTo(0, 0);
+    } catch (err) { showErr(err.message || "The report couldn't be sent. Check your internet and try again."); }
+    sending = false; $("send").disabled = false; $("send").textContent = "Send report";
+  };
+})();
+</script>
+</body>
+</html>

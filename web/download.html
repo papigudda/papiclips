@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Download PapiClips: the free AI clip maker for Windows, Mac and Linux</title>
+<meta name="description" content="Download PapiClips, the free AI clip maker. It finds the best moments of a stream and makes captioned vertical clips, on your own computer. Windows, Mac and Linux.">
+<meta name="theme-color" content="#1E1612">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="PapiClips">
+<meta property="og:title" content="Download PapiClips: free AI clip maker">
+<meta property="og:description" content="Clip streams on your own computer, free. Windows, Mac and Linux.">
+<link rel="icon" type="image/svg+xml" href="/brand/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{--brand:#C6F432;--ink:#1A2100;--soft:#F5FDE0;--line-b:#E3F7A8;--deep:#4E6B00;
+  --frame:#1E1612;--frame-2:#2C221D;--frame-text:#F4EEEA;--frame-dim:#A99A91;
+  --muted:#F7F4F1;--line:#EEE8E4;--line-2:#E1D9D3;--text:#211813;--dim:#6D6159;--faint:#A0948C;
+  --warn-soft:#FFF4E0;--r-lg:18px;--r:12px;color-scheme:light}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:#fff;color:var(--text);font:16px/1.55 "Geist","Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+h1,h2,h3,p{margin:0}
+a{color:inherit}
+svg{width:18px;height:18px;flex:none;fill:currentColor}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+.mono{font-family:"Geist Mono",ui-monospace,monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:46px;padding:0 20px;border-radius:var(--r);border:1px solid var(--line-2);
+  background:#fff;color:var(--text);font-weight:600;font-size:15px;text-decoration:none;white-space:nowrap;transition:background-color .15s ease,border-color .15s ease}
+.btn:hover{background:var(--muted)}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:var(--ink)}
+.btn.primary:hover{background:#D4FA5A}
+.btn.dark{background:var(--frame);border-color:var(--frame);color:var(--frame-text)}
+.btn.dark:hover{background:var(--frame-2)}
+header{background:var(--frame);color:var(--frame-text)}
+header .bar{display:flex;align-items:center;gap:16px;height:68px}
+header .bar img{height:30px;width:auto}
+header .bar nav{margin-left:auto;display:flex;gap:6px}
+header .bar nav a{color:var(--frame-dim);text-decoration:none;font-size:14px;font-weight:500;padding:8px 12px;border-radius:10px}
+header .bar nav a:hover{color:var(--frame-text);background:var(--frame-2)}
+.hero{background:var(--frame);color:var(--frame-text);padding:40px 0 56px}
+.hero .pill{display:inline-flex;align-items:center;gap:8px;background:var(--frame-2);color:var(--frame-text);border-radius:999px;padding:6px 14px 6px 8px;font-size:13px;font-weight:600}
+.hero .pill b{background:var(--brand);color:var(--ink);border-radius:999px;padding:2px 8px;font-size:11px;letter-spacing:.04em}
+.hero h1{font-size:clamp(34px,4.6vw,56px);line-height:1.05;letter-spacing:-.02em;margin:18px 0 14px;font-weight:800}
+.hero h1 span{color:var(--brand)}
+.hero p.lede{color:var(--frame-dim);font-size:18px;max-width:640px}
+.main-dl{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:28px}
+.main-dl .btn.primary{height:56px;padding:0 26px;font-size:17px;border-radius:14px}
+.main-dl .meta{color:var(--frame-dim);font-size:14px}
+.oses{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:-28px}
+.os{background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);padding:24px;display:flex;flex-direction:column;gap:14px}
+.os.mine{border:2px solid var(--brand);padding:23px}
+.os .top{display:flex;align-items:center;gap:10px}
+.os .top svg{width:26px;height:26px}
+.os h2{font-size:21px;letter-spacing:-.01em}
+.os .tag{margin-left:auto;background:var(--soft);color:var(--deep);border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700}
+.os .what{color:var(--dim);font-size:14px}
+.os ol{margin:0;padding-left:20px;display:grid;gap:6px;font-size:14.5px}
+.os ol code{background:var(--muted);border-radius:6px;padding:1px 6px;font-size:13px;font-family:"Geist Mono",ui-monospace,monospace}
+.os .btn{margin-top:auto;width:100%}
+.facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin:48px 0}
+.fact{background:var(--muted);border-radius:var(--r);padding:18px}
+.fact b{display:block;font-size:17px;margin-bottom:2px}
+.fact span{color:var(--dim);font-size:14px}
+.safe{display:flex;gap:14px;align-items:flex-start;background:var(--warn-soft);border-radius:var(--r);padding:16px 18px;color:#6B4200;font-size:14.5px;margin-bottom:24px}
+.safe code{font-family:"Geist Mono",ui-monospace,monospace;font-size:12px;word-break:break-all;color:#4A2E00}
+.after{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding:28px 0 48px;color:var(--dim);font-size:14px}
+.after a{font-weight:600;color:var(--text)}
+@media (max-width:860px){.oses{grid-template-columns:1fr;margin-top:-20px}.facts{grid-template-columns:1fr 1fr}header .bar nav a.hide-s{display:none}}
+</style>
+</head>
+<body>
+<header><div class="wrap bar">
+  <a href="/" aria-label="PapiClips home"><img src="/brand/logo-light.svg" alt="PapiClips"></a>
+  <nav><a class="hide-s" href="/#how">How it works</a><a href="/#campaigns">Campaigns</a><a href="/earn#me">My earnings</a></nav>
+</div></header>
+
+<section class="hero"><div class="wrap">
+  <span class="pill"><b>NEW</b>The PapiClips app is out</span>
+  <h1>Clip streams on <span>your own computer.</span> Free.</h1>
+  <p class="lede">Paste a stream link. PapiClips finds the best moments and makes vertical clips with captions, a hook and a facecam layout. Everything runs on your PC: your videos are never uploaded.</p>
+  <div class="main-dl">
+    <a class="btn primary" id="mainDl" href="/download/windows"><svg viewBox="0 0 256 256" aria-hidden="true"><path d="M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H208V144a8,8,0,0,1,16,0Zm-101.66,5.66a8,8,0,0,0,11.32,0l40-40a8,8,0,0,0-11.32-11.32L136,124.69V32a8,8,0,0,0-16,0v92.69L93.66,98.34a8,8,0,0,0-11.32,11.32Z"/></svg><span id="mainLabel">Download for Windows</span></a>
+    <span class="meta" id="mainMeta">Free · Windows 10 and 11</span>
+  </div>
+</div></section>
+
+<main class="wrap">
+  <div class="oses">
+    <section class="os" id="os-windows">
+      <div class="top"><svg viewBox="0 0 256 256" aria-hidden="true"><path d="M112,144v51.64a8,8,0,0,1-9.38,7.88l-64-11.13A8,8,0,0,1,32,184.51V144a8,8,0,0,1,8-8h64A8,8,0,0,1,112,144Zm-2.87-89.78a8,8,0,0,0-6.51-1.83l-64,11.08A8,8,0,0,0,32,71.36V112a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V60.36A8,8,0,0,0,109.13,54.22ZM216,136H144a8,8,0,0,0-8,8v57.75a8,8,0,0,0,6.62,7.88l72,12.48A7.79,7.79,0,0,0,216,222a8,8,0,0,0,8-8V144A8,8,0,0,0,216,136Zm5.14-102.13a8,8,0,0,0-6.51-1.81l-72,12.47A8,8,0,0,0,136,52.41V112a8,8,0,0,0,8,8h72a8,8,0,0,0,8-8V40A8,8,0,0,0,221.14,33.87Z"/></svg><h2>Windows</h2><span class="tag">Easiest</span></div>
+      <p class="what">One installer with everything inside (about 180 MB). Updates itself.</p>
+      <ol>
+        <li>Open <b>PapiClips-Setup.exe</b>.</li>
+        <li>If Windows says "protected your PC": <b>More info</b>, then <b>Run anyway</b>.</li>
+        <li>Press <b>Install</b>. Open it from the PapiClips icon on your desktop.</li>
+      </ol>
+      <a class="btn dark" href="/download/windows">Download for Windows</a>
+    </section>
+    <section class="os" id="os-mac">
+      <div class="top"><svg viewBox="0 0 256 256" aria-hidden="true"><path d="M223.3,169.59a8.07,8.07,0,0,0-2.8-3.4C203.53,154.53,200,134.64,200,120c0-17.67,13.47-33.06,21.5-40.67a8,8,0,0,0,0-11.62C208.82,55.74,187.82,48,168,48a72.23,72.23,0,0,0-40,12.13,71.56,71.56,0,0,0-90.71,9.09A74.63,74.63,0,0,0,16,123.4a127,127,0,0,0,40.14,89.73A39.8,39.8,0,0,0,83.59,224h87.68a39.84,39.84,0,0,0,29.12-12.57,125,125,0,0,0,17.82-24.6C225.23,174,224.33,172,223.3,169.59ZM160,24a8,8,0,0,0-8-8,48.05,48.05,0,0,0-48,48,8,8,0,0,0,8,8A48.05,48.05,0,0,0,160,24Z"/></svg><h2>Mac</h2></div>
+      <p class="what">A zip with PapiClips inside. The first start sets itself up (5 to 10 minutes).</p>
+      <ol>
+        <li>Double-click the zip to unpack it, and put the folder in your home folder.</li>
+        <li>Right-click <b>Start-PapiClips-Mac.command</b>, then <b>Open</b>, then <b>Open</b> again (only the first time).</li>
+        <li>PapiClips opens in your browser.</li>
+      </ol>
+      <a class="btn dark" href="/download/mac">Download for Mac</a>
+    </section>
+    <section class="os" id="os-linux">
+      <div class="top"><svg viewBox="0 0 256 256" aria-hidden="true"><path d="M229,214.25A8,8,0,0,1,217.76,213C216.39,211.27,184,169.86,184,88A56,56,0,0,0,72,88c0,81.86-32.37,123.27-33.75,125a8,8,0,0,1-12.51-10c.15-.2,7.69-9.9,15.13-28.74C47.77,156.8,56,127.64,56,88a72,72,0,0,1,144,0c0,39.64,8.23,68.8,15.13,86.28,7.48,18.94,15.06,28.64,15.13,28.74A8,8,0,0,1,229,214.25ZM100,88a12,12,0,1,0,12,12A12,12,0,0,0,100,88Zm68,12a12,12,0,1,0-12,12A12,12,0,0,0,168,100ZM99.58,128.84a8,8,0,0,0-7.15,14.31l32,16a7.94,7.94,0,0,0,7.15,0l32-16a8,8,0,0,0-7.16-14.31L128,143.05ZM128,176a54.07,54.07,0,0,0-47,28.11,8,8,0,1,0,14,7.78,37.35,37.35,0,0,1,66,0,8,8,0,0,0,14-7.78A54.07,54.07,0,0,0,128,176Z"/></svg><h2>Linux</h2></div>
+      <p class="what">The same zip as for Mac. Needs Python 3.10 or newer and ffmpeg.</p>
+      <ol>
+        <li>Unpack the zip.</li>
+        <li>In a terminal, in that folder: <code>bash start-linux.sh</code></li>
+        <li>Open <b>http://127.0.0.1:8765</b> if your browser doesn't open by itself.</li>
+      </ol>
+      <a class="btn dark" href="/download/linux">Download for Linux</a>
+    </section>
+  </div>
+
+  <div class="facts">
+    <div class="fact"><b>Free</b><span>No sign-in needed to make clips.</span></div>
+    <div class="fact"><b>8 GB memory</b><span>And about 3 GB of free space.</span></div>
+    <div class="fact"><b>Hindi and English</b><span>Hinglish captions, and Indian languages.</span></div>
+    <div class="fact"><b>Private</b><span>Clips are made on your computer.</span></div>
+  </div>
+
+  <div class="safe" role="note">
+    <svg viewBox="0 0 256 256" aria-hidden="true" style="margin-top:2px"><path d="M208,40H48A16,16,0,0,0,32,56v58.77c0,89.61,75.82,119.34,91,124.39a15.53,15.53,0,0,0,10,0c15.2-5.05,91-34.78,91-124.39V56A16,16,0,0,0,208,40Zm-34.32,69.66-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35a8,8,0,0,1,11.32,11.32Z"/></svg>
+    <div><b>Only download PapiClips from papiclips.com.</b> It's free: anyone asking you to pay for it, or sending it as a file on WhatsApp or Telegram, isn't us.
+      <span id="verify" hidden><br>Newest version: <b id="ver"></b>. Windows installer SHA-256: <code id="sha"></code></span></div>
+  </div>
+
+  <div class="after">
+    <span>Stuck while installing? The full setup guide, with pictures: <a href="#" id="guide" target="_blank" rel="noopener">open the guide</a>. Something not working? <a href="/report">Report a problem</a>.</span>
+    <a class="btn primary" href="/earn">Then earn from your clips →</a>
+  </div>
+</main>
+
+<script>
+// The visitor's own system first: its card is marked and the big button downloads for it.
+(function () {
+  const ua = navigator.userAgent || "", plat = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || "";
+  const os = /android|iphone|ipad|ipod/i.test(ua) ? "phone" : /mac/i.test(plat) || /Mac OS X/.test(ua) ? "mac"
+    : /linux/i.test(plat) || /Linux/.test(ua) ? "linux" : "windows";
+  const label = {windows: ["Download for Windows", "Free · Windows 10 and 11"], mac: ["Download for Mac", "Free · macOS"],
+                 linux: ["Download for Linux", "Free · needs Python and ffmpeg"],
+                 phone: ["Download for Windows", "PapiClips runs on a computer. Open this page on your PC or Mac."]}[os];
+  document.getElementById("mainLabel").textContent = label[0];
+  document.getElementById("mainMeta").textContent = label[1];
+  document.getElementById("mainDl").href = "/download/" + (os === "phone" ? "windows" : os);
+  const card = document.getElementById("os-" + (os === "phone" ? "windows" : os));
+  if (card) card.classList.add("mine");
+  fetch("/api/public").then(r => r.json()).then(p => { if (p.guide_url && /^https:\/\//.test(p.guide_url)) document.getElementById("guide").href = p.guide_url; }).catch(() => {});
+  fetch("/api/public/app-version").then(r => r.json()).then(v => {
+    if (!v || !v.version) return;
+    document.getElementById("ver").textContent = v.version;
+    document.getElementById("sha").textContent = v.windows_sha256;
+    document.getElementById("verify").hidden = false;
+  }).catch(() => {});
+})();
+</script>
+</body>
+</html>
