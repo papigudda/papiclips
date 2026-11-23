@@ -1206,6 +1206,16 @@ body{background:var(--bg) !important;color:var(--text) !important;font-family:-a
 .app.mini .side-head .brand-text-col{display:none}
 .app.mini .side-head{padding:10px 4px 18px !important;justify-content:center}
 
+.styles{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr)) !important;gap:10px !important}
+.sty{border:2px solid var(--line-2) !important;background:#0C0F1A !important;border-radius:12px !important;overflow:hidden !important;cursor:pointer !important;transition:all .18s ease !important}
+.sty video{width:100% !important;aspect-ratio:10/3 !important;object-fit:cover !important;display:block !important;background:#060810 !important}
+.sty span{display:block !important;background:#131828 !important;color:#F8FAFC !important;font-size:12px !important;font-weight:600 !important;padding:7px 10px !important;border-top:1px solid rgba(255,255,255,0.06) !important}
+.sty:hover{border-color:var(--brand) !important;transform:translateY(-2px);box-shadow:0 6px 18px rgba(255,46,84,0.3) !important}
+.sty[aria-pressed=true]{border-color:var(--brand) !important;box-shadow:0 0 0 2px var(--brand),0 0 18px rgba(255,46,84,0.45) !important}
+.sty[aria-pressed=true] span{background:linear-gradient(90deg, rgba(255,46,84,0.3) 0%, rgba(255,46,84,0.12) 100%) !important;color:#fff !important}
+.sty[aria-pressed=true] span::after{content:" ✓";font-weight:800;color:var(--brand)}
+.sty:disabled{opacity:.35 !important;cursor:not-allowed !important}
+
 </style>
 </head>
 <body>
@@ -2341,7 +2351,7 @@ function lookPanel(c) {
     <input type="hidden" id="o_style" value="${esc(style)}">
     <div class="styles" role="group" aria-labelledby="o_style_label">${Object.entries(S.status.styles).map(([k, v]) =>
       `<button type="button" class="sty" data-seg="o_style" data-v="${esc(k)}" aria-pressed="${k === style}" data-caption-style${caps ? "" : " disabled"} title="${esc(v)}">
-        <video src="/brand/styles/${esc(k)}.webm" poster="/brand/styles/${esc(k)}.jpg" muted loop playsinline preload="none" aria-hidden="true"></video><span>${esc(v)}</span></button>`).join("")}</div>
+        <video src="/brand/styles/${esc(k)}.webm" poster="/brand/styles/${esc(k)}.jpg" muted loop playsinline preload="metadata" aria-hidden="true"></video><span>${esc(v)}</span></button>`).join("")}</div>
     <div class="look-h" style="margin-top:12px"><b>Layout</b><span class="sub">Gaming stream with a webcam? Pick <b>Facecam top</b>.</span><span class="grow"></span>
       <label class="mini-sw" title="Quiet pauses and filler words (um, uh) are cut out, so the clip moves faster. The game's action is never cut."><input type="checkbox" id="o_tight" ${tight ? "checked" : ""}>Cut silences</label>
       <label class="mini-sw" title="The picture punches in on the loudest moments: a shout, a laugh, the big reaction"><input type="checkbox" id="o_zoom" ${zoom ? "checked" : ""}>Auto zoom</label></div>
@@ -2400,7 +2410,7 @@ function saveLook(change) {
   }, 350);
 }
 // The previews play while the pointer is over them (or the chosen one, always), so a page of them costs nothing.
-function playLooks() { $$(".sty video").forEach(v => { const on = v.parentElement.matches(":hover, [aria-pressed=true]"); if (on && v.paused) { v.play().catch(() => {}); } else if (!on && !v.paused) v.pause(); }); }
+function playLooks() { $$(".sty video").forEach(v => { const on = v.parentElement.matches(":hover, [aria-pressed=true]"); if (on) { v.muted = true; if (v.paused) v.play().catch(() => {}); } else if (!on && !v.paused) v.pause(); }); }
 document.addEventListener("pointerover", e => { if (e.target.closest?.(".sty")) playLooks(); });
 document.addEventListener("pointerout", e => { if (e.target.closest?.(".sty")) setTimeout(playLooks, 0); });
 const LAYOUT_SHORT = {blur:"Blurred fill", zoom:"Zoomed in", crop:"Fill screen", gameplay:"Gameplay + facecam", split:"Facecam top, game below"};

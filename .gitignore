@@ -38,6 +38,7 @@ data/
 storage.json
 *.mp4
 *.jpg
+!web/brand/**
 *.ass
 *.wav
 *.mp3
