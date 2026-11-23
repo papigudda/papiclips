@@ -37,12 +37,10 @@ def _quiet(fn):
 
 app = FastAPI(title="PapiClips", docs_url=None, redoc_url=None, openapi_url=None)
 WEB = config.ROOT / "web"
-OPEN = ("/api/auth/", "/pub/", "/download/", "/api/public", "/api/earn/public/", "/earn/cover/", "/auth/google/", "/auth/verify", "/brand/", "/assets/", "/healthz", "/favicon.ico", "/robots.txt", "/sitemap.xml")
-# On an Earn-only website these are the only addresses people other than admins may change things through.
-EARN_ONLY_WRITES = ("/api/auth/", "/api/earn/", "/api/account/delete", "/api/notifications/", "/api/feedback", "/api/public/bug-report")
+OPEN = ("/api/auth/", "/pub/", "/api/public", "/auth/google/", "/auth/verify", "/brand/", "/assets/", "/healthz", "/favicon.ico", "/robots.txt", "/sitemap.xml")
 PAGES = {"/": "landing.html", "/login": "auth.html", "/signup": "auth.html", "/reset": "reset.html",
-         "/privacy": "legal.html", "/terms": "legal.html", "/acceptable-use": "legal.html", "/earn": "earn.html",
-         "/clip-maker": "landing.html", "/download": "download.html", "/report": "report.html"}
+         "/privacy": "legal.html", "/terms": "legal.html", "/acceptable-use": "legal.html",
+         "/clip-maker": "landing.html"}
 VIDEO_TYPES = {".mp4", ".mov", ".mkv", ".webm", ".m4v", ".ts", ".flv"}
 CSP = ("default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
        "font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; media-src 'self' blob:; connect-src 'self'; "
@@ -86,9 +84,6 @@ def _startup():
     jobs.start()
     live.start()
     posting.start()
-    earn.start()                     # keeps YouTube view counts of campaign clips fresh
-    from . import updates
-    updates.start()                  # looks for a newer ClipKontrast every minute, in the background
 
 
 # ================================================================ the gate: who is asking, and are they allowed
@@ -353,9 +348,6 @@ _LANDING: dict = {}
 
 @app.get("/")
 def home():
-    # The Earn-only website opens on Earn (campaigns, sign-up, the download); the clip maker's page is at /clip-maker
-    if config.EARN_ONLY:
-        return _page("earn.html", shared=True)
     return landing()
 
 
@@ -665,11 +657,10 @@ def google_callback(request: Request, code: str = "", state: str = "", error: st
 @app.get("/api/status")
 def status(request: Request):
     from . import notices
-    from . import updates
     me_ = _me(request)
-    return {"user": auth.public(me_), "update": updates.latest() if me_.is_admin else None, "accounts": config.ACCOUNTS, "disk_full": load.disk_full(), "no_ffmpeg": bool(_tools.missing()), "links": {"repo": config.REPO_URL, "follow": config.FOLLOW_URL, "earn": ("/earn" if config.ACCOUNTS else config.EARN_URL + "/earn")}, "ai": usage.brief(), "unread": notices.unread(),
+    return {"user": auth.public(me_), "update": None, "accounts": config.ACCOUNTS, "disk_full": load.disk_full(), "no_ffmpeg": bool(_tools.missing()), "links": {"repo": config.REPO_URL, "follow": config.FOLLOW_URL, "earn": ""}, "ai": usage.brief(), "unread": notices.unread(),
             "tour": not accounts.settings()["tour_done"],
-            "earn_url": "/earn" if config.ACCOUNTS else config.EARN_URL + "/earn", "earn_only": config.EARN_ONLY,
+            "earn_url": "", "earn_only": False,
             "youtube": accounts.youtube_ready(), "connect": {p: accounts.can_connect(p) for p in accounts.PLATFORM_NAMES}, "max_upload_mb": config.MAX_UPLOAD_MB, "upload_part_mb": config.UPLOAD_PART_MB, "max_batch": config.MAX_ACTIVE_JOBS_PER_USER,
             "styles": {k: v["label"] for k, v in render.STYLES.items()}, "layouts": render.LAYOUTS,
             "tag": {"styles": tagmod.STYLES, "platforms": tagmod.PLATFORMS, "positions": tagmod.POSITIONS},
