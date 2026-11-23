@@ -195,6 +195,58 @@ def _ydl_info(url: str) -> dict:
         return y.extract_info(url, download=False) or {}
 
 
+LAST_FOR = 600          # seconds a channel's newest stream is reused for (everyone watching it shares the look)
+_last: dict = {}
+
+
+def _streams_page(url: str, plat: str) -> str:
+    """Where a channel lists its past streams, newest first."""
+    u = url.rstrip("/")
+    u = re.sub(r"/(live|streams|videos|featured)$", "", u)
+    if plat == "youtube":
+        return u + "/streams"
+    if plat == "twitch":
+        return u + "/videos?filter=archives&sort=time"
+    return u + "/videos"
+
+
+def last_stream(url: str) -> dict:
+    """A channel's newest stream that has ended: {"url", "title", "duration", "thumb", "post_live", "platform"}, or {}
+    when it can't be told. Only the channel's list is read (yt-dlp, no video), then the stream's own details, the same
+    way a pasted link is looked up. Kept for LAST_FOR seconds per channel."""
+    from . import media
+    key = url.rstrip("/").lower()
+    got = _last.get(key)
+    if got and time.time() - got[0] < LAST_FOR:
+        return dict(got[1])
+    plat = platform_of(url).lower()          # "youtube", "twitch", "kick"
+    out = {}
+    try:
+        import yt_dlp
+        from .live import _Quiet
+        with yt_dlp.YoutubeDL({"quiet": True, "no_warnings": True, "skip_download": True, "logger": _Quiet(),
+                               "extract_flat": "in_playlist", "playlistend": 4, "socket_timeout": 10}) as y:
+            listing = y.extract_info(_streams_page(url, plat), download=False) or {}
+        for e in listing.get("entries") or []:
+            if not isinstance(e, dict) or e.get("live_status") in ("is_live", "is_upcoming"):
+                continue                                    # live now (the player shows it) or not started yet
+            link = e.get("url") or e.get("webpage_url") or ""
+            if plat == "youtube" and e.get("id") and not link.startswith("http"):
+                link = "https://www.youtube.com/watch?v=" + str(e["id"])
+            if not (link.startswith("https://") and media.site_allowed(link)):
+                continue
+            p = media.preview(link)
+            out = {"url": link, "title": p.get("title") or _no_date(e.get("title") or ""), "duration": p.get("duration") or 0,
+                   "thumb": p.get("thumb") or "", "post_live": bool(p.get("post_live")), "platform": plat}
+            break
+    except Exception:  # noqa: BLE001 - no card is shown; tried again after LAST_FOR
+        out = {}
+    if len(_last) > 500:
+        _last.pop(next(iter(_last)))
+    _last[key] = (time.time(), out)
+    return dict(out)
+
+
 def _no_date(title: str) -> str:
     """yt-dlp adds the date and time to live titles; people never see that on the platform."""
     return re.sub(r"\s*\(live\)\s*\d{4}-\d{2}-\d{2} \d{2}:\d{2}$|\s+\d{4}-\d{2}-\d{2} \d{2}:\d{2}$", "", title or "").strip()
