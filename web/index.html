@@ -969,12 +969,11 @@ dialog#clipdlg:not([open]){display:none}
 .prev-draggable.is-dragging{cursor:grabbing!important;outline:2px solid #00F0FF!important;outline-offset:4px;box-shadow:0 0 22px rgba(0,240,255,.85),0 8px 30px rgba(0,0,0,.9)!important;z-index:50!important;opacity:.97}
 
 /* Big Text / Hook Sticker */
-.prev-hook-sticker{position:absolute;top:18%;left:50%;transform:translate(-50%,-50%);z-index:10;display:flex;align-items:center;justify-content:center;max-width:88%;animation:hookPulse 2.5s infinite ease-in-out}
-@keyframes hookPulse{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.03)}}
-.hook-text{font-family:'Poppins',system-ui,sans-serif;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.6px;background:#000;color:#FFE600;padding:6px 14px;border-radius:8px;border:2px solid #FFE600;box-shadow:0 4px 16px rgba(0,0,0,.85);text-align:center;line-height:1.25}
+.prev-hook-sticker{position:absolute;top:18%;left:50%;transform:translate(-50%,-50%);z-index:15;display:flex;align-items:center;justify-content:center;max-width:88%;pointer-events:none;transition:all .15s ease}
+.hook-text{font-family:'Poppins',system-ui,sans-serif;font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:.6px;background:#000;color:#FFE600;padding:6px 14px;border-radius:8px;border:2px solid #FFE600;box-shadow:0 4px 16px rgba(0,0,0,.85);text-align:center;line-height:1.25}
 
 /* Dynamic Captions Box */
-.prev-captions-box{position:absolute;top:70%;left:50%;transform:translate(-50%,-50%);display:flex;justify-content:center;align-items:center;z-index:10;text-align:center;max-width:90%;white-space:nowrap}
+.prev-captions-box{position:absolute;top:70%;left:50%;transform:translate(-50%,-50%);display:flex;justify-content:center;align-items:center;z-index:15;text-align:center;max-width:92%;white-space:nowrap;pointer-events:none;transition:all .15s ease}
 .caption-line{font-family:'Poppins',system-ui,sans-serif;font-size:17px;font-weight:900;text-transform:uppercase;letter-spacing:.5px;line-height:1.2;text-shadow:0 2px 8px rgba(0,0,0,.9);padding:4px 10px;display:inline-flex;gap:6px;transition:all .2s ease}
 [data-style="bounce"] .caption-line{color:#FFF;-webkit-text-stroke:1.5px #000}
 [data-style="bounce"] .caption-line .active{color:#00F0FF;transform:scale(1.18);display:inline-block;animation:capBounce .6s infinite alternate ease-in-out}
@@ -993,16 +992,25 @@ dialog#clipdlg:not([open]){display:none}
 [data-style="karaoke"] .caption-line{color:rgba(255,255,255,.45)}
 [data-style="karaoke"] .caption-line .active{color:#FFE600;text-shadow:0 0 8px #FFE600}
 [data-style="podcast"] .caption-line{background:rgba(10,14,26,.85);color:#FFF;font-size:14px;padding:4px 10px;border-radius:6px}
-[data-style="oneword"] .caption-line{font-size:24px;font-weight:900;color:#FFE600;-webkit-text-stroke:1.5px #000}
+[data-style="one"] .caption-line,[data-style="oneword"] .caption-line{font-family:'Anton','Impact',sans-serif;font-size:24px;font-weight:900;color:#FFF;-webkit-text-stroke:1.8px #000;letter-spacing:1px}
+[data-style="one"] .caption-line .active,[data-style="oneword"] .caption-line .active{color:#32F0B4;text-shadow:0 0 14px rgba(50,240,180,.8)}
+[data-style="pop"] .caption-line{font-family:'Impact',sans-serif;font-size:20px;font-weight:900;color:#FFF;-webkit-text-stroke:1.5px #000}
+[data-style="pop"] .caption-line .active{color:#32F4C6;transform:scale(1.15);display:inline-block}
 
 /* Creator Tag Pill */
-.prev-tag-pill{position:absolute;top:86%;left:28%;transform:translate(-50%,-50%);z-index:12;display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;font-size:12px;font-weight:700;letter-spacing:.3px;box-shadow:0 4px 14px rgba(0,0,0,.6);white-space:nowrap}
+.prev-tag-pill{position:absolute;bottom:14px;left:14px;z-index:15;display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;font-size:12px;font-weight:700;letter-spacing:.3px;box-shadow:0 4px 14px rgba(0,0,0,.6);white-space:nowrap;pointer-events:none;transition:all .15s ease}
+.prev-tag-pill[data-pos="bottom_left"]{bottom:14px;left:14px;top:auto;right:auto;transform:none}
+.prev-tag-pill[data-pos="bottom_center"],.prev-tag-pill[data-pos="bottom_centre"]{bottom:14px;left:50%;top:auto;right:auto;transform:translateX(-50%)}
+.prev-tag-pill[data-pos="top_left"]{top:14px;left:14px;bottom:auto;right:auto;transform:none}
+.prev-tag-pill[data-pos="top_right"]{top:14px;right:14px;bottom:auto;left:auto;transform:none}
+.prev-tag-pill[data-pos="bottom_right"]{bottom:14px;right:14px;top:auto;left:auto;transform:none}
 .prev-tag-pill[data-style="clean"]{background:#FFF;color:#0F172A}
+.prev-tag-pill[data-style="pill"]{background:#FFF;color:#0F172A;border:1px solid rgba(0,0,0,.15)}
 .prev-tag-pill[data-style="dark"]{background:rgba(14,18,30,.92);color:#FFF;border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(6px)}
-.prev-tag-pill[data-style="neon"]{background:rgba(6,9,18,.95);color:#00F0FF;border:1.5px solid #00F0FF;box-shadow:0 0 12px rgba(0,240,255,.4)}
+.prev-tag-pill[data-style="brand"]{background:var(--brand);color:#FFF}
 
 /* Watermark */
-.prev-watermark{position:absolute;top:18px;right:18px;transform:translate(0,0);z-index:12;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);color:rgba(255,255,255,.85);font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;border:1px solid rgba(255,255,255,.15);white-space:nowrap}
+.prev-watermark{position:absolute;top:14px;right:14px;transform:none;z-index:15;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);color:rgba(255,255,255,.85);font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;border:1px solid rgba(255,255,255,.15);white-space:nowrap;pointer-events:none}
 
 /* Interactive Timeline Trimmer */
 .timeline-trimmer{width:100%;background:#0D111E;border:1px solid var(--line-2);border-radius:12px;padding:8px 10px;display:flex;flex-direction:column;gap:7px;flex-shrink:0}
@@ -3604,46 +3612,174 @@ function initLiveClipEditor(j, c) {
   const dlg = $("#clipdlg");
   if (!dlg) return;
   const video = $("#prevVideo");
-  const styleSel = dlg.querySelector('[data-f="style"]');
+  const hookIn = dlg.querySelector('[data-f="hook"]');
   const capToggle = dlg.querySelector('[data-f="captions"]');
-  const capPreview = $("#capStylePreview");
+  const styleSel = dlg.querySelector('[data-f="style"]');
+  const laySel = dlg.querySelector('[data-f="layout"]');
+  const zoomToggle = dlg.querySelector('[data-f="zoom"]');
+  const tagToggle = dlg.querySelector('[data-f="tag"]');
+  const handleIn = dlg.querySelector('[data-f="tag_handle"]');
+  const tagStyle = dlg.querySelector('[data-f="tag_style"]');
+  const tagPos = dlg.querySelector('[data-f="tag_pos"]');
+  const wmIn = dlg.querySelector('[data-f="watermark"]');
 
-  function syncStylePreview() {
-    if (!capPreview) return;
+  const hookBox = $("#prevHookSticker");
+  const hookTxt = $("#prevHookText");
+  const capBox = $("#prevCaptionsBox");
+  const capLine = $("#prevCaptionLine");
+  const capPreview = $("#capStylePreview");
+  const tagPill = $("#prevTagPill");
+  const tagHandle = $("#prevTagHandle");
+  const wmBox = $("#prevWatermark");
+
+  let clipPhrases = [];
+
+  function updateCaptionAtTime(t) {
+    if (!capBox || !capLine) return;
+    if (video && video.dataset.fallback === '1') {
+      capBox.style.display = 'none';
+      return;
+    }
     const on = capToggle ? capToggle.checked : true;
-    capPreview.style.display = on ? "flex" : "none";
-    if (styleSel) {
-      capPreview.setAttribute("data-style", styleSel.value || "bounce");
-      styleSel.disabled = !on;
+    if (!on) {
+      capBox.style.display = "none";
+      return;
+    }
+    capBox.style.display = "flex";
+
+    if (clipPhrases && clipPhrases.length) {
+      const ph = clipPhrases.find(p => t >= p.start - 0.1 && t <= p.end + 0.15);
+      if (ph) {
+        capLine.innerHTML = ph.words.map(w => {
+          const isActive = (t >= w.s - 0.05 && t <= w.e + 0.05);
+          return `<span class="${isActive ? 'active' : ''}">${esc(w.w)}</span>`;
+        }).join(" ");
+        return;
+      }
+      if (video?.paused || t < (clipPhrases[0]?.start || 0)) {
+        const sample = clipPhrases.find(p => p.start >= t) || clipPhrases[0];
+        if (sample) {
+          capLine.innerHTML = sample.words.map((w, i) => `<span class="${i === 0 ? 'active' : ''}">${esc(w.w)}</span>`).join(" ");
+          return;
+        }
+      }
+    } else {
+      capLine.innerHTML = `<span class="active">CAPTION</span> <span>STYLE</span> <span>SAMPLE</span>`;
     }
   }
 
-  if (styleSel) {
-    styleSel.addEventListener("change", syncStylePreview);
+  api(`/api/jobs/${j.id}/clips/${c.id}/captions`).then(res => {
+    clipPhrases = Array.isArray(res) ? res : [];
+    updateCaptionAtTime(video?.currentTime || 0);
+  }).catch(() => {});
+
+  function syncAllSettings() {
+    const isFallback = video && video.dataset.fallback === '1';
+
+    // 1. Big Text / Hook
+    if (hookBox && hookTxt) {
+      const val = (hookIn?.value || "").trim();
+      hookTxt.textContent = val;
+      hookBox.style.display = (!isFallback && val) ? "flex" : "none";
+    }
+
+    // 2. Captions & Style
+    const curStyle = styleSel ? (styleSel.value || "bounce") : "bounce";
+    const capOn = capToggle ? capToggle.checked : true;
+    if (styleSel) styleSel.disabled = !capOn;
+
+    if (capBox) {
+      capBox.setAttribute("data-style", curStyle);
+      capBox.style.display = (!isFallback && capOn) ? "flex" : "none";
+    }
+    if (capPreview) {
+      capPreview.setAttribute("data-style", curStyle);
+      capPreview.style.display = capOn ? "flex" : "none";
+    }
+    updateCaptionAtTime(video?.currentTime || 0);
+
+    // 3. Layout / Zoom
+    if (video && laySel) {
+      const lay = laySel.value;
+      if (lay === "zoom" || (zoomToggle && zoomToggle.checked)) {
+        video.style.objectFit = "cover";
+        video.style.transform = "scale(1.22)";
+      } else if (lay === "crop") {
+        video.style.objectFit = "cover";
+        video.style.transform = "none";
+      } else {
+        video.style.objectFit = "contain";
+        video.style.transform = "none";
+      }
+    }
+
+    // 4. Tag Pill
+    if (tagPill && tagHandle) {
+      const tagOn = tagToggle ? tagToggle.checked : true;
+      tagPill.style.display = (!isFallback && tagOn) ? "inline-flex" : "none";
+      const h = (handleIn?.value || "").trim();
+      tagHandle.textContent = h || (c.uploader || "@streamer");
+      if (tagStyle) tagPill.setAttribute("data-style", tagStyle.value);
+      if (tagPos) tagPill.setAttribute("data-pos", tagPos.value);
+    }
+
+    // 5. Watermark
+    if (wmBox && wmIn) {
+      const val = (wmIn.value || "").trim();
+      wmBox.textContent = val;
+      wmBox.style.display = (!isFallback && val) ? "block" : "none";
+    }
   }
-  if (capToggle) {
-    capToggle.addEventListener("change", syncStylePreview);
-  }
+
+  dlg.oninput = syncAllSettings;
+  dlg.onchange = syncAllSettings;
 
   if (video) {
     video.volume = 1.0;
+    video.ontimeupdate = () => {
+      updateCaptionAtTime(video.currentTime);
+    };
+    video.onerror = () => {
+      if (video.src.indexOf('.clean.mp4') !== -1) {
+        video.dataset.fallback = '1';
+        video.src = `${m}${c.file}?v=${c.version}`;
+        syncAllSettings();
+      }
+    };
     const unmute = () => {
-      video.muted = false;
+      if (video.muted) video.muted = false;
       window.removeEventListener("pointerdown", unmute);
     };
     window.addEventListener("pointerdown", unmute, { once: true });
   }
+
+  syncAllSettings();
 }
 
 function drawClipDlg(full) {
   const j = jobOf(D.jid), c = j?.clips.find(x => x.id === D.cid), dlg = $("#clipdlg");
   if (!c) { if (dlg.open) dlg.close(); return; }
   const m = `/media/${j.id}/`, sig = c.status + c.version;
+  const cleanSrc = c.file ? c.file.replace(/\.mp4$/, '.clean.mp4') : '';
 
   const stage = c.status === "done" ? `
     <div class="phone-stage">
       <div class="phone-frame" id="prevFrame">
-        <video id="prevVideo" src="${m}${esc(c.file)}?v=${c.version}" poster="${m}${esc(c.cover)}?v=${c.version}" controls autoplay playsinline loop></video>
+        <video id="prevVideo" src="${m}${esc(cleanSrc)}?v=${c.version}" poster="${m}${esc(c.cover)}?v=${c.version}" controls autoplay playsinline loop onerror="if(this.src.indexOf('.clean.mp4')!==-1){this.dataset.fallback='1';this.src='${m}${esc(c.file)}?v=${c.version}';}"></video>
+        <div class="prev-hook-sticker" id="prevHookSticker" style="${c.hook ? '' : 'display:none;'}">
+          <span class="hook-text" id="prevHookText">${esc(c.hook || '')}</span>
+        </div>
+        <div class="prev-captions-box" id="prevCaptionsBox" data-style="${esc(c.style || 'bounce')}" style="${c.captions === false ? 'display:none;' : ''}">
+          <div class="caption-line" id="prevCaptionLine">
+            <span class="w1">CAPTION</span> <span class="w2 active">STYLE</span> <span class="w3">SAMPLE</span>
+          </div>
+        </div>
+        <div class="prev-tag-pill" id="prevTagPill" data-style="${esc(c.tag_style || 'clean')}" data-pos="${esc(c.tag_pos || 'bottom_left')}" style="${c.tag ? '' : 'display:none;'}">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M23.5 6.2c-.3-1-.9-1.8-1.9-2.1C19.9 3.5 12 3.5 12 3.5s-7.9 0-9.6.6C1.4 4.4.8 5.2.5 6.2 0 8.1 0 12 0 12s0 3.9.5 5.8c.3 1 .9 1.8 1.9 2.1 1.7.6 9.6.6 9.6.6s7.9 0 9.6-.6c1-.3 1.6-1.1 1.9-2.1.5-1.9.5-5.8.5-5.8s0-3.9-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg>
+          <span id="prevTagHandle">${esc(c.tag_handle || c.uploader || '@channel')}</span>
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="#3897f0"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+        </div>
+        <div class="prev-watermark" id="prevWatermark" style="${c.watermark ? '' : 'display:none;'}">${esc(c.watermark || '')}</div>
       </div>
     </div>`
     : c.status === "error" ? `<div class="err" style="padding:20px;text-align:center">${esc(c.error || "Could not make this clip.")}</div>`
