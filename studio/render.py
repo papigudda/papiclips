@@ -712,65 +712,40 @@ def _render_in(work: Path, src: Path, out_dir: Path, name: str, start, end, layo
     # Audio enhancement: vocal isolation, speech EQ, dynamic compression and broadcast loudness
     voice_af = "highpass=f=80,equalizer=f=3000:t=q:w=1.5:g=3,acompressor=threshold=-18dB:ratio=4:attack=5:release=50,loudnorm=I=-14:TP=-1.5:LRA=11"
 
-    # Dual filtergraph for simultaneous clean clip (live preview) and final clip (with burnt subtitles)
-    fc_dual = _filter(layout, fg_h, face, z, game, top_h) + f"[v0]split=2[v_clean][v_ass];[v_ass]ass=filename={name}.ass:fontsdir=f[v]"
-    extra = []
-    if tag:
-        fc_dual = fc_dual[:-3] + f"[va];[va][1:v]overlay={int(tag[0])}:{int(tag[1])}[v]"
-        extra = ["-i", "t.png"]
+    # Step 1: Render clean 1080x1920 video with layout and broadcast audio (clean.mp4)
+    fc_clean = _filter(layout, fg_h, face, z, game, top_h) + "[v0]null[v]"
     if keep:
-        fc_dual = _tighten_filter(keep, fc_dual) + f";[ca]{voice_af},asplit=2[a1][a2]"
-        sound1 = ["-map", "[a1]"]
-        sound2 = ["-map", "[a2]"]
+        fc_clean = _tighten_filter(keep, fc_clean) + f";[ca]{voice_af}[a]"
+        sound = ["-map", "[a]"]
     else:
-        sound1 = ["-map", "0:a:0", "-af", voice_af]
-        sound2 = ["-map", "0:a:0", "-af", voice_af]
+        sound = ["-map", "0:a:0", "-af", voice_af]
 
-    base_dual = ["ffmpeg", "-y", "-v", "error", "-ss", f"{start:.2f}", "-t", f"{end - start:.2f}", "-i", str(src), *extra,
-                 "-filter_complex", fc_dual, "-map", "[v]", *sound1,
-                 "-c:a", "aac", "-b:a", "160k", "-ar", "48000", "-movflags", "+faststart", "-pix_fmt"]
-
-    # Clean single-output fallback if dual output is not supported by hardware encoder
-    fc_single = _filter(layout, fg_h, face, z, game, top_h) + f"[v0]ass=filename={name}.ass:fontsdir=f[v]"
-    if tag:
-        fc_single = fc_single[:-3] + f"[va];[va][1:v]overlay={int(tag[0])}:{int(tag[1])}[v]"
-    if keep:
-        fc_single = _tighten_filter(keep, fc_single) + f";[ca]{voice_af}[a]"
-        sound_single = ["-map", "[a]"]
-    else:
-        sound_single = ["-map", "0:a:0", "-af", voice_af]
-    base_single = ["ffmpeg", "-y", "-v", "error", "-ss", f"{start:.2f}", "-t", f"{end - start:.2f}", "-i", str(src), *extra,
-                   "-filter_complex", fc_single, "-map", "[v]", *sound_single,
-                   "-c:a", "aac", "-b:a", "160k", "-ar", "48000", "-movflags", "+faststart", "-pix_fmt"]
+    base_clean = ["ffmpeg", "-y", "-v", "error", "-ss", f"{start:.2f}", "-t", f"{end - start:.2f}", "-i", str(src),
+                  "-filter_complex", fc_clean, "-map", "[v]", *sound,
+                  "-c:a", "aac", "-b:a", "160k", "-ar", "48000", "-movflags", "+faststart", "-pix_fmt"]
 
     working = [e for e in HW_ENCODERS if _hw_ok.get(e[0]) is True]
     encoders = working[:1] or [e for e in HW_ENCODERS if _hw_ok.get(e[0]) is None]
     encoders.append(("x264", ["yuv420p", "-c:v", "libx264", "-crf", "21", "-preset", "veryfast"]))
+
+    clean_file = work / f"{name}.clean.mp4"
+    final_file = work / f"{name}.mp4"
+
+    # Execute Step 1: Render clean clip
     err = None
     for label, enc in encoders:
         try:
-            # 1. Output both final clip and clean clip
-            cmd = (
-                base_dual + enc + [f"{name}.mp4",
-                "-map", "[v_clean]", *sound2,
-                "-c:a", "aac", "-b:a", "160k", "-ar", "48000", "-movflags", "+faststart", "-pix_fmt"]
-                + enc + [f"{name}.clean.mp4"]
-            )
-            p = subprocess.run(cmd, cwd=work, capture_output=True, text=True,
+            cmd_clean = base_clean + enc + [str(clean_file)]
+            p = subprocess.run(cmd_clean, cwd=work, capture_output=True, text=True,
                                encoding="utf-8", errors="replace", creationflags=NO_WINDOW,
                                timeout=RENDER_SECONDS if label == "x264" else 180)
-            if p.returncode != 0:
-                # 2. If dual output failed, run clean single output
-                p = subprocess.run(base_single + enc + [f"{name}.mp4"], cwd=work, capture_output=True, text=True,
-                                   encoding="utf-8", errors="replace", creationflags=NO_WINDOW,
-                                   timeout=RENDER_SECONDS if label == "x264" else 180)
         except subprocess.TimeoutExpired:
             if label == "x264":
-                raise RuntimeError("Making the clip took too long and was stopped.")
-            _hw_ok[label] = False          # a graphics-card encoder that hangs is not used again
+                raise RuntimeError("Making the clean clip took too long and was stopped.")
+            _hw_ok[label] = False
             err = f"{label} took too long"
             continue
-        if p.returncode == 0:
+        if p.returncode == 0 and clean_file.is_file() and clean_file.stat().st_size > 100000:
             if label != "x264":
                 _hw_ok[label] = True
             break
@@ -778,7 +753,37 @@ def _render_in(work: Path, src: Path, out_dir: Path, name: str, start, end, layo
         if label != "x264":
             _hw_ok[label] = False
     else:
-        raise RuntimeError(f"Render failed: {err}")
+        raise RuntimeError(f"Clean render failed: {err}")
+
+    # Step 2: Burn subtitles and creator tag onto clean clip to create final clip (name.mp4)
+    # Uses -c:a copy so audio is 100% identical and encoding is lightning fast
+    tag_png = work / "t.png"
+    if tag and tag_png.is_file():
+        filter_burn = f"[0:v]ass=filename={name}.ass:fontsdir=f[va];[va][1:v]overlay={int(tag[0])}:{int(tag[1])}[v]"
+        base_burn = ["ffmpeg", "-y", "-v", "error", "-i", str(clean_file), "-i", "t.png",
+                     "-filter_complex", filter_burn, "-map", "[v]", "-map", "0:a",
+                     "-c:a", "copy", "-movflags", "+faststart", "-pix_fmt"]
+    else:
+        base_burn = ["ffmpeg", "-y", "-v", "error", "-i", str(clean_file),
+                     "-vf", f"ass=filename={name}.ass:fontsdir=f", "-map", "0:v", "-map", "0:a",
+                     "-c:a", "copy", "-movflags", "+faststart", "-pix_fmt"]
+
+    for label, enc in encoders:
+        try:
+            cmd_burn = base_burn + enc + [str(final_file)]
+            p = subprocess.run(cmd_burn, cwd=work, capture_output=True, text=True,
+                               encoding="utf-8", errors="replace", creationflags=NO_WINDOW,
+                               timeout=RENDER_SECONDS if label == "x264" else 180)
+        except subprocess.TimeoutExpired:
+            if label == "x264":
+                raise RuntimeError("Burning subtitles took too long and was stopped.")
+            continue
+        if p.returncode == 0 and final_file.is_file() and final_file.stat().st_size > 100000:
+            break
+        err = p.stderr[-1200:]
+    else:
+        raise RuntimeError(f"Subtitle burn failed: {err}")
+
     length = sum(b - a for a, b in keep) if keep else end - start
     cover_t = min(1.2, length / 2)
     run(["ffmpeg", "-y", "-v", "error", "-ss", f"{cover_t:.2f}", "-i", f"{name}.mp4", "-frames:v", "1",

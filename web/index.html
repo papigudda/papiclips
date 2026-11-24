@@ -3748,6 +3748,14 @@ function initLiveClipEditor(j, c) {
 
   if (video) {
     video.volume = 1.0;
+    video.onloadedmetadata = () => {
+      const clipLen = (c.end || 0) - (c.start || 0);
+      if (video.duration < 2 && clipLen > 4 && video.src.indexOf('.clean.mp4') !== -1) {
+        video.dataset.fallback = '1';
+        video.src = `${m}${c.file}?v=${c.version}`;
+        syncAllSettings();
+      }
+    };
     video.ontimeupdate = () => {
       updateCaptionAtTime(video.currentTime);
     };
