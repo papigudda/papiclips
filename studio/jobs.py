@@ -495,6 +495,12 @@ def request_render(jid, cid, changes: dict):
     for k in ("hook", "title", "description", "style", "layout"):
         if k in changes:
             new[k] = str(changes[k])[:{"hook": 60, "title": 100, "description": 2000}.get(k, 20)]
+    for k in ("hook_x", "hook_y", "caption_x", "caption_y", "tag_x", "tag_y", "watermark_x", "watermark_y"):
+        if k in changes and changes[k] not in ("", None):
+            try:
+                new[k] = round(float(changes[k]), 1)
+            except (ValueError, TypeError):
+                pass
     if "hashtags" in changes:
         new["hashtags"] = clean_hashtags(changes["hashtags"])
     if new.get("style") not in render.STYLES:

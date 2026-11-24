@@ -553,6 +553,16 @@ def render_clip(src: Path, out_dir: Path, name: str, clip: dict, words: list, sr
     game = _box(clip.get("game"))
     layout, fg_h, hook_y, cap_y = geometry(src_w, src_h, want, top_h)
     hook_y = _hook_y(layout, hook_y, face)
+    if clip.get("hook_y") not in (None, ""):
+        try:
+            hook_y = int(round(H * float(clip["hook_y"]) / 100))
+        except (ValueError, TypeError):
+            pass
+    if clip.get("caption_y") not in (None, ""):
+        try:
+            cap_y = int(round(H * float(clip["caption_y"]) / 100))
+        except (ValueError, TypeError):
+            pass
     keep = tighten_plan(src, start, end, words) if clip.get("tighten") else []
     shown = tightened_words(words, start, keep) if keep else words
     length = sum(b - a for a, b in keep) if keep else end - start
@@ -578,6 +588,12 @@ def render_clip(src: Path, out_dir: Path, name: str, clip: dict, words: list, sr
                 im = im.resize((W - 80, max(1, int(im.height * (W - 80) / im.width))))
             im.save(work / "t.png")
             tag = tagmod.place(im.size, t.get("pos", "bottom_left"), cap_y, hook_y, bool(clip.get("watermark")))
+            if clip.get("tag_x") not in (None, "") and clip.get("tag_y") not in (None, ""):
+                try:
+                    tag = (int(round(W * float(clip["tag_x"]) / 100 - im.width / 2)),
+                           int(round(H * float(clip["tag_y"]) / 100 - im.height / 2)))
+                except (ValueError, TypeError):
+                    pass
         except Exception as e:  # noqa: BLE001 - the clip is still made, without the tag
             print(f"  Creator tag not drawn: {e}", flush=True)
             tag = None
@@ -607,7 +623,7 @@ def _render_in(work: Path, src: Path, out_dir: Path, name: str, start, end, layo
     (work / "f").mkdir(exist_ok=True)
     for f in config.FONTS_DIR.glob("*.ttf"):
         shutil.copyfile(f, work / "f" / f.name)
-    fc = _filter(layout, fg_h, face, z, game, top_h) + f"[v0]ass=filename={name}.ass:fontsdir=f[v]"   # option names said: newer ffmpeg (Mac) refuses the short form
+    fc = _filter(layout, fg_h, face, z, game, top_h) + f"[v0]split=2[v_clean][v_ass];[v_ass]ass=filename={name}.ass:fontsdir=f[v]"
     extra = []
     if tag:             # the creator tag (t.png, written by render_clip) laid over everything
         fc = fc[:-3] + f"[va];[va][1:v]overlay={int(tag[0])}:{int(tag[1])}[v]"
@@ -626,9 +642,16 @@ def _render_in(work: Path, src: Path, out_dir: Path, name: str, start, end, layo
     err = None
     for label, enc in encoders:
         try:
-            p = subprocess.run(base + enc + [f"{name}.mp4"], cwd=work, capture_output=True, text=True,
+            # Output both final clip and clean clip (for live editor preview without duplicate burned subtitles)
+            cmd = base + enc + [f"{name}.mp4", "-map", "[v_clean]", *sound] + enc + [f"{name}.clean.mp4"]
+            p = subprocess.run(cmd, cwd=work, capture_output=True, text=True,
                                encoding="utf-8", errors="replace", creationflags=NO_WINDOW,
                                timeout=RENDER_SECONDS if label == "x264" else 180)
+            if p.returncode != 0:
+                # If dual output failed, try single output
+                p = subprocess.run(base + enc + [f"{name}.mp4"], cwd=work, capture_output=True, text=True,
+                                   encoding="utf-8", errors="replace", creationflags=NO_WINDOW,
+                                   timeout=RENDER_SECONDS if label == "x264" else 180)
         except subprocess.TimeoutExpired:
             if label == "x264":
                 raise RuntimeError("Making the clip took too long and was stopped.")
@@ -648,6 +671,8 @@ def _render_in(work: Path, src: Path, out_dir: Path, name: str, start, end, layo
     cover_t = min(1.2, length / 2)
     run(["ffmpeg", "-y", "-v", "error", "-ss", f"{cover_t:.2f}", "-i", f"{name}.mp4", "-frames:v", "1",
          "-q:v", "3", f"{name}.jpg"], cwd=work)
-    for ext in ("mp4", "jpg", "ass"):
-        shutil.move(str(work / f"{name}.{ext}"), str(out_dir / f"{name}.{ext}"))
+    for ext in ("mp4", "clean.mp4", "jpg", "ass"):
+        f = work / f"{name}.{ext}"
+        if f.is_file():
+            shutil.move(str(f), str(out_dir / f"{name}.{ext}"))
     return {"file": f"{name}.mp4", "cover": f"{name}.jpg", "layout": layout}
