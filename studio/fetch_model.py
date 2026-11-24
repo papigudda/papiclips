@@ -35,6 +35,95 @@ _locks = {lang: threading.Lock() for lang in MODELS}
 state = {lang: {"doing": False, "percent": 0, "error": ""} for lang in MODELS}
 
 
+class Problem(Exception):
+    """A reason the person can act on."""
+
+
+def _why(e: BaseException) -> str:
+    """What went wrong, in words someone without a technical background can act on."""
+    import ssl
+    try:
+        import httpx
+    except ImportError:
+        httpx = None
+    t = f"{type(e).__name__}: {e}"
+    if isinstance(e, Problem):
+        return str(e)
+    if isinstance(e, OSError) and getattr(e, "errno", None) == 28 or "No space left" in t or "disk is full" in t.lower():
+        return "The drive is full. Free up about 1.5 GB and try again."
+    if isinstance(e, PermissionError):
+        return "Windows didn't let PapiClips write its files (an antivirus may be blocking it)."
+    if "CERTIFICATE" in t.upper() or isinstance(e, ssl.SSLError):
+        return ("The secure connection was refused (an antivirus or office network that checks secure connections can "
+                "cause this).")
+    if httpx:
+        if isinstance(e, (httpx.ConnectTimeout, httpx.ReadTimeout, httpx.WriteTimeout, httpx.PoolTimeout)):
+            return "The internet connection was too slow or stopped."
+        if isinstance(e, httpx.ConnectError):
+            return "Couldn't connect to the download server. Check the internet connection."
+        if isinstance(e, httpx.HTTPStatusError):
+            return f"The download server answered {e.response.status_code}."
+        if isinstance(e, (httpx.RemoteProtocolError, httpx.ReadError)):
+            return "The connection was cut off in the middle."
+    return t[:160]
+
+
+def _proxy():
+    """Windows' own proxy setting, if there is one (httpx only reads the HTTPS_PROXY variable by itself)."""
+    try:
+        p = urllib.request.getproxies()
+        return p.get("https") or p.get("http") or None
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _client(windows_certs: bool = False):
+    import httpx, ssl
+    verify = ssl.create_default_context() if windows_certs else True
+    return httpx.Client(headers={"User-Agent": "PapiClips"}, timeout=httpx.Timeout(60, connect=20), follow_redirects=True, verify=verify,
+                        proxy=_proxy())
+
+
+def _download(url: str, dest, share: tuple = (0, 100), progress: dict = None) -> None:
+    """Fetch `url` into `dest`, carrying on from what is already in `dest`. Tries again a few times, then raises.
+    `share` is the part of the progress bar this file fills; `progress` the dict whose "percent" it fills."""
+    progress = progress if progress is not None else {}
+    import httpx, ssl
+    last = None
+    windows_certs = False
+    for attempt in range(4):
+        if attempt:
+            time.sleep(min(20, 3 * attempt))
+        have = dest.stat().st_size if dest.exists() else 0
+        try:
+            with _client(windows_certs) as c, c.stream("GET", url, headers={"Range": f"bytes={have}-"} if have else {}) as r:
+                if r.status_code == 416:
+                    return
+                r.raise_for_status()
+                if have and r.status_code != 206:
+                    have = 0
+                total = have + int(r.headers.get("content-length") or 0)
+                with open(dest, "ab" if have else "wb") as f:
+                    got = have
+                    for chunk in r.iter_bytes(1024 * 1024):
+                        f.write(chunk)
+                        got += len(chunk)
+                        if total:
+                            progress["percent"] = min(99, int(share[0] + (share[1] - share[0]) * got / total))
+                if total and got < total:
+                    raise httpx.RemoteProtocolError("ended early")
+                return
+        except Exception as e:  # noqa: BLE001
+            last = e
+            if isinstance(e, httpx.HTTPStatusError) and e.response.status_code in (403, 404):
+                break
+            if ("CERTIFICATE" in str(e).upper() or isinstance(e, ssl.SSLError)) and not windows_certs:
+                windows_certs = True
+            if isinstance(e, OSError) and not isinstance(e, (httpx.HTTPError, ssl.SSLError)):
+                break
+    raise last
+
+
 class WrongFile(Exception):
     """The downloaded file is not the one expected: its fingerprint does not match."""
 

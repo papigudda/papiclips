@@ -126,15 +126,15 @@ def _move_folder(old: Path, new: Path) -> bool:
 
 def _data_folder():
     if env("CLIPKONTRAST_DATA"):
-        return Path(env("CLIPKONTRAST_DATA")), "env"
+        return Path(env("CLIPKONTRAST_DATA")).resolve(), "env"
     try:
         chosen = json.loads(STORAGE_FILE.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         chosen = {}
     if not chosen.get("path"):
         # The Windows app keeps its data next to its code, not inside it, so an update can replace the code folder
-        return Path(env("CLIPKONTRAST_DEFAULT_DATA") or ROOT / "data"), "default"
-    new = Path(chosen["path"])
+        return Path(env("CLIPKONTRAST_DEFAULT_DATA") or ROOT / "data").resolve(), "default"
+    new = Path(chosen["path"]).resolve()
     try:
         new.mkdir(parents=True, exist_ok=True)
     except OSError:

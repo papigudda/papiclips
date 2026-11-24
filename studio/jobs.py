@@ -573,19 +573,20 @@ def render_one(job, clip, words):
         clip.update(status="error", error="Stopped before this clip was made. Press Re-make to make it.")
         save(job)
         return
-    d = Path(job["dir"])
+    d = Path(job["dir"]).resolve()
     clip["status"] = "rendering"
     save(job)
     try:
         if not clip.get("src") and not job.get("source_path"):
             _piece_again(job, clip)
         src, meta = _clip_source(job, clip)
+        src = src.resolve()
         off = clip.get("src_offset", 0.0) if clip.get("src") else 0.0
         local = dict(clip, start=clip["start"] - off, end=clip["end"] - off, hook=roman.to_roman(clip.get("hook") or ""))
         local["tag"] = tagmod.spec(_with_channel(job), clip)          # the streamer's handle on it, if asked for
         near = _caption_words(job, clip, words, off, src) if clip.get("captions", True) else []
         # the size of the file this clip is really cut from (a piece can come in another size than the first one)
-        out = render.render_clip(src, d / "clips", clip["id"], local, near, meta["width"] or job["width"],
+        out = render.render_clip(src, (d / "clips").resolve(), clip["id"], local, near, meta["width"] or job["width"],
                                  meta["height"] or job["height"])
         # The layout chosen stays the clip's choice; what was really used is kept beside it, with why if they differ.
         used = out.pop("layout", clip.get("layout"))
@@ -855,7 +856,7 @@ def _clip_source(job, clip):
     another stretch, or a short one) used to reach the encoder with nothing to cut ("received no packets"): it is
     fetched again, cut exactly at the clip's time, and only if that still fails does the clip say so."""
     for attempt in (1, 2):
-        src = Path(clip["src"]) if clip.get("src") else Path(job["source_path"])
+        src = (Path(clip["src"]) if clip.get("src") else Path(job["source_path"])).resolve()
         try:
             meta = media.probe(src)
         except Exception:  # noqa: BLE001 - an unreadable piece is fetched again below; the whole video, as known

@@ -319,6 +319,7 @@ _LOUD: dict = {}
 def clip_loudness(src, start, end):
     """How loud the clip is every 50 ms (a quarter-second average), read once per clip and kept for the next caller."""
     import numpy as np
+    src = Path(src).resolve()
     key = (str(src), round(start, 2), round(end, 2))
     if key in _LOUD:
         return _LOUD[key]
@@ -536,6 +537,8 @@ RENDER_SECONDS = 600      # one clip's video encode; far beyond normal, so a fro
 
 def render_clip(src: Path, out_dir: Path, name: str, clip: dict, words: list, src_w: int, src_h: int) -> dict:
     """Writes <name>.mp4, <name>.jpg and <name>.ass into out_dir. Returns file names."""
+    src = Path(src).resolve()
+    out_dir = Path(out_dir).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
     start, end = clip["start"], clip["end"]
     face = clip.get("facecam")
@@ -598,6 +601,8 @@ def render_clip(src: Path, out_dir: Path, name: str, clip: dict, words: list, sr
 
 def _render_in(work: Path, src: Path, out_dir: Path, name: str, start, end, layout, fg_h, ass: str, face=None, z="", keep=None,
                game=None, top_h=SPLIT_TOP, tag=None) -> dict:
+    src = Path(src).resolve()
+    out_dir = Path(out_dir).resolve()
     (work / f"{name}.ass").write_text(ass, encoding="utf-8")
     (work / "f").mkdir(exist_ok=True)
     for f in config.FONTS_DIR.glob("*.ttf"):

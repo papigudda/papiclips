@@ -47,3 +47,6 @@ storage.json
 *.log
 .tmp/
 tmp/
+
+render_carry_clips.py
+
