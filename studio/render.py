@@ -215,6 +215,66 @@ def _mark_y(cap_y):
     return cap_y + 128 if cap_y + 128 <= 1660 else cap_y - 140
 
 
+def parse_ass_phrases(ass_path: Path) -> list:
+    """Parses .ass subtitle file and returns grouped timed phrases and words for live editor preview."""
+    if not ass_path.is_file():
+        return []
+    lines = ass_path.read_text(encoding="utf-8").splitlines()
+    def to_sec(t):
+        p = t.split(":")
+        return round(int(p[0]) * 3600 + int(p[1]) * 60 + float(p[2]), 2)
+
+    active_words = []
+    for l in lines:
+        if l.startswith("Dialogue:") and ",Cap," in l:
+            p = l.split(",", 9)
+            if len(p) == 10:
+                layer_part = p[0].split(":")[1].strip()
+                try:
+                    layer = int(layer_part)
+                except ValueError:
+                    layer = 0
+                if layer in (2, 3):
+                    s = to_sec(p[1])
+                    e = to_sec(p[2])
+                    txt = re.sub(r"\{[^}]*\}", "", p[9]).strip()
+                    if txt:
+                        pos_m = re.search(r"\\pos\((\d+)", p[9])
+                        x_pos = int(pos_m.group(1)) if pos_m else 0
+                        active_words.append({"s": s, "e": e, "w": txt, "x": x_pos})
+
+    dedup = []
+    for w in active_words:
+        if not dedup or dedup[-1]["w"] != w["w"] or abs(dedup[-1]["s"] - w["s"]) > 0.05:
+            dedup.append(w)
+
+    dedup.sort(key=lambda item: (item["s"], item["x"]))
+
+    phrases = []
+    cur_group = []
+    for w in dedup:
+        if not cur_group:
+            cur_group.append(w)
+        else:
+            prev = cur_group[-1]
+            if w["s"] <= prev["e"] + 0.45 and len(cur_group) < 3:
+                cur_group.append(w)
+            else:
+                phrases.append({
+                    "start": cur_group[0]["s"],
+                    "end": cur_group[-1]["e"],
+                    "words": [{"w": x["w"], "s": x["s"], "e": x["e"]} for x in cur_group]
+                })
+                cur_group = [w]
+    if cur_group:
+        phrases.append({
+            "start": cur_group[0]["s"],
+            "end": cur_group[-1]["e"],
+            "words": [{"w": x["w"], "s": x["s"], "e": x["e"]} for x in cur_group]
+        })
+    return phrases
+
+
 def build_ass(words, start, end, hook, style_name, highlight, hook_y, cap_y, watermark="") -> str:
     st = STYLES.get(style_name, STYLES["bounce"])
     words = [dict(w, s=w["s"] - CAPTION_LEAD, e=w["e"] - CAPTION_LEAD) for w in words]

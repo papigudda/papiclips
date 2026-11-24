@@ -3626,6 +3626,43 @@ function initLiveClipEditor(j, c) {
   let selStart = Number(startIn?.value || c.start || 0);
   let selEnd = Number(endIn?.value || c.end || (selStart + 30));
 
+  let clipPhrases = [];
+  function updateCaptionAtTime(t) {
+    const capBox = $("#prevCaptionsBox");
+    const capLine = $("#prevCaptionLine");
+    const capToggle = dlg.querySelector('[data-f="captions"]');
+    if (!capBox || !capLine) return;
+    const on = capToggle ? capToggle.checked : true;
+    if (!on) {
+      capBox.style.display = "none";
+      return;
+    }
+    capBox.style.display = "flex";
+    if (clipPhrases && clipPhrases.length) {
+      const ph = clipPhrases.find(p => t >= p.start - 0.1 && t <= p.end + 0.15);
+      if (ph) {
+        capLine.innerHTML = ph.words.map(w => {
+          const isActive = (t >= w.s - 0.05 && t <= w.e + 0.05);
+          return `<span class="${isActive ? 'active' : ''}">${esc(w.w)}</span>`;
+        }).join(" ");
+        return;
+      }
+      if (video?.paused || t < (clipPhrases[0]?.start || 0)) {
+        const sample = clipPhrases.find(p => p.start >= t) || clipPhrases[0];
+        if (sample) {
+          capLine.innerHTML = sample.words.map((w, i) => `<span class="${i === 0 ? 'active' : ''}">${esc(w.w)}</span>`).join(" ");
+          return;
+        }
+      }
+      capLine.innerHTML = "";
+    }
+  }
+
+  api(`/api/jobs/${j.id}/clips/${c.id}/captions`).then(res => {
+    clipPhrases = Array.isArray(res) ? res : [];
+    updateCaptionAtTime(video?.currentTime || 0);
+  }).catch(() => {});
+
   function updateTimelineUI() {
     if (!track) return;
     const dur = (video && video.duration && isFinite(video.duration) && video.duration > 0) ? video.duration : (selEnd - selStart || 30);
@@ -3672,6 +3709,7 @@ function initLiveClipEditor(j, c) {
       const on = capToggle ? capToggle.checked : true;
       capBox.style.display = on ? "flex" : "none";
       if (styleSel) capBox.setAttribute("data-style", styleSel.value);
+      updateCaptionAtTime(video?.currentTime || 0);
     }
 
     // 3. Layout Overlay
@@ -3742,11 +3780,7 @@ function initLiveClipEditor(j, c) {
         const pct = (video.currentTime / video.duration) * 100;
         playhead.style.left = Math.min(100, Math.max(0, pct)) + "%";
       }
-      const words = $$("#prevCaptionLine span");
-      if (words.length) {
-        const idx = Math.floor((video.currentTime * 2.5) % words.length);
-        words.forEach((w, i) => w.classList.toggle("active", i === idx));
-      }
+      updateCaptionAtTime(video.currentTime);
     };
     const muteBtn = $("#tlMuteBtn");
     function updateMuteUI() {
@@ -3791,12 +3825,6 @@ function initLiveClipEditor(j, c) {
         video.play().catch(() => {});
       };
     }
-    video.addEventListener("error", () => {
-      if (video.dataset.fallback === "1") {
-        const h = $("#prevHookSticker"); if (h) h.style.display = "none";
-        const c = $("#prevCaptionsBox"); if (c) c.style.display = "none";
-      }
-    });
   }
 
   // Interactive Timeline Scrubber & Dragging

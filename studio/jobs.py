@@ -1312,7 +1312,7 @@ def facecam_frame(jid, cid) -> tuple:
         path, span = job.get("source_path"), (clip["start"], clip["end"])
     if not path or not Path(path).is_file():
         raise ValueError("The video this clip came from isn't on this computer any more.")
-    jpeg = facecam._frame_jpeg(path, width=960, span=span)
+    jpeg = facecam._frame_jpeg(path, width=960)
     if not jpeg:
         raise ValueError("Couldn't read a picture from this clip's video.")
     w, h = _src_size(job, clip)

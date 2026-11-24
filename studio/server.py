@@ -1161,6 +1161,16 @@ def _clip_or_404(jid: str, cid: str):
     return job, clip
 
 
+@app.get("/api/jobs/{jid}/clips/{cid}/captions")
+def clip_captions(jid: str, cid: str):
+    """Timed subtitle phrases for live editor preview, parsed from the clip's .ass file."""
+    job, clip = _clip_or_404(jid, cid)
+    ass_path = Path(job["dir"]) / "clips" / f"{cid}.ass"
+    if ass_path.is_file():
+        return render.parse_ass_phrases(ass_path)
+    return []
+
+
 @app.put("/api/jobs/{jid}/clips/{cid}/text")
 def clip_text(jid: str, cid: str, body: dict = Body(...)):
     """Save a clip's title, description and hashtags. The video is not made again."""
