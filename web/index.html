@@ -951,12 +951,10 @@ dialog#clipdlg:not([open]){display:none}
 .editor{display:grid;grid-template-columns:minmax(320px,400px) minmax(360px,1fr);grid-template-rows:100%;width:100%;height:100%;max-height:100%;min-height:0;flex:1;background:var(--card);border-radius:var(--r-lg);overflow:hidden;position:relative;transition:all .2s ease}
 .editor.fullscreen{position:fixed;inset:0;width:100vw;height:100vh;max-width:100vw;max-height:100vh;border-radius:0;z-index:100;grid-template-columns:1fr 480px;grid-template-rows:100%}
 .editor .stage{background:#070913;border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px 16px;position:relative;overflow:hidden;user-select:none;min-height:0;height:100%;max-height:100%}
-.phone-stage{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;gap:8px;min-height:0;height:100%;max-height:100%}
-.phone-frame{position:relative;height:min(50vh,440px);aspect-ratio:9/16;width:auto;max-width:100%;background:#000;border-radius:22px;overflow:hidden;box-shadow:0 18px 45px rgba(0,0,0,.9),0 0 0 2px rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.phone-frame video{width:100%;height:100%;object-fit:cover;display:block;transition:transform .25s ease,object-fit .25s ease}
-
-.drag-hint-pill{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:500;color:var(--dim);background:rgba(255,255,255,.05);padding:3px 10px;border-radius:999px;border:1px solid var(--line);user-select:none;letter-spacing:.2px;margin-top:2px}
-.drag-hint-pill svg{color:#00F0FF;flex:none}
+.phone-stage{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;gap:8px;min-height:0;height:100%;max-height:100%;padding:10px;box-sizing:border-box}
+.phone-frame{position:relative;height:min(74vh,620px);aspect-ratio:9/16;width:auto;max-width:100%;background:#000;border-radius:22px;overflow:hidden;box-shadow:0 20px 55px rgba(0,0,0,.92),0 0 0 2px rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.phone-frame video{width:100%;height:100%;object-fit:contain;background:#000;display:block}
+.cap-style-box{padding:10px 14px;background:rgba(0,0,0,.45);border:1px solid var(--line-2);border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;margin-top:6px;min-height:48px}
 
 /* Live Layout Overlays - subtle guides in corners */
 .prev-layout-overlay{position:absolute;inset:0;pointer-events:none;z-index:5}
@@ -3606,441 +3604,46 @@ function initLiveClipEditor(j, c) {
   const dlg = $("#clipdlg");
   if (!dlg) return;
   const video = $("#prevVideo");
-  const track = $("#tlTrack");
-  const sel = $("#tlSelection");
-  const dimL = $("#tlDimLeft");
-  const dimR = $("#tlDimRight");
-  const playhead = $("#tlPlayhead");
-  const curTime = $("#tlCurTime");
-  const totTime = $("#tlTotTime");
-  const rangeText = $("#tlRangeText");
-  const durText = $("#tlDurText");
-  const playBtn = $("#tlPlayBtn");
-  const rewindBtn = $("#tlRewindBtn");
+  const styleSel = dlg.querySelector('[data-f="style"]');
+  const capToggle = dlg.querySelector('[data-f="captions"]');
+  const capPreview = $("#capStylePreview");
 
-  const startIn = dlg.querySelector('[data-f="start"]');
-  const endIn = dlg.querySelector('[data-f="end"]');
-
-  let totalDur = (c.end - c.start) || 60;
-  let baseStart = Number(c.start || 0);
-  let selStart = Number(startIn?.value || c.start || 0);
-  let selEnd = Number(endIn?.value || c.end || (selStart + 30));
-
-  let clipPhrases = [];
-  function updateCaptionAtTime(t) {
-    const capBox = $("#prevCaptionsBox");
-    const capLine = $("#prevCaptionLine");
-    const capToggle = dlg.querySelector('[data-f="captions"]');
-    if (!capBox || !capLine) return;
+  function syncStylePreview() {
+    if (!capPreview) return;
     const on = capToggle ? capToggle.checked : true;
-    if (!on) {
-      capBox.style.display = "none";
-      return;
-    }
-    capBox.style.display = "flex";
-    if (clipPhrases && clipPhrases.length) {
-      const ph = clipPhrases.find(p => t >= p.start - 0.1 && t <= p.end + 0.15);
-      if (ph) {
-        capLine.innerHTML = ph.words.map(w => {
-          const isActive = (t >= w.s - 0.05 && t <= w.e + 0.05);
-          return `<span class="${isActive ? 'active' : ''}">${esc(w.w)}</span>`;
-        }).join(" ");
-        return;
-      }
-      if (video?.paused || t < (clipPhrases[0]?.start || 0)) {
-        const sample = clipPhrases.find(p => p.start >= t) || clipPhrases[0];
-        if (sample) {
-          capLine.innerHTML = sample.words.map((w, i) => `<span class="${i === 0 ? 'active' : ''}">${esc(w.w)}</span>`).join(" ");
-          return;
-        }
-      }
-      capLine.innerHTML = "";
+    capPreview.style.display = on ? "flex" : "none";
+    if (styleSel) {
+      capPreview.setAttribute("data-style", styleSel.value || "bounce");
+      styleSel.disabled = !on;
     }
   }
 
-  api(`/api/jobs/${j.id}/clips/${c.id}/captions`).then(res => {
-    clipPhrases = Array.isArray(res) ? res : [];
-    updateCaptionAtTime(video?.currentTime || 0);
-  }).catch(() => {});
-
-  function updateTimelineUI() {
-    if (!track) return;
-    const dur = (video && video.duration && isFinite(video.duration) && video.duration > 0) ? video.duration : (selEnd - selStart || 30);
-    if (totTime) totTime.textContent = fmt(dur);
-
-    const sFrac = Math.max(0, Math.min(1, (selStart - baseStart) / dur));
-    const eFrac = Math.max(sFrac + 0.05, Math.min(1, (selEnd - baseStart) / dur));
-
-    if (sel) {
-      sel.style.left = (sFrac * 100) + "%";
-      sel.style.width = Math.max(2, (eFrac - sFrac) * 100) + "%";
-    }
-    if (dimL) dimL.style.width = (sFrac * 100) + "%";
-    if (dimR) dimR.style.left = (eFrac * 100) + "%";
-
-    if (rangeText) rangeText.textContent = `${fmt(selStart)} – ${fmt(selEnd)}`;
-    if (durText) durText.textContent = `(${Math.max(1, Math.round(selEnd - selStart))}s)`;
+  if (styleSel) {
+    styleSel.addEventListener("change", syncStylePreview);
+  }
+  if (capToggle) {
+    capToggle.addEventListener("change", syncStylePreview);
   }
 
-  function syncPreview() {
-    const hookIn = dlg.querySelector('[data-f="hook"]');
-    const capToggle = dlg.querySelector('[data-f="captions"]');
-    const styleSel = dlg.querySelector('[data-f="style"]');
-    const laySel = dlg.querySelector('[data-f="layout"]');
-    const zoomToggle = dlg.querySelector('[data-f="zoom"]');
-    const tagToggle = dlg.querySelector('[data-f="tag"]');
-    const handleIn = dlg.querySelector('[data-f="tag_handle"]');
-    const tagStyle = dlg.querySelector('[data-f="tag_style"]');
-    const tagPos = dlg.querySelector('[data-f="tag_pos"]');
-    const wmIn = dlg.querySelector('[data-f="watermark"]');
-
-    // 1. Hook / Big Text
-    const hookBox = $("#prevHookSticker");
-    const hookTxt = $("#prevHookText");
-    if (hookBox && hookTxt) {
-      const val = (hookIn?.value || "").trim();
-      hookTxt.textContent = val;
-      hookBox.style.display = val ? "flex" : "none";
-    }
-
-    // 2. Captions & Style
-    const capBox = $("#prevCaptionsBox");
-    if (capBox) {
-      const on = capToggle ? capToggle.checked : true;
-      capBox.style.display = on ? "flex" : "none";
-      if (styleSel) capBox.setAttribute("data-style", styleSel.value);
-      updateCaptionAtTime(video?.currentTime || 0);
-    }
-
-    // 3. Layout Overlay
-    const overlay = $("#prevLayoutOverlay");
-    const splitT = $("#prevSplitTop");
-    const splitB = $("#prevSplitBottom");
-    const pip = $("#prevPipBox");
-    if (laySel && overlay) {
-      const lay = laySel.value;
-      overlay.setAttribute("data-layout", lay);
-      if (splitT && splitB) {
-        splitT.style.display = lay === "split" ? "flex" : "none";
-        splitB.style.display = lay === "split" ? "flex" : "none";
-      }
-      if (pip) pip.style.display = lay === "gameplay" ? "flex" : "none";
-      if (video) {
-        if (lay === "crop") {
-          video.style.objectFit = "cover";
-          video.style.transform = "none";
-        } else if (lay === "zoom" || (zoomToggle && zoomToggle.checked)) {
-          video.style.objectFit = "cover";
-          video.style.transform = "scale(1.2)";
-        } else {
-          video.style.objectFit = "cover";
-          video.style.transform = "none";
-        }
-      }
-    }
-
-    // 4. Tag Pill
-    const tagPill = $("#prevTagPill");
-    const tagHandle = $("#prevTagHandle");
-    if (tagPill && tagHandle) {
-      const on = tagToggle ? tagToggle.checked : true;
-      tagPill.style.display = on ? "inline-flex" : "none";
-      const h = (handleIn?.value || "").trim();
-      tagHandle.textContent = h || "@streamer";
-      if (tagStyle) tagPill.setAttribute("data-style", tagStyle.value);
-      if (tagPos && !tagPill.dataset.customDragged) tagPill.setAttribute("data-pos", tagPos.value);
-    }
-
-    // 5. Watermark
-    const wm = $("#prevWatermark");
-    if (wm && wmIn) {
-      const val = wmIn.value.trim();
-      wm.textContent = val;
-      wm.style.display = val ? "block" : "none";
-    }
-
-    // 6. Time inputs
-    if (startIn) selStart = Number(startIn.value);
-    if (endIn) selEnd = Number(endIn.value);
-    updateTimelineUI();
-  }
-
-  dlg.oninput = syncPreview;
-  dlg.onchange = syncPreview;
-
-  // Video listeners
   if (video) {
-    video.onloadedmetadata = () => {
-      totalDur = video.duration || totalDur;
-      updateTimelineUI();
+    video.volume = 1.0;
+    const unmute = () => {
+      video.muted = false;
+      window.removeEventListener("pointerdown", unmute);
     };
-    video.ontimeupdate = () => {
-      if (curTime) curTime.textContent = fmt(video.currentTime);
-      if (playhead && video.duration) {
-        const pct = (video.currentTime / video.duration) * 100;
-        playhead.style.left = Math.min(100, Math.max(0, pct)) + "%";
-      }
-      updateCaptionAtTime(video.currentTime);
-    };
-    const muteBtn = $("#tlMuteBtn");
-    function updateMuteUI() {
-      if (!muteBtn || !video) return;
-      const isMuted = video.muted;
-      muteBtn.innerHTML = isMuted
-        ? '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.63 3.63a.996.996 0 000 1.41L7.29 8.7 7 9H4c-.55 0-1 .45-1 1v4c0 .55.45 1 1 1h3l3.29 3.29c.63.63 1.71.18 1.71-.71v-4.17l4.18 4.18c-.49.37-1.02.68-1.6.91-.36.15-.58.53-.58.92 0 .69.67 1.2 1.33.95.84-.32 1.61-.79 2.29-1.37l1.76 1.76a.996.996 0 101.41-1.41L5.05 3.63a.996.996 0 00-1.42 0zM19 12c0 .82-.15 1.61-.41 2.34l1.53 1.53c.56-1.17.88-2.48.88-3.87 0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zm-7-8l-1.88 1.88L12 7.76zm4.5 8A4.5 4.5 0 0014 7.97v1.79l2.48 2.48c.01-.08.02-.16.02-.24z"/></svg>'
-        : '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>';
-      muteBtn.title = isMuted ? "Click to Unmute Sound" : "Click to Mute Sound";
-    }
-    if (muteBtn) {
-      muteBtn.onclick = () => {
-        video.muted = !video.muted;
-        if (!video.muted) video.volume = 1.0;
-        updateMuteUI();
-      };
-    }
-    if (playBtn) {
-      playBtn.onclick = () => {
-        if (video.paused) {
-          if (video.muted) {
-            video.muted = false;
-            video.volume = 1.0;
-            updateMuteUI();
-          }
-          video.play().catch(() => {});
-          playBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
-        } else {
-          video.pause();
-          playBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
-        }
-      };
-    }
-    if (rewindBtn) {
-      rewindBtn.onclick = () => {
-        video.currentTime = 0;
-        if (video.muted) {
-          video.muted = false;
-          video.volume = 1.0;
-          updateMuteUI();
-        }
-        video.play().catch(() => {});
-      };
-    }
+    window.addEventListener("pointerdown", unmute, { once: true });
   }
-
-  // Interactive Timeline Scrubber & Dragging
-  let dragging = null;
-
-  function onTrackPointer(e) {
-    if (!track || !video || !video.duration) return;
-    const rect = track.getBoundingClientRect();
-    const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
-    const frac = Math.max(0, Math.min(1, x / rect.width));
-    const t = frac * video.duration;
-
-    if (dragging === "start") {
-      selStart = Math.min(selEnd - 2, baseStart + t);
-      if (startIn) startIn.value = selStart.toFixed(1);
-      video.currentTime = t;
-    } else if (dragging === "end") {
-      selEnd = Math.max(selStart + 2, baseStart + t);
-      if (endIn) endIn.value = selEnd.toFixed(1);
-    } else {
-      video.currentTime = t;
-    }
-    updateTimelineUI();
-  }
-
-  if (track) {
-    track.onpointerdown = e => {
-      if (e.target.closest("#tlHandleStart")) {
-        dragging = "start";
-      } else if (e.target.closest("#tlHandleEnd")) {
-        dragging = "end";
-      } else {
-        dragging = "scrub";
-      }
-      track.setPointerCapture(e.pointerId);
-      onTrackPointer(e);
-    };
-    track.onpointermove = e => {
-      if (dragging) onTrackPointer(e);
-    };
-    track.onpointerup = e => {
-      if (dragging) {
-        try { track.releasePointerCapture(e.pointerId); } catch {}
-        dragging = null;
-      }
-    };
-  }
-
-  // Interactive On-Video Dragging for Captions, Hook, Tag Pill, Watermark
-  function makeOverlayDraggable(el, key, defX, defY) {
-    if (!el) return;
-    el.classList.add("prev-draggable");
-
-    let posX = c[key + "_x"] != null ? Number(c[key + "_x"]) : defX;
-    let posY = c[key + "_y"] != null ? Number(c[key + "_y"]) : defY;
-
-    function renderPos(x, y) {
-      el.style.left = x.toFixed(1) + "%";
-      el.style.top = y.toFixed(1) + "%";
-      el.style.right = "auto";
-      el.style.bottom = "auto";
-      el.style.transform = "translate(-50%, -50%)";
-    }
-
-    if (c[key + "_x"] != null || c[key + "_y"] != null || el.dataset.customDragged) {
-      renderPos(posX, posY);
-    }
-
-    let isDragging = false;
-    let startPointerX = 0, startPointerY = 0;
-    let startElX = posX, startElY = posY;
-
-    el.onpointerdown = e => {
-      if (e.target.closest("button, a")) return;
-      e.preventDefault();
-      e.stopPropagation();
-
-      isDragging = true;
-      el.setPointerCapture(e.pointerId);
-      el.classList.add("is-dragging");
-      el.dataset.customDragged = "1";
-
-      const frame = $("#prevFrame");
-      const frameRect = frame ? frame.getBoundingClientRect() : { width: 300, height: 533, left: 0, top: 0 };
-
-      const elRect = el.getBoundingClientRect();
-      startElX = ((elRect.left + elRect.width / 2) - frameRect.left) / frameRect.width * 100;
-      startElY = ((elRect.top + elRect.height / 2) - frameRect.top) / frameRect.height * 100;
-
-      startPointerX = e.clientX;
-      startPointerY = e.clientY;
-
-      function onPointerMove(ev) {
-        if (!isDragging) return;
-        ev.preventDefault();
-        const deltaX = ev.clientX - startPointerX;
-        const deltaY = ev.clientY - startPointerY;
-
-        const deltaXPct = (deltaX / frameRect.width) * 100;
-        const deltaYPct = (deltaY / frameRect.height) * 100;
-
-        posX = Math.max(6, Math.min(94, startElX + deltaXPct));
-        posY = Math.max(5, Math.min(95, startElY + deltaYPct));
-
-        renderPos(posX, posY);
-
-        c[key + "_x"] = Number(posX.toFixed(1));
-        c[key + "_y"] = Number(posY.toFixed(1));
-
-        if (key === "tag") {
-          const tagPosSel = dlg.querySelector('[data-f="tag_pos"]');
-          if (tagPosSel) {
-            let p = "bottom_centre";
-            if (posY < 35) p = posX < 50 ? "top_left" : "top_right";
-            else if (posX < 38) p = "bottom_left";
-            else if (posX > 62) p = "bottom_right";
-            tagPosSel.value = p;
-          }
-        }
-      }
-
-      function onPointerUp(ev) {
-        if (!isDragging) return;
-        isDragging = false;
-        try { el.releasePointerCapture(ev.pointerId); } catch {}
-        el.classList.remove("is-dragging");
-        window.removeEventListener("pointermove", onPointerMove);
-        window.removeEventListener("pointerup", onPointerUp);
-      }
-
-      window.addEventListener("pointermove", onPointerMove);
-      window.addEventListener("pointerup", onPointerUp);
-    };
-  }
-
-  makeOverlayDraggable($("#prevHookSticker"), "hook", 50, 18);
-  makeOverlayDraggable($("#prevCaptionsBox"), "caption", 50, 70);
-  makeOverlayDraggable($("#prevTagPill"), "tag", 28, 86);
-  makeOverlayDraggable($("#prevWatermark"), "watermark", 82, 8);
-
-  const tagPosDropdown = dlg.querySelector('[data-f="tag_pos"]');
-  if (tagPosDropdown && !tagPosDropdown._snapBound) {
-    tagPosDropdown._snapBound = true;
-    tagPosDropdown.addEventListener("change", () => {
-      const tp = $("#prevTagPill");
-      if (tp) {
-        delete tp.dataset.customDragged;
-        tp.style.left = "";
-        tp.style.top = "";
-        tp.style.transform = "";
-        tp.setAttribute("data-pos", tagPosDropdown.value);
-      }
-    });
-  }
-
-  syncPreview();
 }
 
 function drawClipDlg(full) {
   const j = jobOf(D.jid), c = j?.clips.find(x => x.id === D.cid), dlg = $("#clipdlg");
   if (!c) { if (dlg.open) dlg.close(); return; }
   const m = `/media/${j.id}/`, sig = c.status + c.version;
-  const cleanSrc = c.file ? c.file.replace(/\.mp4$/, '.clean.mp4') : '';
 
   const stage = c.status === "done" ? `
     <div class="phone-stage">
       <div class="phone-frame" id="prevFrame">
-        <video id="prevVideo" src="${m}${esc(cleanSrc)}?v=${c.version}" poster="${m}${esc(c.cover)}?v=${c.version}" playsinline loop autoplay muted onerror="if(this.src.indexOf('.clean.mp4')!==-1){this.dataset.fallback='1';this.src='${m}${esc(c.file)}?v=${c.version}';}"></video>
-        <div class="prev-layout-overlay" id="prevLayoutOverlay">
-          <div class="prev-split-top" id="prevSplitTop"><span class="prev-guide-pill">Facecam</span></div>
-          <div class="prev-split-bottom" id="prevSplitBottom"><span class="prev-guide-pill">Gameplay</span></div>
-          <div class="prev-pip-box" id="prevPipBox"><span class="prev-guide-pill">PIP</span></div>
-        </div>
-        <div class="prev-hook-sticker prev-draggable" id="prevHookSticker" style="${c.hook ? '' : 'display:none'}; ${c.hook_y != null ? `top:${c.hook_y}%;left:${c.hook_x || 50}%;transform:translate(-50%,-50%);` : ''}">
-          <span class="hook-text" id="prevHookText">${esc(c.hook || '')}</span>
-        </div>
-        <div class="prev-captions-box prev-draggable" id="prevCaptionsBox" data-style="${esc(c.style || 'bounce')}" style="${c.captions === false ? 'display:none;' : ''} ${c.caption_y != null ? `top:${c.caption_y}%;left:${c.caption_x || 50}%;transform:translate(-50%,-50%);` : ''}">
-          <div class="caption-line" id="prevCaptionLine">
-            <span class="w1">WAIT</span> <span class="w2 active">WHAT</span> <span class="w3">BRO</span>
-          </div>
-        </div>
-        <div class="prev-tag-pill prev-draggable" id="prevTagPill" data-style="${esc(c.tag_style || 'clean')}" data-pos="${esc(c.tag_pos || 'bottom_left')}" style="${c.tag ? '' : 'display:none;'} ${c.tag_y != null ? `top:${c.tag_y}%;left:${c.tag_x || 28}%;transform:translate(-50%,-50%);` : ''}">
-          <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M23.5 6.2c-.3-1-.9-1.8-1.9-2.1C19.9 3.5 12 3.5 12 3.5s-7.9 0-9.6.6C1.4 4.4.8 5.2.5 6.2 0 8.1 0 12 0 12s0 3.9.5 5.8c.3 1 .9 1.8 1.9 2.1 1.7.6 9.6.6 9.6.6s7.9 0 9.6-.6c1-.3 1.6-1.1 1.9-2.1.5-1.9.5-5.8.5-5.8s0-3.9-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg>
-          <span id="prevTagHandle">${esc(c.tag_handle || c.uploader || '@channel')}</span>
-          <svg viewBox="0 0 24 24" width="12" height="12" fill="#3897f0"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-        </div>
-        <div class="prev-watermark prev-draggable" id="prevWatermark" style="${c.watermark ? '' : 'display:none;'} ${c.watermark_y != null ? `top:${c.watermark_y}%;left:${c.watermark_x || 82}%;transform:translate(-50%,-50%);` : ''}">${esc(c.watermark || '')}</div>
-      </div>
-      <div class="drag-hint-pill"><svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"/></svg> Drag captions, headline or tag to move</div>
-      <div class="timeline-trimmer" id="tlTrimmer">
-        <div class="tl-controls">
-          <button type="button" class="tl-btn" id="tlPlayBtn" title="Play/Pause"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
-          <button type="button" class="tl-btn" id="tlRewindBtn" title="Jump to start"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/></svg></button>
-          <button type="button" class="tl-btn" id="tlMuteBtn" title="Click to Unmute Sound" aria-label="Audio toggle"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.63 3.63a.996.996 0 000 1.41L7.29 8.7 7 9H4c-.55 0-1 .45-1 1v4c0 .55.45 1 1 1h3l3.29 3.29c.63.63 1.71.18 1.71-.71v-4.17l4.18 4.18c-.49.37-1.02.68-1.6.91-.36.15-.58.53-.58.92 0 .69.67 1.2 1.33.95.84-.32 1.61-.79 2.29-1.37l1.76 1.76a.996.996 0 101.41-1.41L5.05 3.63a.996.996 0 00-1.42 0zM19 12c0 .82-.15 1.61-.41 2.34l1.53 1.53c.56-1.17.88-2.48.88-3.87 0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zm-7-8l-1.88 1.88L12 7.76zm4.5 8A4.5 4.5 0 0014 7.97v1.79l2.48 2.48c.01-.08.02-.16.02-.24z"/></svg></button>
-          <div class="tl-times">
-            <span class="tl-cur" id="tlCurTime">00:00</span>
-            <span class="tl-sep">/</span>
-            <span class="tl-tot" id="tlTotTime">00:00</span>
-          </div>
-          <div class="tl-range-badge" id="tlRangeBadge">Trim: <b id="tlRangeText">${fmt(c.start)} – ${fmt(c.end)}</b> <span class="tl-dur" id="tlDurText">(${Math.max(1, Math.round(c.end - c.start))}s)</span></div>
-        </div>
-        <div class="tl-bar-container" id="tlBarContainer">
-          <div class="tl-track" id="tlTrack">
-            <div class="tl-dim-left" id="tlDimLeft"></div>
-            <div class="tl-selection" id="tlSelection">
-              <div class="tl-handle tl-handle-left" id="tlHandleStart" title="Drag to trim start">
-                <span class="tl-handle-grip"></span>
-              </div>
-              <div class="tl-handle tl-handle-right" id="tlHandleEnd" title="Drag to trim end">
-                <span class="tl-handle-grip"></span>
-              </div>
-            </div>
-            <div class="tl-dim-right" id="tlDimRight"></div>
-            <div class="tl-playhead" id="tlPlayhead"></div>
-          </div>
-        </div>
+        <video id="prevVideo" src="${m}${esc(c.file)}?v=${c.version}" poster="${m}${esc(c.cover)}?v=${c.version}" controls autoplay playsinline loop></video>
       </div>
     </div>`
     : c.status === "error" ? `<div class="err" style="padding:20px;text-align:center">${esc(c.error || "Could not make this clip.")}</div>`
@@ -4061,18 +3664,13 @@ function drawClipDlg(full) {
           </div>
         </div>
         <h3>On the video</h3>
-        <input type="hidden" data-f="hook_x" value="${c.hook_x != null ? c.hook_x : ''}">
-        <input type="hidden" data-f="hook_y" value="${c.hook_y != null ? c.hook_y : ''}">
-        <input type="hidden" data-f="caption_x" value="${c.caption_x != null ? c.caption_x : ''}">
-        <input type="hidden" data-f="caption_y" value="${c.caption_y != null ? c.caption_y : ''}">
-        <input type="hidden" data-f="tag_x" value="${c.tag_x != null ? c.tag_x : ''}">
-        <input type="hidden" data-f="tag_y" value="${c.tag_y != null ? c.tag_y : ''}">
-        <input type="hidden" data-f="watermark_x" value="${c.watermark_x != null ? c.watermark_x : ''}">
-        <input type="hidden" data-f="watermark_y" value="${c.watermark_y != null ? c.watermark_y : ''}">
         <label class="f">Big text<input data-f="hook" value="${esc(c.hook || '')}" placeholder="HOOK / BIG HEADLINE"></label>
         <label class="sw"><input type="checkbox" data-f="captions" data-caption-toggle ${c.captions === false ? "" : "checked"}>Generate captions</label>
         <div class="two"><label class="f">Caption style<select data-f="style" data-caption-style ${c.captions === false ? "disabled" : ""}>${opts(S.status.styles, c.style)}</select></label>
           <label class="f">Layout<select data-f="layout">${opts(S.status.layouts, c.layout)}</select></label></div>
+        <div class="cap-style-box" id="capStylePreview" data-style="${esc(c.style || 'bounce')}" style="${c.captions === false ? 'display:none;' : ''}">
+          <span class="caption-line"><span class="w1">CAPTION</span> <span class="w2 active">STYLE</span> <span class="w3">SAMPLE</span></span>
+        </div>
         <div class="camfix-row"><button type="button" class="btn sm" data-act="camfix">${ic("eye")}Fix facecam</button>
           <span class="sub">${c.camera_from === "manual" ? "Set by you, remembered for this streamer." : "Wrong part on top? Draw a box around the streamer's webcam."}</span></div>
         <label class="sw"><input type="checkbox" data-f="tighten" ${c.tighten ? "checked" : ""}>Cut silences and filler words${c.tightened ? ` <small style="font-weight:400;color:var(--dim)">(${c.tightened}s cut)</small>` : ""}</label>
@@ -4545,7 +4143,8 @@ document.addEventListener("click", async e => {
       });
       await send(`/api/jobs/${D.jid}/clips/${D.cid}/render`, body);
       toast(a === "done_remake" ? "Clip finalized! Rendering now…" : "Re-making the clip…", "ok");
-      if (a === "done_remake") $("#clipdlg").close();
+      const isStandalone = new URLSearchParams(location.search).has("edit_job");
+      if (a === "done_remake" && !isStandalone) $("#clipdlg").close();
       return tick();
     }
     if (a === "postnow" || a === "postqueue") {
