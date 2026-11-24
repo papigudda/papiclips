@@ -332,7 +332,7 @@ def _remap(path, folder: Path):
 
 def _load_file(f: Path, uid: str):
     try:
-        job = json.loads(f.read_text(encoding="utf-8"))
+        job = json.loads(f.read_text(encoding="utf-8-sig"))
     except Exception:  # noqa: BLE001
         return
     job.update(dir=str(f.parent), user=uid)

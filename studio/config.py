@@ -125,8 +125,10 @@ def _move_folder(old: Path, new: Path) -> bool:
 
 
 def _data_folder():
-    if env("CLIPKONTRAST_DATA"):
-        return Path(env("CLIPKONTRAST_DATA")).resolve(), "env"
+    raw_env = env("CLIPKONTRAST_DATA")
+    if raw_env:
+        p = Path(raw_env)
+        return (ROOT / p if not p.is_absolute() else p).resolve(), "env"
     try:
         chosen = json.loads(STORAGE_FILE.read_text(encoding="utf-8"))
     except (OSError, ValueError):
