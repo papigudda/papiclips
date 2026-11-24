@@ -14,6 +14,14 @@ W, H = config.OUT_W, config.OUT_H
 STYLES = {
     "bounce": {"label": "Bounce", "font": "Poppins ExtraBold", "size": 132, "base": "FFFFFF", "active": "00F0FF",
                "strong": "FFFFFF", "outline": 7, "pop": 112, "upper": True, "per": 3},
+    "hormozi": {"label": "Hormozi", "font": "Poppins ExtraBold", "size": 138, "base": "FFFFFF", "active": "00FF52",
+                "strong": "00FF52", "outline": 8, "pop": 120, "upper": True, "per": 2},
+    "beast": {"label": "MrBeast", "font": "Anton", "size": 156, "base": "FFFFFF", "active": "00F5FF",
+              "strong": "FFD700", "outline": 8, "pop": 122, "upper": True, "per": 2},
+    "neon_cyber": {"label": "Cyberpunk", "font": "Archivo Black", "size": 120, "base": "FFF000", "active": "7F00FF",
+                   "strong": "7F00FF", "outline": 8, "pop": 115, "upper": True, "per": 3, "outline_colour": "1A000D"},
+    "fire": {"label": "Fire", "font": "Bangers", "size": 158, "base": "FFFFFF", "active": "303BFF",
+             "strong": "00A2FF", "outline": 9, "pop": 118, "upper": True, "per": 2},
     "hype": {"label": "Hype", "font": "Anton", "size": 152, "base": "FFFFFF", "active": "3C3CFF",
              "strong": "00D7FF", "outline": 7, "pop": 114, "upper": True, "per": 2},
     "clean": {"label": "Clean", "font": "Poppins ExtraBold", "size": 100, "base": "FFFFFF", "active": "6BD7FF",
@@ -43,6 +51,23 @@ STYLES = {
     "podcast": {"label": "Podcast", "font": "Poppins ExtraBold", "size": 86, "base": "B9B9B9", "active": "FFFFFF",
                 "strong": "FFFFFF", "outline": 0, "pop": 100, "upper": False, "per": 4, "keep": True, "band": "000000"},
 }
+
+EMOJI_KEYWORDS = {
+    "car": "🏎️", "cars": "🏎️", "drive": "🏎️", "driving": "🏎️", "speed": "🏎️",
+    "money": "💸", "cash": "💸", "rich": "💸", "dollar": "💵", "paid": "💰",
+    "police": "🚨", "cop": "🚨", "cops": "🚨", "busted": "🚨", "jail": "🔒",
+    "fire": "🔥", "crazy": "🔥", "insane": "🔥", "lit": "🔥", "hype": "🔥",
+    "dead": "💀", "die": "💀", "died": "💀", "kill": "💀", "killed": "💀", "rip": "💀",
+    "bro": "🗣️", "wait": "✋", "stop": "🛑", "no": "❌", "yes": "✅",
+    "gun": "🔫", "shoot": "🔫", "fight": "🥊", "hit": "💥", "boom": "💥",
+    "run": "🏃", "running": "🏃", "fast": "⚡", "win": "👑", "goat": "🐐",
+    "laugh": "🤣", "lol": "🤣", "lmao": "🤣", "funny": "🤣", "roast": "💀",
+    "shock": "😱", "omg": "😱", "what": "❓", "why": "❓",
+}
+
+def get_word_emoji(word: str) -> str:
+    k = re.sub(r"[^a-zA-Z]", "", str(word or "")).lower()
+    return EMOJI_KEYWORDS.get(k, "")
 HOOK = {"font": "Poppins ExtraBold", "size": 96, "ink": "14100E", "box": "FFFFFF", "pad_x": 36, "pad_y": 22, "radius": 26,
         "max_w": 900}
 FONT_FILES = {"Poppins ExtraBold": "Poppins-ExtraBold.ttf", "Anton": "Anton-Regular.ttf", "Archivo Black": "ArchivoBlack-Regular.ttf",
@@ -263,14 +288,14 @@ def parse_ass_phrases(ass_path: Path) -> list:
                 phrases.append({
                     "start": cur_group[0]["s"],
                     "end": cur_group[-1]["e"],
-                    "words": [{"w": x["w"], "s": x["s"], "e": x["e"]} for x in cur_group]
+                    "words": [{"w": x["w"], "s": x["s"], "e": x["e"], "emoji": get_word_emoji(x["w"])} for x in cur_group]
                 })
                 cur_group = [w]
     if cur_group:
         phrases.append({
             "start": cur_group[0]["s"],
             "end": cur_group[-1]["e"],
-            "words": [{"w": x["w"], "s": x["s"], "e": x["e"]} for x in cur_group]
+            "words": [{"w": x["w"], "s": x["s"], "e": x["e"], "emoji": get_word_emoji(x["w"])} for x in cur_group]
         })
     return phrases
 
@@ -683,33 +708,60 @@ def _render_in(work: Path, src: Path, out_dir: Path, name: str, start, end, layo
     (work / "f").mkdir(exist_ok=True)
     for f in config.FONTS_DIR.glob("*.ttf"):
         shutil.copyfile(f, work / "f" / f.name)
-    fc = _filter(layout, fg_h, face, z, game, top_h) + f"[v0]split=2[v_clean][v_ass];[v_ass]ass=filename={name}.ass:fontsdir=f[v]"
+
+    # Audio enhancement: vocal isolation, speech EQ, dynamic compression and broadcast loudness
+    voice_af = "highpass=f=80,equalizer=f=3000:t=q:w=1.5:g=3,acompressor=threshold=-18dB:ratio=4:attack=5:release=50,loudnorm=I=-14:TP=-1.5:LRA=11"
+
+    # Dual filtergraph for simultaneous clean clip (live preview) and final clip (with burnt subtitles)
+    fc_dual = _filter(layout, fg_h, face, z, game, top_h) + f"[v0]split=2[v_clean][v_ass];[v_ass]ass=filename={name}.ass:fontsdir=f[v]"
     extra = []
-    if tag:             # the creator tag (t.png, written by render_clip) laid over everything
-        fc = fc[:-3] + f"[va];[va][1:v]overlay={int(tag[0])}:{int(tag[1])}[v]"
+    if tag:
+        fc_dual = fc_dual[:-3] + f"[va];[va][1:v]overlay={int(tag[0])}:{int(tag[1])}[v]"
         extra = ["-i", "t.png"]
-    if keep:            # silences and filler words cut out first; the sound evened out in the same graph
-        fc = _tighten_filter(keep, fc) + ";[ca]loudnorm=I=-14:TP=-1.5:LRA=11[a]"
-        sound = ["-map", "[a]"]
+    if keep:
+        fc_dual = _tighten_filter(keep, fc_dual) + f";[ca]{voice_af},asplit=2[a1][a2]"
+        sound1 = ["-map", "[a1]"]
+        sound2 = ["-map", "[a2]"]
     else:
-        sound = ["-map", "0:a:0", "-af", "loudnorm=I=-14:TP=-1.5:LRA=11"]
-    base = ["ffmpeg", "-y", "-v", "error", "-ss", f"{start:.2f}", "-t", f"{end - start:.2f}", "-i", str(src), *extra,
-            "-filter_complex", fc, "-map", "[v]", *sound,
-            "-c:a", "aac", "-b:a", "160k", "-ar", "48000", "-movflags", "+faststart", "-pix_fmt"]
+        sound1 = ["-map", "0:a:0", "-af", voice_af]
+        sound2 = ["-map", "0:a:0", "-af", voice_af]
+
+    base_dual = ["ffmpeg", "-y", "-v", "error", "-ss", f"{start:.2f}", "-t", f"{end - start:.2f}", "-i", str(src), *extra,
+                 "-filter_complex", fc_dual, "-map", "[v]", *sound1,
+                 "-c:a", "aac", "-b:a", "160k", "-ar", "48000", "-movflags", "+faststart", "-pix_fmt"]
+
+    # Clean single-output fallback if dual output is not supported by hardware encoder
+    fc_single = _filter(layout, fg_h, face, z, game, top_h) + f"[v0]ass=filename={name}.ass:fontsdir=f[v]"
+    if tag:
+        fc_single = fc_single[:-3] + f"[va];[va][1:v]overlay={int(tag[0])}:{int(tag[1])}[v]"
+    if keep:
+        fc_single = _tighten_filter(keep, fc_single) + f";[ca]{voice_af}[a]"
+        sound_single = ["-map", "[a]"]
+    else:
+        sound_single = ["-map", "0:a:0", "-af", voice_af]
+    base_single = ["ffmpeg", "-y", "-v", "error", "-ss", f"{start:.2f}", "-t", f"{end - start:.2f}", "-i", str(src), *extra,
+                   "-filter_complex", fc_single, "-map", "[v]", *sound_single,
+                   "-c:a", "aac", "-b:a", "160k", "-ar", "48000", "-movflags", "+faststart", "-pix_fmt"]
+
     working = [e for e in HW_ENCODERS if _hw_ok.get(e[0]) is True]
     encoders = working[:1] or [e for e in HW_ENCODERS if _hw_ok.get(e[0]) is None]
     encoders.append(("x264", ["yuv420p", "-c:v", "libx264", "-crf", "21", "-preset", "veryfast"]))
     err = None
     for label, enc in encoders:
         try:
-            # Output both final clip and clean clip (for live editor preview without duplicate burned subtitles)
-            cmd = base + enc + [f"{name}.mp4", "-map", "[v_clean]", *sound] + enc + [f"{name}.clean.mp4"]
+            # 1. Output both final clip and clean clip
+            cmd = (
+                base_dual + enc + [f"{name}.mp4",
+                "-map", "[v_clean]", *sound2,
+                "-c:a", "aac", "-b:a", "160k", "-ar", "48000", "-movflags", "+faststart", "-pix_fmt"]
+                + enc + [f"{name}.clean.mp4"]
+            )
             p = subprocess.run(cmd, cwd=work, capture_output=True, text=True,
                                encoding="utf-8", errors="replace", creationflags=NO_WINDOW,
                                timeout=RENDER_SECONDS if label == "x264" else 180)
             if p.returncode != 0:
-                # If dual output failed, try single output
-                p = subprocess.run(base + enc + [f"{name}.mp4"], cwd=work, capture_output=True, text=True,
+                # 2. If dual output failed, run clean single output
+                p = subprocess.run(base_single + enc + [f"{name}.mp4"], cwd=work, capture_output=True, text=True,
                                    encoding="utf-8", errors="replace", creationflags=NO_WINDOW,
                                    timeout=RENDER_SECONDS if label == "x264" else 180)
         except subprocess.TimeoutExpired:

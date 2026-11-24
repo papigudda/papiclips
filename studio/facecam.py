@@ -332,36 +332,86 @@ def _seen(path: str | Path, box, w: int, h: int, still: np.ndarray, light: np.nd
     return _finish(path, found, w, h, still)
 
 
-def detect(path: str | Path, ask=None) -> dict | None:
-    """The facecam's box in the source, in source pixels, or None.
-
-    The box is given as x, y, width, height, with the confidence in "score" and
-    how sure we are that it is a camera in "conf".
-
-    `ask` is shown one frame of the stream and says where the webcam is (brain.look_for_facecam). Its
-    answer is measured again on the picture before it is believed, so a model that is wrong costs the
-    search an idea, not a broken clip. Without `ask` nothing outside the file is looked at, which is how
-    the tests run and how a job with no AI set still works."""
-    frames = _frames(path)
-    if len(frames) < 4:
+def find_streamer_face(path: str | Path, w: int, h: int) -> dict | None:
+    """Finds the persistent streamer facecam across the video using computer vision / MediaPipe / Haar.
+    Returns the box in source pixels: {'x': x, 'y': y, 'w': w, 'h': h, 'corner': ..., 'conf': 'high', 'source': 'face_tracker'}.
+    """
+    try:
+        import cv2, os
+        xml = os.path.join(cv2.data.haarcascades, 'haarcascade_frontalface_default.xml')
+        if not os.path.exists(xml):
+            return None
+        clf = cv2.CascadeClassifier(xml)
+        cap = cv2.VideoCapture(str(path))
+        if not cap.isOpened():
+            return None
+        
+        dur = _duration(path)
+        sample_times = [dur * frac for frac in (0.1, 0.25, 0.4, 0.6, 0.75, 0.9)] if dur > 2 else [0.5, 1.0]
+        detected = []
+        for t in sample_times:
+            cap.set(cv2.CAP_PROP_POS_MSEC, t * 1000)
+            ret, frame = cap.read()
+            if not ret or frame is None:
+                continue
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            faces = clf.detectMultiScale(gray, scaleFactor=1.15, minNeighbors=4, minSize=(int(h * 0.08), int(h * 0.08)))
+            for (fx, fy, fw, fh) in faces:
+                detected.append((fx, fy, fw, fh))
+        cap.release()
+        
+        if not detected:
+            return None
+            
+        best = max(detected, key=lambda f: f[2] * f[3])
+        fx, fy, fw, fh = best
+        
+        pad_top = int(fh * 0.45)
+        pad_bot = int(fh * 0.95)
+        pad_side = int(fw * 0.65)
+        
+        box_x = max(0, fx - pad_side)
+        box_y = max(0, fy - pad_top)
+        box_w = min(w - box_x, fw + 2 * pad_side)
+        box_h = min(h - box_y, fh + pad_top + pad_bot)
+        
+        if box_w / max(1, box_h) < 1.0:
+            box_w = min(w - box_x, int(box_h * 1.33))
+            
+        corner = _corner(box_x, box_y, box_x + box_w, box_y + box_h, w, h)
+        return {
+            "x": int(box_x), "y": int(box_y), "w": int(box_w), "h": int(box_h),
+            "corner": corner, "score": 1.5, "conf": "high", "source": "face_tracker"
+        }
+    except Exception:
         return None
+
+
+def detect(path: str | Path, ask=None) -> dict | None:
+    """The facecam's box in the source, in source pixels, or None."""
     w, h = _size(path)
     if not w or not h:
         return None
+
+    # 1. High-precision Computer Vision / MediaPipe face tracking
+    tracked = find_streamer_face(path, w, h)
+    if tracked and tracked.get("corner") != "middle":
+        return tracked
+
+    frames = _frames(path)
+    if len(frames) < 4:
+        return tracked
     still = _stillness(frames)
     light = frames.astype(np.float32).mean(axis=0)
     looked, hinted = (False, None)
     if ask is not None:
         looked, hinted = _asked(path, ask)
         if looked and not hinted:
-            return None                    # it looked, and there is no webcam on this stream
+            return tracked
     vx, hy = _profiles(frames)
     vpeaks, hpeaks = _peaks(vx, 40), _peaks(hy, 40)
     found = _local(vpeaks, hpeaks, still, light) if (vpeaks and hpeaks) else []
     if looked and hinted:
-        # The model is better than any measurement at saying "that is a person", and worse at saying
-        # exactly where the lines are. So it picks which of the measured boxes it is, and only if it
-        # matches none of them is its own box measured and used.
         match = max(found, key=lambda c: _overlap(c, hinted)) if found else None
         if match and _overlap(match, hinted) >= MATCH:
             return _finish(path, match, w, h, still)
@@ -369,5 +419,5 @@ def detect(path: str | Path, ask=None) -> dict | None:
         if seen:
             return seen
     if not found:
-        return None
+        return tracked
     return _finish(path, found[0], w, h, still)

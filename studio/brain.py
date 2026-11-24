@@ -220,6 +220,30 @@ def loud_zscore(db):
     return (db - np.median(db)) / (db.std() + 1e-6)
 
 
+def detect_audio_hype_peaks(video_or_audio_path, start_sec: float = 0.0, dur_sec: float | None = None) -> list[float]:
+    """Uses Librosa onset strength envelope to detect acoustic hype spikes (screams, laughter, beat drops).
+    Returns a list of timestamps (seconds) where energy surges significantly above ambient level.
+    """
+    try:
+        import subprocess, numpy as np, librosa
+        dur_args = ["-t", str(dur_sec)] if dur_sec else []
+        cmd = ["ffmpeg", "-v", "error", "-ss", str(start_sec), "-i", str(video_or_audio_path), *dur_args,
+               "-f", "f32le", "-ar", "22050", "-ac", "1", "-"]
+        p = subprocess.run(cmd, capture_output=True, timeout=30)
+        if p.returncode != 0 or not p.stdout:
+            return []
+        y = np.frombuffer(p.stdout, dtype=np.float32)
+        sr = 22050
+        if len(y) < sr:
+            return []
+        onset_env = librosa.onset.onset_strength(y=y, sr=sr)
+        peaks = librosa.util.peak_pick(onset_env, pre_max=7, post_max=7, pre_avg=7, post_avg=7, delta=0.5, wait=10)
+        times = librosa.frames_to_time(peaks, sr=sr)
+        return [round(float(start_sec + t), 2) for t in times]
+    except Exception:
+        return []
+
+
 # When the AI has just failed (a key out of credit, a daily limit, no internet), it isn't asked again for a while:
 # a long video asks it many times, and waiting for every one of them to fail took half an hour. Clips are picked by
 # loudness meanwhile, at once.
