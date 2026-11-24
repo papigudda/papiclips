@@ -2361,10 +2361,15 @@ function lookPanel(c) {
       <label class="mini-sw" title="Quiet pauses and filler words (um, uh) are cut out, so the clip moves faster. The game's action is never cut."><input type="checkbox" id="o_tight" ${tight ? "checked" : ""}>Cut silences</label>
       <label class="mini-sw" title="The picture punches in on the loudest moments: a shout, a laugh, the big reaction"><input type="checkbox" id="o_zoom" ${zoom ? "checked" : ""}>Auto zoom</label></div>
     ${choice("o_layout", Object.entries(S.status.layouts).map(([k, v]) => ({v:k, label:LAYOUT_SHORT[k] || v, title:v, prev:`<span class="lay-prev ${esc(k)}"><span class="ph"><i></i></span></span>`})), layout)}
-    <div class="camrow"${["split", "gameplay"].includes(layout) ? "" : " hidden"}><b>Webcam</b>
-      <input type="hidden" id="o_cam" value="${esc(cam)}"><div class="seg-mini" role="group" aria-label="Where the webcam is">${CAM_CHOICES.map(([k, l]) =>
-        `<button type="button" data-seg="o_cam" data-v="${k}" aria-pressed="${k === cam}">${l}</button>`).join("")}</div>
-      <span class="sub">Auto finds it. Or tap <b>Set webcam &amp; game</b> on your video above to draw both yourself, before any clip is made.</span></div>
+    <div class="camrow"${["split", "gameplay"].includes(layout) ? "" : " hidden"}>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <b>Webcam</b>
+        <input type="hidden" id="o_cam" value="${esc(cam)}">
+        <div class="seg-mini" role="group" aria-label="Where the webcam is">${CAM_CHOICES.map(([k, l]) =>
+          `<button type="button" data-seg="o_cam" data-v="${k}" aria-pressed="${k === cam}">${l}</button>`).join("")}</div>
+        <button type="button" class="fset" data-act="camrow_frameset" title="Draw where the webcam and the game are on a frame of your video" style="margin-left:auto">${ic("eye")} Set webcam &amp; game</button>
+      </div>
+      <span class="sub">Auto finds it. Or tap <b>Set webcam &amp; game</b> (above on your video card or here) to crop the webcam &amp; gameplay areas yourself before clipping.</span></div>
     ${tagPanel(c)}
   </div>`;
 }
@@ -3739,6 +3744,16 @@ document.addEventListener("click", async e => {
       return;
     }
     if (a === "camfix") return openCamFix();
+    if (a === "camrow_frameset") {
+      const A = att();
+      const item = A.links.find(l => l.state === "ok") || A.files[0];
+      if (!item) {
+        const bad = A.links.find(l => l.state === "bad");
+        if (bad) return toast("The video link has an error. Please re-paste a valid video link first.", "bad");
+        return toast("Paste or upload a video first, then tap 'Set webcam & game'.", "info");
+      }
+      return openFrame(item.url ? "link" : "file", item.id);
+    }
     if (a === "frameset") return openFrame(d.kind, d.id);
     if (a === "moment") return openMoment(d.kind, d.id);
     if (a === "lsclip" || a === "lsmoment") return clipLastStream(d.url, a === "lsmoment");

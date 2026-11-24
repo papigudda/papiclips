@@ -2029,6 +2029,23 @@ def yt_cookies_get(request: Request):
     return {"saved": f.is_file(), "updated": int(f.stat().st_mtime) if f.is_file() else 0}
 
 
+@app.put("/api/youtube-cookies")
+def yt_cookies_put(request: Request, body: dict = Body(...)):
+    _admin(request)
+    if body.get("remove"):
+        if config.YT_COOKIES.is_file():
+            config.YT_COOKIES.unlink(missing_ok=True)
+        return {"saved": False}
+    text = str(body.get("text") or "")
+    lines = text.splitlines()
+    valid = any(not l.startswith("#") and "youtube.com" in l.lower() for l in lines)
+    if not valid:
+        raise HTTPException(400, "That file doesn't look like exported YouTube cookies (Netscape format).")
+    config.YT_COOKIES.parent.mkdir(parents=True, exist_ok=True)
+    config.YT_COOKIES.write_text(text, encoding="utf-8")
+    return {"saved": True}
+
+
 @app.post("/api/youtube-cookies")
 async def yt_cookies_upload(request: Request, file: UploadFile = File(None)):
     _admin(request)
@@ -2038,7 +2055,7 @@ async def yt_cookies_upload(request: Request, file: UploadFile = File(None)):
     if len(body) > 20 * 1024 * 1024:
         raise HTTPException(413, "Cookies file is too large.")
     lines = body.decode("utf-8", errors="replace").splitlines()
-    valid = any(not l.startswith("#") and "	youtube.com	" in l.lower() for l in lines)
+    valid = any(not l.startswith("#") and "youtube.com" in l.lower() for l in lines)
     if not valid:
         raise HTTPException(400, "That file doesn't look like exported YouTube cookies (Netscape format).")
     config.YT_COOKIES.parent.mkdir(parents=True, exist_ok=True)
