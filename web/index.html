@@ -941,18 +941,22 @@ a.lnk{color:var(--brand-ink);text-decoration:none;font-weight:600}
 /* ---------- dialogs + toasts */
 dialog{border:1px solid var(--line-2);background:var(--card);color:var(--text);border-radius:var(--r-lg);padding:0;max-width:calc(100vw - 32px);box-shadow:0 24px 60px rgba(0,0,0,.75)}
 dialog::backdrop{background:rgba(3,4,8,.82);backdrop-filter:blur(8px);animation:fadein .16s ease}
-dialog#clipdlg{width:min(980px,calc(100vw - 32px));max-width:980px;height:min(90vh,820px);max-height:min(90vh,820px);margin:auto;padding:0;overflow:hidden;border:1px solid var(--line-2);border-radius:var(--r-lg);background:var(--card);box-shadow:0 24px 70px rgba(0,0,0,.85)}
+dialog#clipdlg{position:fixed;inset:0;margin:auto;width:min(1040px,calc(100vw - 32px));max-width:1040px;height:min(90vh,780px);max-height:calc(100vh - 40px);min-height:480px;padding:0;overflow:hidden;border:1px solid var(--line-2);border-radius:var(--r-lg);background:var(--card);box-shadow:0 24px 70px rgba(0,0,0,.85);display:flex;flex-direction:column}
+dialog#clipdlg:not([open]){display:none}
 .dlg{padding:24px;width:450px;max-width:100%;display:flex;flex-direction:column;gap:14px;background:var(--card);color:var(--text)}
 .dlg h2{font-size:18px;font-weight:600;color:#FFF}
 .dlg-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:4px}
 
 /* ---------- Interactive Live Clip Editor ---------- */
-.editor{display:grid;grid-template-columns:minmax(300px,380px) minmax(360px,1fr);width:100%;height:100%;max-height:100%;background:var(--card);border-radius:var(--r-lg);overflow:hidden;position:relative;transition:all .2s ease}
-.editor.fullscreen{position:fixed;inset:0;width:100vw;height:100vh;max-width:100vw;max-height:100vh;border-radius:0;z-index:100;grid-template-columns:1fr 480px}
+.editor{display:grid;grid-template-columns:minmax(320px,400px) minmax(360px,1fr);grid-template-rows:100%;width:100%;height:100%;max-height:100%;min-height:0;flex:1;background:var(--card);border-radius:var(--r-lg);overflow:hidden;position:relative;transition:all .2s ease}
+.editor.fullscreen{position:fixed;inset:0;width:100vw;height:100vh;max-width:100vw;max-height:100vh;border-radius:0;z-index:100;grid-template-columns:1fr 480px;grid-template-rows:100%}
 .editor .stage{background:#070913;border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px 16px;position:relative;overflow:hidden;user-select:none;min-height:0;height:100%;max-height:100%}
-.phone-stage{display:flex;flex-direction:column;align-items:center;width:100%;max-width:300px;gap:10px;min-height:0;flex:1;justify-content:center}
-.phone-frame{position:relative;width:100%;aspect-ratio:9/16;max-height:min(48vh,440px);background:#000;border-radius:16px;overflow:hidden;box-shadow:0 16px 40px rgba(0,0,0,.85),0 0 0 1px rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;flex-shrink:1}
+.phone-stage{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;max-width:310px;gap:8px;min-height:0;height:100%;max-height:100%}
+.phone-frame{position:relative;width:100%;aspect-ratio:9/16;max-height:min(46vh,390px);background:#000;border-radius:16px;overflow:hidden;box-shadow:0 16px 40px rgba(0,0,0,.85),0 0 0 1px rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;flex-shrink:1}
 .phone-frame video{width:100%;height:100%;object-fit:contain;display:block;transition:transform .25s ease,object-fit .25s ease}
+
+.drag-hint-pill{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:500;color:var(--dim);background:rgba(255,255,255,.05);padding:3px 10px;border-radius:999px;border:1px solid var(--line);user-select:none;letter-spacing:.2px;margin-top:2px}
+.drag-hint-pill svg{color:#00F0FF;flex:none}
 
 /* Live Layout Overlays - subtle guides in corners */
 .prev-layout-overlay{position:absolute;inset:0;pointer-events:none;z-index:5}
@@ -961,13 +965,18 @@ dialog#clipdlg{width:min(980px,calc(100vw - 32px));max-width:980px;height:min(90
 .prev-pip-box{position:absolute;top:10px;right:10px;width:34%;aspect-ratio:4/3;border:2px dashed var(--brand);background:rgba(255,46,84,.12);border-radius:8px;display:none;align-items:center;justify-content:center}
 .prev-guide-pill{font-size:9.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;background:rgba(0,0,0,.7);color:rgba(255,255,255,.8);padding:2px 6px;border-radius:4px;backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.15);opacity:.75}
 
+/* Interactive Draggable Video Overlays */
+.prev-draggable{pointer-events:auto!important;cursor:grab!important;user-select:none!important;touch-action:none!important;transition:outline .15s ease,box-shadow .15s ease}
+.prev-draggable:hover{outline:2px dashed rgba(0,240,255,.8)!important;outline-offset:3px}
+.prev-draggable.is-dragging{cursor:grabbing!important;outline:2px solid #00F0FF!important;outline-offset:4px;box-shadow:0 0 22px rgba(0,240,255,.85),0 8px 30px rgba(0,0,0,.9)!important;z-index:50!important;opacity:.97}
+
 /* Big Text / Hook Sticker */
-.prev-hook-sticker{position:absolute;top:20%;left:50%;transform:translateX(-50%);z-index:10;display:flex;align-items:center;justify-content:center;max-width:88%;pointer-events:none;animation:hookPulse 2.5s infinite ease-in-out}
-@keyframes hookPulse{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.03)}}
+.prev-hook-sticker{position:absolute;top:18%;left:50%;transform:translate(-50%,-50%);z-index:10;display:flex;align-items:center;justify-content:center;max-width:88%;animation:hookPulse 2.5s infinite ease-in-out}
+@keyframes hookPulse{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.03)}}
 .hook-text{font-family:'Poppins',system-ui,sans-serif;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.6px;background:#000;color:#FFE600;padding:6px 14px;border-radius:8px;border:2px solid #FFE600;box-shadow:0 4px 16px rgba(0,0,0,.85);text-align:center;line-height:1.25}
 
 /* Dynamic Captions Box */
-.prev-captions-box{position:absolute;bottom:25%;left:0;right:0;display:flex;justify-content:center;align-items:center;z-index:10;pointer-events:none;text-align:center}
+.prev-captions-box{position:absolute;top:70%;left:50%;transform:translate(-50%,-50%);display:flex;justify-content:center;align-items:center;z-index:10;text-align:center;max-width:90%;white-space:nowrap}
 .caption-line{font-family:'Poppins',system-ui,sans-serif;font-size:17px;font-weight:900;text-transform:uppercase;letter-spacing:.5px;line-height:1.2;text-shadow:0 2px 8px rgba(0,0,0,.9);padding:4px 10px;display:inline-flex;gap:6px;transition:all .2s ease}
 [data-style="bounce"] .caption-line{color:#FFF;-webkit-text-stroke:1.5px #000}
 [data-style="bounce"] .caption-line .active{color:#00F0FF;transform:scale(1.18);display:inline-block;animation:capBounce .6s infinite alternate ease-in-out}
@@ -989,18 +998,13 @@ dialog#clipdlg{width:min(980px,calc(100vw - 32px));max-width:980px;height:min(90
 [data-style="oneword"] .caption-line{font-size:24px;font-weight:900;color:#FFE600;-webkit-text-stroke:1.5px #000}
 
 /* Creator Tag Pill */
-.prev-tag-pill{position:absolute;z-index:12;display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;font-size:12px;font-weight:700;letter-spacing:.3px;pointer-events:none;box-shadow:0 4px 14px rgba(0,0,0,.6);transition:all .25s ease}
+.prev-tag-pill{position:absolute;top:86%;left:28%;transform:translate(-50%,-50%);z-index:12;display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;font-size:12px;font-weight:700;letter-spacing:.3px;box-shadow:0 4px 14px rgba(0,0,0,.6);white-space:nowrap}
 .prev-tag-pill[data-style="clean"]{background:#FFF;color:#0F172A}
 .prev-tag-pill[data-style="dark"]{background:rgba(14,18,30,.92);color:#FFF;border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(6px)}
 .prev-tag-pill[data-style="neon"]{background:rgba(6,9,18,.95);color:#00F0FF;border:1.5px solid #00F0FF;box-shadow:0 0 12px rgba(0,240,255,.4)}
-.prev-tag-pill[data-pos="bottom_left"]{bottom:18px;left:14px}
-.prev-tag-pill[data-pos="bottom_right"]{bottom:18px;right:14px}
-.prev-tag-pill[data-pos="top_left"]{top:18px;left:14px}
-.prev-tag-pill[data-pos="top_right"]{top:18px;right:14px}
-.prev-tag-pill[data-pos="bottom_centre"]{bottom:18px;left:50%;transform:translateX(-50%)}
 
 /* Watermark */
-.prev-watermark{position:absolute;top:14px;right:14px;z-index:12;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);color:rgba(255,255,255,.85);font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;border:1px solid rgba(255,255,255,.15);pointer-events:none}
+.prev-watermark{position:absolute;top:18px;right:18px;transform:translate(0,0);z-index:12;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);color:rgba(255,255,255,.85);font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;border:1px solid rgba(255,255,255,.15);white-space:nowrap}
 
 /* Interactive Timeline Trimmer */
 .timeline-trimmer{width:100%;background:#0D111E;border:1px solid var(--line-2);border-radius:12px;padding:8px 10px;display:flex;flex-direction:column;gap:7px;flex-shrink:0}
@@ -1024,8 +1028,20 @@ dialog#clipdlg{width:min(980px,calc(100vw - 32px));max-width:980px;height:min(90
 .tl-playhead::before{content:"";position:absolute;top:-2px;left:-3px;width:8px;height:8px;border-radius:50%;background:#FFF;box-shadow:0 0 6px rgba(255,255,255,.9)}
 
 /* Panel Styling */
-.editor .panel{background:var(--card);color:var(--text);padding:20px 24px 28px;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:13px;height:100%;max-height:100%;min-height:0}
-.editor .panel .job-head{position:sticky;top:-20px;margin:-20px -24px 4px -24px !important;padding:14px 24px;background:#151A2C;border-bottom:1px solid var(--line-2);z-index:20;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.editor .panel{background:var(--card);color:var(--text);padding:0 24px 28px;overflow-y:scroll!important;overflow-x:hidden;display:flex;flex-direction:column;gap:13px;height:100%;max-height:100%;min-height:0;scrollbar-gutter:stable}
+.editor .panel .job-head{position:sticky;top:0;margin:0 -24px 8px -24px!important;padding:16px 24px;background:#151A2C;border-bottom:1px solid var(--line-2);z-index:20;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.editor .panel h3{font-size:12px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.6px;margin-top:6px;border-bottom:1px solid var(--line);padding-bottom:4px}
+.editor .panel .f input,.editor .panel .f select,.editor .panel .f textarea{background:#181E34!important;border:1px solid var(--line-2)!important;color:#F8FAFC!important;border-radius:var(--r-sm);padding:8px 12px;font-size:13px}
+.editor .panel .f input:focus,.editor .panel .f select:focus,.editor .panel .f textarea:focus{border-color:var(--brand)!important;outline:none;box-shadow:0 0 0 2px rgba(255,46,84,.25)}
+.editor .panel .btn:not(.primary){background:#181E34!important;color:#F8FAFC!important;border:1px solid var(--line-2)!important}
+.editor .panel .btn:not(.primary):hover{background:#232C4B!important;border-color:var(--brand)!important;color:#FFF!important}
+.editor .panel label.ck{background:#181E34!important;border:1px solid var(--line-2)!important;color:#F8FAFC!important}
+.editor .panel label.ck:hover{background:#232C4B!important;border-color:rgba(255,255,255,0.25)!important}
+.editor .panel label.ck:has(input:checked){background:var(--brand-soft)!important;border-color:var(--brand)!important;color:#FFF!important}
+.editor-head-acts{display:flex;align-items:center;gap:8px;margin-left:auto}
+.done-finalize-btn{width:100%;padding:14px 20px;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px;background:linear-gradient(135deg,#FF2E54,#E0183E)!important;box-shadow:0 4px 20px rgba(255,46,84,.45);border:none!important;border-radius:10px;color:#fff!important;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease}
+.done-finalize-btn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(255,46,84,.6)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .editor .panel h3{font-size:12px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.6px;margin-top:6px;border-bottom:1px solid var(--line);padding-bottom:4px}
 .editor .panel .f input,.editor .panel .f select,.editor .panel .f textarea{background:#181E34!important;border:1px solid var(--line-2)!important;color:#F8FAFC!important;border-radius:var(--r-sm);padding:8px 12px;font-size:13px}
 .editor .panel .f input:focus,.editor .panel .f select:focus,.editor .panel .f textarea:focus{border-color:var(--brand)!important;outline:none;box-shadow:0 0 0 2px rgba(255,46,84,.25)}
@@ -3694,7 +3710,7 @@ function initLiveClipEditor(j, c) {
       const h = (handleIn?.value || "").trim();
       tagHandle.textContent = h || "@streamer";
       if (tagStyle) tagPill.setAttribute("data-style", tagStyle.value);
-      if (tagPos) tagPill.setAttribute("data-pos", tagPos.value);
+      if (tagPos && !tagPill.dataset.customDragged) tagPill.setAttribute("data-pos", tagPos.value);
     }
 
     // 5. Watermark
@@ -3797,6 +3813,113 @@ function initLiveClipEditor(j, c) {
     };
   }
 
+  // Interactive On-Video Dragging for Captions, Hook, Tag Pill, Watermark
+  function makeOverlayDraggable(el, key, defX, defY) {
+    if (!el) return;
+    el.classList.add("prev-draggable");
+
+    let posX = c[key + "_x"] != null ? Number(c[key + "_x"]) : defX;
+    let posY = c[key + "_y"] != null ? Number(c[key + "_y"]) : defY;
+
+    function renderPos(x, y) {
+      el.style.left = x.toFixed(1) + "%";
+      el.style.top = y.toFixed(1) + "%";
+      el.style.right = "auto";
+      el.style.bottom = "auto";
+      el.style.transform = "translate(-50%, -50%)";
+    }
+
+    if (c[key + "_x"] != null || c[key + "_y"] != null || el.dataset.customDragged) {
+      renderPos(posX, posY);
+    }
+
+    let isDragging = false;
+    let startPointerX = 0, startPointerY = 0;
+    let startElX = posX, startElY = posY;
+
+    el.onpointerdown = e => {
+      if (e.target.closest("button, a")) return;
+      e.preventDefault();
+      e.stopPropagation();
+
+      isDragging = true;
+      el.setPointerCapture(e.pointerId);
+      el.classList.add("is-dragging");
+      el.dataset.customDragged = "1";
+
+      const frame = $("#prevFrame");
+      const frameRect = frame ? frame.getBoundingClientRect() : { width: 300, height: 533, left: 0, top: 0 };
+
+      const elRect = el.getBoundingClientRect();
+      startElX = ((elRect.left + elRect.width / 2) - frameRect.left) / frameRect.width * 100;
+      startElY = ((elRect.top + elRect.height / 2) - frameRect.top) / frameRect.height * 100;
+
+      startPointerX = e.clientX;
+      startPointerY = e.clientY;
+
+      function onPointerMove(ev) {
+        if (!isDragging) return;
+        ev.preventDefault();
+        const deltaX = ev.clientX - startPointerX;
+        const deltaY = ev.clientY - startPointerY;
+
+        const deltaXPct = (deltaX / frameRect.width) * 100;
+        const deltaYPct = (deltaY / frameRect.height) * 100;
+
+        posX = Math.max(6, Math.min(94, startElX + deltaXPct));
+        posY = Math.max(5, Math.min(95, startElY + deltaYPct));
+
+        renderPos(posX, posY);
+
+        c[key + "_x"] = Number(posX.toFixed(1));
+        c[key + "_y"] = Number(posY.toFixed(1));
+
+        if (key === "tag") {
+          const tagPosSel = dlg.querySelector('[data-f="tag_pos"]');
+          if (tagPosSel) {
+            let p = "bottom_centre";
+            if (posY < 35) p = posX < 50 ? "top_left" : "top_right";
+            else if (posX < 38) p = "bottom_left";
+            else if (posX > 62) p = "bottom_right";
+            tagPosSel.value = p;
+          }
+        }
+      }
+
+      function onPointerUp(ev) {
+        if (!isDragging) return;
+        isDragging = false;
+        try { el.releasePointerCapture(ev.pointerId); } catch {}
+        el.classList.remove("is-dragging");
+        window.removeEventListener("pointermove", onPointerMove);
+        window.removeEventListener("pointerup", onPointerUp);
+      }
+
+      window.addEventListener("pointermove", onPointerMove);
+      window.addEventListener("pointerup", onPointerUp);
+    };
+  }
+
+  makeOverlayDraggable($("#prevHookSticker"), "hook", 50, 18);
+  makeOverlayDraggable($("#prevCaptionsBox"), "caption", 50, 70);
+  makeOverlayDraggable($("#prevTagPill"), "tag", 28, 86);
+  makeOverlayDraggable($("#prevWatermark"), "watermark", 82, 8);
+
+  const tagPosDropdown = dlg.querySelector('[data-f="tag_pos"]');
+  if (tagPosDropdown && !tagPosDropdown._snapBound) {
+    tagPosDropdown._snapBound = true;
+    tagPosDropdown.addEventListener("change", () => {
+      const tp = $("#prevTagPill");
+      if (tp) {
+        delete tp.dataset.customDragged;
+        tp.style.left = "";
+        tp.style.top = "";
+        tp.style.transform = "";
+        tp.setAttribute("data-pos", tagPosDropdown.value);
+      }
+    });
+  }
+
   syncPreview();
 }
 
@@ -3814,21 +3937,22 @@ function drawClipDlg(full) {
           <div class="prev-split-bottom" id="prevSplitBottom"><span class="prev-guide-pill">Gameplay</span></div>
           <div class="prev-pip-box" id="prevPipBox"><span class="prev-guide-pill">PIP</span></div>
         </div>
-        <div class="prev-hook-sticker" id="prevHookSticker" style="${c.hook ? '' : 'display:none'}">
+        <div class="prev-hook-sticker prev-draggable" id="prevHookSticker" style="${c.hook ? '' : 'display:none'}; ${c.hook_y != null ? `top:${c.hook_y}%;left:${c.hook_x || 50}%;transform:translate(-50%,-50%);` : ''}">
           <span class="hook-text" id="prevHookText">${esc(c.hook || '')}</span>
         </div>
-        <div class="prev-captions-box" id="prevCaptionsBox" data-style="${esc(c.style || 'bounce')}" style="${c.captions === false ? 'display:none' : ''}">
+        <div class="prev-captions-box prev-draggable" id="prevCaptionsBox" data-style="${esc(c.style || 'bounce')}" style="${c.captions === false ? 'display:none;' : ''} ${c.caption_y != null ? `top:${c.caption_y}%;left:${c.caption_x || 50}%;transform:translate(-50%,-50%);` : ''}">
           <div class="caption-line" id="prevCaptionLine">
             <span class="w1">WAIT</span> <span class="w2 active">WHAT</span> <span class="w3">BRO</span>
           </div>
         </div>
-        <div class="prev-tag-pill" id="prevTagPill" data-style="${esc(c.tag_style || 'clean')}" data-pos="${esc(c.tag_pos || 'bottom_left')}" style="${c.tag ? '' : 'display:none'}">
+        <div class="prev-tag-pill prev-draggable" id="prevTagPill" data-style="${esc(c.tag_style || 'clean')}" data-pos="${esc(c.tag_pos || 'bottom_left')}" style="${c.tag ? '' : 'display:none;'} ${c.tag_y != null ? `top:${c.tag_y}%;left:${c.tag_x || 28}%;transform:translate(-50%,-50%);` : ''}">
           <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M23.5 6.2c-.3-1-.9-1.8-1.9-2.1C19.9 3.5 12 3.5 12 3.5s-7.9 0-9.6.6C1.4 4.4.8 5.2.5 6.2 0 8.1 0 12 0 12s0 3.9.5 5.8c.3 1 .9 1.8 1.9 2.1 1.7.6 9.6.6 9.6.6s7.9 0 9.6-.6c1-.3 1.6-1.1 1.9-2.1.5-1.9.5-5.8.5-5.8s0-3.9-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg>
           <span id="prevTagHandle">${esc(c.tag_handle || c.uploader || '@channel')}</span>
           <svg viewBox="0 0 24 24" width="12" height="12" fill="#3897f0"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
         </div>
-        <div class="prev-watermark" id="prevWatermark" style="${c.watermark ? '' : 'display:none'}">${esc(c.watermark || '')}</div>
+        <div class="prev-watermark prev-draggable" id="prevWatermark" style="${c.watermark ? '' : 'display:none;'} ${c.watermark_y != null ? `top:${c.watermark_y}%;left:${c.watermark_x || 82}%;transform:translate(-50%,-50%);` : ''}">${esc(c.watermark || '')}</div>
       </div>
+      <div class="drag-hint-pill"><svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"/></svg> Drag captions, headline or tag to move</div>
       <div class="timeline-trimmer" id="tlTrimmer">
         <div class="tl-controls">
           <button type="button" class="tl-btn" id="tlPlayBtn" title="Play/Pause"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
@@ -3875,6 +3999,14 @@ function drawClipDlg(full) {
           </div>
         </div>
         <h3>On the video</h3>
+        <input type="hidden" data-f="hook_x" value="${c.hook_x != null ? c.hook_x : ''}">
+        <input type="hidden" data-f="hook_y" value="${c.hook_y != null ? c.hook_y : ''}">
+        <input type="hidden" data-f="caption_x" value="${c.caption_x != null ? c.caption_x : ''}">
+        <input type="hidden" data-f="caption_y" value="${c.caption_y != null ? c.caption_y : ''}">
+        <input type="hidden" data-f="tag_x" value="${c.tag_x != null ? c.tag_x : ''}">
+        <input type="hidden" data-f="tag_y" value="${c.tag_y != null ? c.tag_y : ''}">
+        <input type="hidden" data-f="watermark_x" value="${c.watermark_x != null ? c.watermark_x : ''}">
+        <input type="hidden" data-f="watermark_y" value="${c.watermark_y != null ? c.watermark_y : ''}">
         <label class="f">Big text<input data-f="hook" value="${esc(c.hook || '')}" placeholder="HOOK / BIG HEADLINE"></label>
         <label class="sw"><input type="checkbox" data-f="captions" data-caption-toggle ${c.captions === false ? "" : "checked"}>Generate captions</label>
         <div class="two"><label class="f">Caption style<select data-f="style" data-caption-style ${c.captions === false ? "disabled" : ""}>${opts(S.status.styles, c.style)}</select></label>
