@@ -189,11 +189,17 @@ def _biggest(job_dir: Path, stem: str) -> Path:
     return files[0]
 
 
+# what no other way of asking can change: the video itself is private, removed, members-only, not out yet...
+_UNFIXABLE = re.compile(r"private video|members.only|join this channel|has been removed|account .*terminated|confirm your age|"
+                        r"not available in your country|live event will begin|premieres in|unsupported url|is not a valid url", re.I)
+
+
 def info(url: str) -> dict:
     """Title, channel and length, without downloading anything. If YouTube asks one of its apps to prove it isn't
     a bot, the next is asked; YouTube is only taken as refusing when all of them were refused."""
     clients = YT_CLIENTS if is_youtube(url) else [None]
     token = _defer.set(True)
+    refused, other = 0, None
     try:
         for n, client in enumerate(clients):
             try:
@@ -201,9 +207,19 @@ def info(url: str) -> dict:
                     i = ydl.extract_info(url, download=False)
                 break
             except YouTubeBlocked:
+                refused += 1
                 if n == len(clients) - 1:
-                    _pause_youtube()
-                    raise
+                    if refused == len(clients):
+                        _pause_youtube()
+                        raise
+                    raise other                     # some were refused, others failed: the other reason is the real one
+            except Exception as e:  # noqa: BLE001
+                # "The page needs to be reloaded", a format list YouTube cut short...: one of YouTube's apps failing
+                # isn't the video failing, so the next is asked. Only when every one failed is it said.
+                if not _UNFIXABLE.search(str(e)) and n < len(clients) - 1:
+                    other = e
+                    continue
+                raise
     finally:
         _defer.reset(token)
     return {"title": i.get("title") or "", "uploader": i.get("uploader") or i.get("channel") or "",
@@ -225,9 +241,13 @@ def youtube_words(url: str):
     with _youtube_guard(url), _ydl({}) as ydl:
         i = ydl.extract_info(url, download=False)
         auto = i.get("automatic_captions") or {}
-        key = next((k for k in auto if k.endswith("-orig")), None)
-        if not key and i.get("language") in auto:
-            key = i["language"]
+        # the track in the language the video says it's in first ("hi-orig", "hi", then "en-IN" read as "en"),
+        # then any original; never one of YouTube's translations
+        lang = str(i.get("language") or "").strip().lower()
+        base = lang.split("-")[0] if lang else ""
+        key = next((c for c in (f"{lang}-orig", lang, f"{base}-orig", base) if c and c in auto), None)
+        if not key:
+            key = next((k for k in auto if k.endswith("-orig")), None)
         track = next((f for f in auto.get(key) or [] if f.get("ext") == "json3" and f.get("url")), None) if key else None
         if not track:
             return None
@@ -619,10 +639,26 @@ def _each_try(url, out_dir, stem, fetch, clients, why, tried, refused):
 
 def download_audio(url: str, job_dir: Path, on_progress=None) -> Path:
     """Audio only: a few seconds even for long videos, and all the AI needs to pick clips."""
+    last = {"at": 0.0}
+
     def hook(d):
+        if not on_progress or d.get("status") != "downloading":
+            return
+        now = time.time()
+        if now - last["at"] < 1.0:
+            return                               # a long stream sends thousands of these: once a second is plenty
+        last["at"] = now
         total = d.get("total_bytes") or d.get("total_bytes_estimate")
-        if on_progress and d.get("status") == "downloading" and total:
-            on_progress(d.get("downloaded_bytes", 0) / total)
+        got = d.get("downloaded_bytes") or 0
+        # A long stream often has no size known up front (it comes in pieces): how many pieces are done says it
+        # instead, so the bar moves and nobody thinks it's stuck at 3%.
+        frac = got / total if total else (d.get("fragment_index") or 0) / d["fragment_count"] if d.get("fragment_count") else None
+        note = f"{got / 1e6:.0f} MB" if got >= 1e6 else ""
+        try:
+            on_progress(min(1.0, frac) if frac is not None else None, note)
+        except TypeError:
+            if frac is not None:
+                on_progress(min(1.0, frac))
 
     def fetch(client, log):
         opts = {"format": "ba[ext=m4a]/ba/worst", "outtmpl": str(job_dir / "audio_src.%(ext)s"),

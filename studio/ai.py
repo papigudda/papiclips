@@ -524,6 +524,64 @@ def list_models(provider_id=None, address=None, with_key=None) -> list:
     return sorted({m for m in found if m})[:400]
 
 
+TEST_PROMPT = 'Answer with a JSON array that holds the single string "ok".'
+TEST_SCHEMA = {"type": "ARRAY", "items": {"type": "STRING"}}
+
+
+def _candidates(found: list, old: str, skip=()) -> list:
+    """The models to try instead of one the service won't run, best first: Gemini's 'latest flash' name, the
+    closest name to the old one, then the newest fast general models."""
+    import difflib
+    ok = [m for m in found if m != old and m not in skip
+          and not re.search(r"embed|image|tts|audio|live|vision|aqa|imagen|veo|learnlm|robotics|gemma|nano|computer", m, re.I)]
+    if not ok:
+        return []
+
+    def version(m):
+        nums = re.findall(r"\d+(?:\.\d+)?", m)
+        return (float(nums[0]) if nums else 0.0, "lite" not in m, "preview" not in m and "exp" not in m, -len(m))
+    out = [m for m in ("gemini-flash-latest", "gemini-flash-lite-latest") if m in ok]
+    out += difflib.get_close_matches(old, ok, n=2, cutoff=0.75)
+    fast = [m for m in ok if re.search(r"flash|mini|haiku|small|instant|lite", m, re.I)]
+    out += sorted(fast, key=version, reverse=True) + sorted(ok, key=version, reverse=True)
+    return list(dict.fromkeys(out))
+
+
+def unknown_model(e) -> bool:
+    """The service doesn't know this model, or won't run it any more (retired, not for new users)."""
+    t, low = str(e), str(e).lower()
+    return ("404" in t or "not found" in low or "unknown model" in low or "does not exist" in low or "not_found" in low
+            or "no longer available" in low or "has been deprecated" in low or "is not supported for generatecontent" in low)
+
+
+def busy(e) -> bool:
+    """The service is overloaded right now (503 high demand / overloaded / 529)."""
+    t, low = str(e), str(e).lower()
+    return ("http 503" in low or "high demand" in low or "overloaded" in low or '"unavailable"' in low
+            or "http 529" in low or "temporarily unavailable" in low)
+
+
+def swap_model(failed: str, tries: int = 4, keep: bool = False) -> str:
+    """The service won't run the model in use: the models it offers are tried, and the first that answers is put first."""
+    p, bare_failed, _, _, _ = resolve_model(failed)
+    found = list_models(provider_id=p)
+    last = None
+    for m in _candidates(found, bare_failed)[:tries]:
+        cand = f"{p}:{m}" if ":" in str(failed) else m
+        try:
+            call(cand, TEST_PROMPT, TEST_SCHEMA, timeout=40)
+        except Exception as e:  # noqa: BLE001 - the next one
+            last = e
+            if not (unknown_model(e) or busy(e)):
+                raise
+            continue
+        c, ms = current(), models()
+        rest = [x for x in ms if x not in (cand, failed, m, bare_failed)]
+        save(c["provider"] or p, [cand] + ([failed] if keep else []) + rest, c.get("base_url") or "", None)
+        return cand
+    raise last or AIError(f"HTTP 404 none of the models {label()} offers answered")
+
+
 def test() -> dict:
     ms = models()
     if not ready():
@@ -531,12 +589,19 @@ def test() -> dict:
     last_err = None
     for m in ms:
         try:
-            out, sent, wrote = call(m, 'Answer with a JSON array that holds the single string "ok".', {"type": "ARRAY", "items": {"type": "STRING"}}, timeout=20)
+            out, sent, wrote = call(m, TEST_PROMPT, TEST_SCHEMA, timeout=20)
             clear_problem()
             return {"ok": True, "model": m, "tokens": sent + wrote, "answer": str(out)[:80]}
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             last_err = e
             continue
+    if last_err and (unknown_model(last_err) or busy(last_err)):
+        try:
+            pick = swap_model(ms[0], keep=busy(last_err))
+            clear_problem()
+            return {"ok": True, "model": pick, "switched_from": ms[0], "tokens": 0, "answer": "ok"}
+        except Exception as e2:  # noqa: BLE001
+            raise (e2 if not (unknown_model(e2) or busy(e2)) else last_err) from None
     if last_err:
         raise last_err
     raise ValueError("No models available.")
@@ -684,8 +749,10 @@ def _parse(text):
     return out
 
 
-def call(model: str, prompt: str, schema: dict, timeout: float | None = None):
+def call(model: str, prompt: str, schema: dict, timeout: float | None = None, audio: tuple = None, temperature: float = None):
     p, actual_model, base, _, how = resolve_model(model)
+    if (audio or temperature is not None) and how != "gemini":
+        raise AIError("This AI service can't listen to audio.", provider=p)
     keys = get_keys_for(p)
     if not keys and p not in NO_KEY:
         raise AIError(f"Missing API key for provider {p} ({actual_model})")
@@ -699,7 +766,7 @@ def call(model: str, prompt: str, schema: dict, timeout: float | None = None):
     for k in ordered_keys:
         try:
             if how == "gemini":
-                res = _gemini_call(actual_model, prompt, schema, k, base, timeout)
+                res = _gemini_call(actual_model, prompt, schema, k, base, timeout, audio=audio, temperature=temperature)
             elif how == "anthropic":
                 res = _anthropic_call(actual_model, prompt, schema, k, base, timeout)
             else:
@@ -720,19 +787,30 @@ def call(model: str, prompt: str, schema: dict, timeout: float | None = None):
     raise AIError(f"No usable API keys available for provider {p}")
 
 
+def can_hear() -> bool:
+    """Can the AI in use listen to a clip's sound? Only Gemini can."""
+    if not ready():
+        return False
+    return any(resolve_model(m)[4] == "gemini" and bool(resolve_model(m)[3]) for m in models())
+
+
 def _gem(model: str) -> str:
     """Gemini names models 'models/gemini-2.5-flash'; the address already ends in /models, so only the bare id is used."""
     return model.removeprefix("models/")
 
 
-def _gemini_call(model, prompt, schema, api_key, base, timeout=None):
+def _gemini_call(model, prompt, schema, api_key, base, timeout=None, audio=None, temperature=None):
     model = _gem(model)
-    body = {"contents": [{"role": "user", "parts": [{"text": prompt}]}],
-            "generationConfig": {"temperature": 0.4, "responseMimeType": "application/json", "responseSchema": schema}}
+    sound = [{"inline_data": {"mime_type": audio[1], "data": base64.b64encode(audio[0]).decode()}}] if audio else []
+    temp = 0.4 if temperature is None else float(temperature)
+    body = {"contents": [{"role": "user", "parts": sound + [{"text": prompt}]}],
+            "generationConfig": {"temperature": temp, "responseMimeType": "application/json", "responseSchema": schema}}
     r = httpx.post(f"{base}/{model}:generateContent", json=body, headers={"x-goog-api-key": api_key}, timeout=timeout or 120)
     used_plain = False
     if r.status_code in (400, 422) and "api key" not in r.text.lower() and "api_key" not in r.text.lower():
-        plain = {"contents": [{"role": "user", "parts": [{"text": _wrapped(prompt, schema)}]}]}
+        plain = {"contents": [{"role": "user", "parts": sound + [{"text": _wrapped(prompt, schema)}]}]}
+        if temperature is not None:
+            plain["generationConfig"] = {"temperature": temp}
         r = httpx.post(f"{base}/{model}:generateContent", json=plain, headers={"x-goog-api-key": api_key}, timeout=timeout or 120)
         used_plain = True
     if r.status_code != 200:

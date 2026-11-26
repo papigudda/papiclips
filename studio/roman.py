@@ -26,6 +26,23 @@ _WORDS = {"में": "mein", "मैं": "main", "हैं": "hain", "है
           "यहां": "yahan", "वहाँ": "wahan", "वहां": "wahan", "कहाँ": "kahan", "कहां": "kahan", "थी": "thi",
           "रही": "rahi", "कभी": "kabhi", "अभी": "abhi", "सभी": "sabhi", "भाई": "bhai", "मुझे": "mujhe",
           "तुम": "tum", "हम": "hum", "आप": "aap", "बहुत": "bahut", "अच्छा": "accha", "ठीक": "theek", "लिए": "liye"}
+# English words that come up in Hindi streams, written in Devanagari by the speech model ("लाइफ" for "life"). Spelled
+# by the rules below they would read like "laaiph", so they get their English spelling back. The AI does this for
+# every word when it tidies captions; this list is for when there is no AI.
+_ENGLISH = {"लाइफ": "life", "गेम": "game", "गेमिंग": "gaming", "ब्रो": "bro", "क्लिप": "clip", "वीडियो": "video",
+            "स्ट्रीम": "stream", "चैट": "chat", "सब्सक्राइब": "subscribe", "लाइक": "like", "कमेंट": "comment",
+            "शेयर": "share", "चैनल": "channel", "ओके": "ok", "सॉरी": "sorry", "थैंक्यू": "thank you", "प्लीज": "please",
+            "प्लीज़": "please", "कार": "car", "पुलिस": "police", "गन": "gun", "मिशन": "mission", "टीम": "team",
+            "प्लेयर": "player", "लेवल": "level", "मनी": "money", "फ्रेंड": "friend", "फ्रेंड्स": "friends",
+            "फैमिली": "family", "मैकेनिक": "mechanic", "हेलो": "hello", "हैलो": "hello", "हाय": "hi", "बाय": "bye",
+            "गुड": "good", "बैड": "bad", "नाइस": "nice", "वेट": "wait", "स्टॉप": "stop", "फास्ट": "fast", "डेड": "dead",
+            "किल": "kill", "विन": "win", "रियल": "real", "सीरियस": "serious", "फनी": "funny", "कूल": "cool",
+            "ऑसम": "awesome", "लव": "love", "हेट": "hate", "गाइज": "guys", "गाइज़": "guys", "वाओ": "wow", "ओह": "oh",
+            "माय": "my", "गॉड": "god", "सीरियसली": "seriously", "एक्चुअली": "actually", "बेसिकली": "basically",
+            "लिटरली": "literally", "ओके.": "ok.", "यस": "yes", "नो": "no", "सर": "sir", "मैडम": "madam", "बॉस": "boss",
+            "स्कैम": "scam", "हैक": "hack", "रेस": "race", "बाइक": "bike", "हाउस": "house", "रूम": "room", "डोर": "door",
+            "फोन": "phone", "मैसेज": "message", "लाइव": "live", "वॉट": "what", "रेडी": "ready", "डन": "done",
+            "चांस": "chance", "प्रॉब्लम": "problem", "टाइम": "time", "पार्टी": "party", "मूवी": "movie", "सीन": "scene"}
 DEVANAGARI = re.compile(r"[ऀ-ॿ]")
 OTHER_SCRIPT = re.compile(r"[؀-ۿݐ-ݿﭐ-﷿ﹰ-﻿]")   # Urdu / Arabic letters
 
@@ -89,6 +106,8 @@ def _korean(run: str) -> str:
 def _word(w: str) -> str:
     if w in _WORDS:
         return _WORDS[w]
+    if w in _ENGLISH:
+        return _ENGLISH[w]
     # One unit per letter: [roman consonant or vowel, its vowel or None (None = a consonant with no vowel), is_cons]
     units, i = [], 0
     while i < len(w):

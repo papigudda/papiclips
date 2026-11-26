@@ -21,7 +21,12 @@ DEFAULTS = {"name": "", "channel": "", "style": "bounce", "layout": "blur", "cap
             "trigger_words": "clip that, clip it",
             "autopost": False, "accounts": [], "post_min_score": 75, "post_gap_min": 45, "daily_cap": 6,
             "privacy": "public", "post_footer": "", "rate_per_1k": 0.0, "channels": {},
-            "lang": "en"}    # the language this creator speaks: picks the speech model, for live recordings too
+            "zoom": True, "watermark": "", "tighten": True,
+            # watch_once: record their next (or current) stream once, then stop watching (Live clipping from Home).
+            # hold: Stop was pressed while they were live: not recorded again by itself until they've gone offline.
+            "watch_once": False, "hold": False,
+            "tag": False, "tag_handle": "", "tag_platforms": [], "tag_style": "clean", "tag_pos": "bottom_left",
+            "lang": "en", "caption_lang": "auto"}    # the language this creator speaks & caption mode
 PLATFORMS = ("youtube", "twitch", "kick")
 
 
@@ -82,8 +87,17 @@ def _clean(data: dict) -> dict:
         if k in NUMERIC:
             lo, hi = NUMERIC[k]
             v = max(lo, min(hi, int(float(v))))
-        elif k in ("auto_watch", "autopost", "ai_only_on_spike"):
+        elif k in ("auto_watch", "autopost", "ai_only_on_spike", "zoom", "tighten", "watch_once", "hold"):
             v = bool(v)
+        elif k == "watermark":
+            from .jobs import clean_watermark
+            v = clean_watermark(v)
+        elif k in ("tag", "tag_handle", "tag_platforms", "tag_style", "tag_pos"):
+            from .jobs import clean_options
+            got = clean_options({k: v})
+            if k not in got:
+                continue
+            v = got[k]
         elif k == "channels":
             v = {p: str(u).strip()[:300] for p, u in (v.items() if isinstance(v, dict) else []) if p in PLATFORMS and str(u).strip()}
         elif k == "accounts":
@@ -101,8 +115,11 @@ def _clean(data: dict) -> dict:
         elif k == "privacy":
             v = v if v in ("public", "unlisted", "private") else "public"
         elif k == "lang":
-            from . import fetch_model
-            v = v if fetch_model.known(v) else "en"
+            from . import fetch_model, whisper
+            v = v if (fetch_model.known(v) or v in whisper.LANGUAGES) else "en"
+        elif k == "caption_lang":
+            from . import whisper
+            v = v if v in whisper.CAPTION_LANGS else "auto"
         else:
             v = str(v).strip()[:300]
         out[k] = v

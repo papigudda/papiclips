@@ -3,6 +3,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+import time
 from pathlib import Path
 
 from . import config, roman
@@ -73,9 +74,41 @@ HOOK = {"font": "Poppins ExtraBold", "size": 96, "ink": "14100E", "box": "FFFFFF
 FONT_FILES = {"Poppins ExtraBold": "Poppins-ExtraBold.ttf", "Anton": "Anton-Regular.ttf", "Archivo Black": "ArchivoBlack-Regular.ttf",
               "Bangers": "Bangers-Regular.ttf", "Luckiest Guy": "LuckiestGuy-Regular.ttf", "Bebas Neue": "BebasNeue-Regular.ttf",
               "Mukta ExtraBold": "Mukta-ExtraBold.ttf"}
+CUSTOM_FONTS: dict = {}         # a family name -> its file, for fonts from a person's library (studio/library.py)
 DEVA_FONT = "Mukta ExtraBold"      # Hindi in its own script (Devanagari): every style draws it in this font
 MARK = {"font": "Poppins ExtraBold", "size": 46}      # the clipper's own @handle, small and see-through
 CAP_MAX_W = 960   # captions never run wider than this, whatever is said
+
+
+def font_names(path) -> dict:
+    """A font file's own names, by name id (1 family, 2 style, 4 full name, 16 typographic family), as Windows reads
+    them (English), else as a Mac does. {} when the file can't be read."""
+    import struct
+    try:
+        d = Path(path).read_bytes()
+        tables = {}
+        for i in range(struct.unpack(">H", d[4:6])[0]):
+            tag, _, off, _ = struct.unpack(">4sIII", d[12 + 16 * i: 28 + 16 * i])
+            tables[tag] = off
+        off = tables[b"name"]
+        _, count, so = struct.unpack(">HHH", d[off: off + 6])
+        win, mac = {}, {}
+        for i in range(count):
+            pid, _eid, lid, nid, ln, o = struct.unpack(">HHHHHH", d[off + 6 + 12 * i: off + 18 + 12 * i])
+            raw = d[off + so + o: off + so + o + ln]
+            if pid == 3 and lid == 0x409:
+                win[nid] = raw.decode("utf-16-be", "replace").strip()
+            elif pid == 1 and lid == 0:
+                mac.setdefault(nid, raw.decode("mac_roman", "replace").strip())
+        return {**mac, **win}
+    except Exception:  # noqa: BLE001 - not a font we can read
+        return {}
+
+
+def ass_family(path, fallback="") -> str:
+    """The name to ask the caption renderer for, so it finds exactly this file."""
+    n = font_names(path)
+    return (n.get(4) or n.get(1) or fallback or "").strip()[:60]
 
 
 class _Font:
@@ -85,7 +118,8 @@ class _Font:
 
     def __init__(self, name):
         import struct
-        path = Path(__file__).resolve().parent / "fonts" / FONT_FILES.get(name, FONT_FILES["Poppins ExtraBold"])
+        own = CUSTOM_FONTS.get(name)
+        path = Path(own) if own else Path(__file__).resolve().parent / "fonts" / FONT_FILES.get(name, FONT_FILES["Poppins ExtraBold"])
         d = path.read_bytes()
         tables = {}
         for i in range(struct.unpack(">H", d[4:6])[0]):
@@ -100,7 +134,8 @@ class _Font:
 
     @classmethod
     def get(cls, name):
-        if name not in cls._cache:
+        own = CUSTOM_FONTS.get(name)
+        if name not in cls._cache or (own and cls._cache[name].path != str(own)):
             cls._cache[name] = cls(name)
         return cls._cache[name]
 
@@ -208,9 +243,14 @@ def _rounded(x0, y0, x1, y1, r):
             f"l {n(x0)} {n(y0 + r)} b {n(x0)} {n(y0)} {n(x0)} {n(y0)} {n(x0 + r)} {n(y0)}")
 
 
-def _hook_events(hook, dur, y):
-    """The heading: dark text in a white rounded box that fits it, on one line or two balanced ones."""
-    f, size = _Font.get(HOOK["font"]), HOOK["size"]
+LIME, INK, WHITE = "32F4C6", "14100E", "FFFFFF"     # ASS colours (&HBBGGRR)
+
+
+def _hook_events(hook, dur, y, fx="box", until=0.0, font=None):
+    """The heading: by default dark text in a white rounded box that fits it, on one line or two balanced ones.
+    fx changes how it looks and comes in (pop, lime, outline, glow, typewriter); until, when set, is how many
+    seconds it stays (it fades out then)."""
+    f, size = _Font.get(font or HOOK["font"]), HOOK["size"]
     words = hook.split()
     if not words:
         return []
@@ -224,13 +264,44 @@ def _hook_events(hook, dur, y):
         widest = max(f.width(l, size) for l in lines)
     line_h = f.em(size) * 1.16
     bw, bh = widest + 2 * HOOK["pad_x"], line_h * len(lines) + 2 * HOOK["pad_y"]
-    x0, y0 = (W - bw) / 2, y - bh / 2
-    box = _rounded(x0, y0, x0 + bw, y0 + bh, min(HOOK["radius"], bh / 2))
-    span = f"{_ts(0)},{_ts(dur)}"
-    ev = [f"Dialogue: 3,{span},Hook,,0,0,0,,{{\\an7\\pos(0,0)\\fad(160,0)\\c&H{HOOK['box']}&\\p1}}{box}{{\\p0}}"]
+    end = min(dur, until) if until and until > 0 else dur
+    span = f"{_ts(0)},{_ts(end)}"
+    fade = "\\fad(160,220)" if end < dur else "\\fad(160,0)"
+    ev = []
+    boxed = fx in ("box", "pop", "lime", "type")
+    if boxed:
+        colour = LIME if fx == "lime" else HOOK["box"]
+        if fx == "pop":
+            # the box and its text grow in from small with a little overshoot, together, from the middle
+            box = _rounded(0, 0, bw, bh, min(HOOK["radius"], bh / 2))
+            ev.append(f"Dialogue: 3,{span},Hook,,0,0,0,,{{\\an5\\pos({W // 2},{y:.0f}){fade}\\c&H{colour}&\\fscx30\\fscy30"
+                      f"\\t(0,170,\\fscx112\\fscy112)\\t(170,300,\\fscx100\\fscy100)\\p1}}{box}{{\\p0}}")
+        else:
+            x0, y0 = (W - bw) / 2, y - bh / 2
+            box = _rounded(x0, y0, x0 + bw, y0 + bh, min(HOOK["radius"], bh / 2))
+            ev.append(f"Dialogue: 3,{span},Hook,,0,0,0,,{{\\an7\\pos(0,0){fade}\\c&H{colour}&\\p1}}{box}{{\\p0}}")
     for i, line in enumerate(lines):
         cy = y - line_h * (len(lines) - 1) / 2 + i * line_h - f.cap_shift(size)
-        ev.append(f"Dialogue: 4,{span},Hook,,0,0,0,,{{\\an5\\pos({W // 2},{cy:.0f})\\fad(160,0)\\fs{size}}}{line}")
+        pos = f"\\an5\\pos({W // 2},{cy:.0f}){fade}\\fs{size}"
+        if fx == "pop":
+            # the line is scaled around the box's middle, so the text stays in its place inside it
+            ev.append(f"Dialogue: 4,{span},Hook,,0,0,0,,{{{pos}\\org({W // 2},{y:.0f})\\fscx30\\fscy30"
+                      f"\\t(0,170,\\fscx112\\fscy112)\\t(170,300,\\fscx100\\fscy100)}}{line}")
+        elif fx == "type":
+            # letter by letter, the way a typewriter writes it (a whole heading in about 0.6 s)
+            n = max(1, len("".join(lines)))
+            step = max(18, min(45, int(600 / n)))
+            before = sum(len(x) for x in lines[:i])
+            chars = "".join(f"{{\\alpha&HFF&\\t({(before + k) * step},{(before + k) * step + 1},\\alpha&H00&)}}{ch}"
+                            for k, ch in enumerate(line))
+            ev.append(f"Dialogue: 4,{span},Hook,,0,0,0,,{{{pos}}}{chars}")
+        elif fx == "outline":
+            ev.append(f"Dialogue: 4,{span},Hook,,0,0,0,,{{{pos}\\c&H{WHITE}&\\3c&H000000&\\bord9\\shad4\\4c&H000000&}}{line}")
+        elif fx == "glow":
+            ev.append(f"Dialogue: 3,{span},Hook,,0,0,0,,{{{pos}\\c&H{LIME}&\\3c&H{LIME}&\\bord16\\blur14\\1a&H40&}}{line}")
+            ev.append(f"Dialogue: 4,{span},Hook,,0,0,0,,{{{pos}\\c&H{WHITE}&\\3c&H14100E&\\bord3}}{line}")
+        else:
+            ev.append(f"Dialogue: 4,{span},Hook,,0,0,0,,{{{pos}}}{line}")
     return ev
 
 
@@ -300,8 +371,11 @@ def parse_ass_phrases(ass_path: Path) -> list:
     return phrases
 
 
-def build_ass(words, start, end, hook, style_name, highlight, hook_y, cap_y, watermark="") -> str:
+def build_ass(words, start, end, hook, style_name, highlight, hook_y, cap_y, watermark="", hook_fx="box", hook_dur=0.0,
+              hook_font=None, cap_font=None) -> str:
     st = STYLES.get(style_name, STYLES["bounce"])
+    if cap_font:                      # the person's own font for the captions, in the style's colours and sizes
+        st = dict(st, font=cap_font)
     words = [dict(w, s=w["s"] - CAPTION_LEAD, e=w["e"] - CAPTION_LEAD) for w in words]
     strong = {_key(h) for h in highlight if _key(h)}
     head = f"""[Script Info]
@@ -314,14 +388,14 @@ ScaledBorderAndShadow: yes
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
 Style: Cap,{st['font']},{st['size']},&H00{st['base']},&H00{st['base']},&H00{st.get('outline_colour', '000000')},&H00000000,0,0,0,0,100,100,0,0,1,{st['outline']},0,5,0,0,0,1
-Style: Hook,{HOOK['font']},{HOOK['size']},&H00{HOOK['ink']},&H00{HOOK['ink']},&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,0,0,5,0,0,0,1
+Style: Hook,{hook_font or HOOK['font']},{HOOK['size']},&H00{HOOK['ink']},&H00{HOOK['ink']},&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,0,0,5,0,0,0,1
 Style: Mark,{MARK['font']},{MARK['size']},&H60FFFFFF,&H60FFFFFF,&H90000000,&H00000000,0,0,0,0,100,100,0,0,1,2,0,5,0,0,0,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 """
     dur = end - start
-    ev = _hook_events(_clean(hook), dur, hook_y)
+    ev = _hook_events(_clean(hook), dur, hook_y, hook_fx, hook_dur, hook_font)
     mark = _clean(watermark)[:40]
     if mark:
         ev.append(f"Dialogue: 5,{_ts(0)},{_ts(dur)},Mark,,0,0,0,,{{\\an5\\pos({W // 2},{_mark_y(cap_y)})\\q2}}{mark}")
@@ -617,10 +691,61 @@ HW_ENCODERS = [
     ("videotoolbox", ["yuv420p", "-c:v", "h264_videotoolbox", "-q:v", "62"]),
 ]
 _hw_ok: dict = {}            # encoder -> True (works) / False (failed once)
-RENDER_SECONDS = 600      # one clip's video encode; far beyond normal, so a frozen encoder is stopped, not waited on
+RENDER_SECONDS = 3600     # one clip's encode, at the very most (a slow computer making a 1080p clip is waited for)
+RENDER_STALL = 180        # ...but an encoder that stops making progress for this long is frozen: stopped
 
 
-def render_clip(src: Path, out_dir: Path, name: str, clip: dict, words: list, src_w: int, src_h: int) -> dict:
+class _Done:
+    def __init__(self, code, err):
+        self.returncode, self.stderr = code, err
+
+
+def _encode(cmd, cwd, stall=RENDER_STALL, cap=RENDER_SECONDS, progress=None):
+    """Run ffmpeg, reading its progress: stopped only when it stops moving for `stall` seconds (or after `cap`), not
+    after a fixed time, so a slow computer finishes its clips and a frozen encoder doesn't hold one for ever."""
+    import threading as _th
+    p = subprocess.Popen(cmd[:1] + ["-progress", "pipe:1", "-nostats"] + cmd[1:], cwd=cwd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE, text=True, encoding="utf-8", errors="replace", creationflags=NO_WINDOW)
+    seen = {"at": time.time(), "t": 0.0}
+    err = []
+
+    def read_out():
+        for line in p.stdout:
+            seen["at"] = time.time()          # every progress line is ffmpeg still moving
+            if line.startswith(("out_time_us=", "out_time_ms=")):     # both are in millionths of a second
+                try:
+                    seen["t"] = max(seen["t"], int(line.split("=", 1)[1]) / 1e6)
+                except ValueError:
+                    pass
+
+    def read_err():
+        for line in p.stderr:
+            err.append(line)
+            del err[:-60]
+
+    ts = [_th.Thread(target=read_out, daemon=True), _th.Thread(target=read_err, daemon=True)]
+    for t in ts:
+        t.start()
+    began, told = time.time(), -1.0
+    while p.poll() is None:
+        if progress and seen["t"] != told:     # how far it is, told here (not from the reading thread)
+            told = seen["t"]
+            try:
+                progress(told)
+            except Exception:  # noqa: BLE001 - showing progress never stops a clip
+                pass
+        now = time.time()
+        if now - seen["at"] > stall or now - began > cap:
+            p.kill()
+            p.wait()
+            raise subprocess.TimeoutExpired(cmd, stall)
+        time.sleep(0.5)
+    for t in ts:
+        t.join(2)
+    return _Done(p.returncode, "".join(err))
+
+
+def render_clip(src: Path, out_dir: Path, name: str, clip: dict, words: list, src_w: int, src_h: int, progress=None) -> dict:
     """Writes <name>.mp4, <name>.jpg and <name>.ass into out_dir. Returns file names."""
     src = Path(src).resolve()
     out_dir = Path(out_dir).resolve()
@@ -648,15 +773,41 @@ def render_clip(src: Path, out_dir: Path, name: str, clip: dict, words: list, sr
             cap_y = int(round(H * float(clip["caption_y"]) / 100))
         except (ValueError, TypeError):
             pass
+    from . import edit as editmod
+    ed = clip.get("edit") or {}                     # what was done in the editor: cuts, effects, sounds, text
+    hook_y, cap_y = ed.get("hook_y") or hook_y, ed.get("cap_y") or cap_y
+    hook_fx, hook_dur = ed.get("hook_fx", "box"), ed.get("hook_dur", 0)
+    lib = clip.get("lib") or {}                     # the person's own fonts, sounds and media this edit uses
+    fonts, hook_font, cap_font = [], None, None
+    for key in ("hook_font", "cap_font"):
+        it = lib.get(ed.get(key) or "")
+        if it and it.get("kind") == "font" and it.get("path"):
+            fam = ass_family(it["path"], it.get("family", ""))      # read from the file: right for fonts added before too
+            if not fam:
+                continue
+            CUSTOM_FONTS[fam] = it["path"]
+            fonts.append(it["path"])
+            if key == "hook_font":
+                hook_font = fam
+            else:
+                cap_font = fam
     keep = tighten_plan(src, start, end, words) if clip.get("tighten") else []
+    if ed.get("cuts"):                              # the parts cut out in the editor, together with the silences cut
+        keep = editmod.intersect(keep, editmod.keep_from_cuts(ed["cuts"], start, end)) or [(0.0, round(end - start, 3))]
+        if keep == [(0.0, round(end - start, 3))]:
+            keep = []
     shown = tightened_words(words, start, keep) if keep else words
     length = sum(b - a for a, b in keep) if keep else end - start
     ass = build_ass(shown if clip.get("captions", True) else [], start, start + length, clip.get("hook", ""), clip.get("style", "bounce"),
-                    clip.get("highlight_words", []), hook_y, cap_y, watermark=clip.get("watermark", ""))
+                    clip.get("highlight_words", []), hook_y, cap_y, watermark=clip.get("watermark", ""),
+                    hook_fx=hook_fx, hook_dur=hook_dur, hook_font=hook_font, cap_font=cap_font)
     moments = zoom_moments(src, start, end) if clip.get("zoom") else []
     if keep:
         moments = [m for m in (_remap(t, keep) for t in moments) if m is not None and 0.8 < m < length - 1.5]
     z = zoom_expr(moments)
+    post = editmod.post_graph(ed, start, keep, length, W, H, config.OUT_FPS)
+    sfx = editmod.sounds_for(ed, start, keep, length, lib)
+    over = editmod.overlays_for(ed, start, keep, length, lib)
     # The clip is made in a short work folder and moved into place afterwards. The caption step of ffmpeg cannot
     # open files whose full path is longer than 260 characters on Windows, which a data folder deep inside other
     # folders easily reaches. Inside the work folder every name is short and relative (a drive colon would also
@@ -682,17 +833,36 @@ def render_clip(src: Path, out_dir: Path, name: str, clip: dict, words: list, sr
         except Exception as e:  # noqa: BLE001 - the clip is still made, without the tag
             print(f"  Creator tag not drawn: {e}", flush=True)
             tag = None
+    meta = {"title": clip.get("title") or "", "description": clip.get("description") or "",
+            "comment": clip.get("description") or ""}
     try:
+        out = None
+        if post or sfx or over:
+            try:
+                out = _render_in(work, src, out_dir, name, start, end, layout, fg_h, ass, face=face, z=z, keep=keep,
+                                 game=game, top_h=top_h, tag=tag, post=post, sfx=sfx, over=over, fonts=fonts, progress=progress, voice=ed.get("voice"), meta=meta)
+            except RuntimeError as e:
+                # effects this ffmpeg can't make: the clip is still made, with the edit's cuts and text, without them
+                print(f"  Effects not added to {name}: {str(e)[-300:]}", flush=True)
+                out = None
         try:
-            out = _render_in(work, src, out_dir, name, start, end, layout, fg_h, ass, face=face, z=z, keep=keep,
-                             game=game, top_h=top_h, tag=tag)
-        except RuntimeError:
+            if out is None:
+                out = _render_in(work, src, out_dir, name, start, end, layout, fg_h, ass, face=face, z=z, keep=keep,
+                                 game=game, top_h=top_h, tag=tag, fonts=fonts, progress=progress, voice=ed.get("voice"), meta=meta)
+                if post or sfx or over:
+                    out["fx_note"] = "The effects couldn't be added on this computer, so the clip was made without them."
+        except RuntimeError as e:
             if not z and not keep:
                 raise
+            print(f"  Cuts and zoom not made in {name}: {str(e)[-300:]}", flush=True)
             # a zoom or cuts this ffmpeg can't make: the clip is made without them, never not at all
             ass = build_ass(words if clip.get("captions", True) else [], start, end, clip.get("hook", ""), clip.get("style", "bounce"),
-                            clip.get("highlight_words", []), hook_y, cap_y, watermark=clip.get("watermark", ""))
-            out = _render_in(work, src, out_dir, name, start, end, layout, fg_h, ass, face=face, game=game, top_h=top_h, tag=tag)
+                            clip.get("highlight_words", []), hook_y, cap_y, watermark=clip.get("watermark", ""),
+                            hook_fx=hook_fx, hook_dur=hook_dur, hook_font=hook_font, cap_font=cap_font)
+            out = _render_in(work, src, out_dir, name, start, end, layout, fg_h, ass, face=face, game=game, top_h=top_h, tag=tag,
+                             fonts=fonts, progress=progress, voice=ed.get("voice"), meta=meta)
+            if ed.get("cuts") or post or sfx or over:      # say so: the edit didn't make it into the clip
+                out["fx_note"] = "Your cuts and effects couldn't be made on this computer, so the clip was made without them."
             keep = []
         out["tightened"] = round((end - start) - sum(b - a for a, b in keep), 1) if keep else 0
         return out
@@ -701,28 +871,76 @@ def render_clip(src: Path, out_dir: Path, name: str, clip: dict, words: list, sr
 
 
 def _render_in(work: Path, src: Path, out_dir: Path, name: str, start, end, layout, fg_h, ass: str, face=None, z="", keep=None,
-               game=None, top_h=SPLIT_TOP, tag=None) -> dict:
+               game=None, top_h=SPLIT_TOP, tag=None, post="", sfx=None, over=None, fonts=None, progress=None, voice=None, meta=None) -> dict:
     src = Path(src).resolve()
     out_dir = Path(out_dir).resolve()
     (work / f"{name}.ass").write_text(ass, encoding="utf-8")
     (work / "f").mkdir(exist_ok=True)
     for f in config.FONTS_DIR.glob("*.ttf"):
         shutil.copyfile(f, work / "f" / f.name)
+    for f in fonts or []:                # the person's own fonts, beside PapiClips's
+        try:
+            shutil.copyfile(f, work / "f" / Path(f).name)
+        except OSError:
+            pass
+    from . import tools as _tools
 
     # Audio enhancement: vocal isolation, speech EQ, dynamic compression and broadcast loudness
     voice_af = "highpass=f=80,equalizer=f=3000:t=q:w=1.5:g=3,acompressor=threshold=-18dB:ratio=4:attack=5:release=50,loudnorm=I=-14:TP=-1.5:LRA=11"
 
-    # Step 1: Render clean 1080x1920 video with layout and broadcast audio (clean.mp4)
-    fc_clean = _filter(layout, fg_h, face, z, game, top_h) + "[v0]null[v]"
+    # Step 1: Render clean 1080x1920 video with layout, post FX, overlays, cuts, and mixed/enhanced audio (clean.mp4)
+    pic = _filter(layout, fg_h, face, z, game, top_h)
+    if post:             # the editor's look, punch-ins and transitions, on the laid-out picture, under the captions
+        pic += post + ";"
+    lab = "[vp]" if post else "[v0]"
+    extra = []
+    first_over = 1
+    if over:             # pictures, GIFs and videos from the library, over the picture and under the text
+        for i, o in enumerate(over):
+            ow = max(2, int(round(W * o["w"] / 2)) * 2)
+            if o["type"] == "image":
+                extra += ["-loop", "1", "-t", f"{end - start + 1:.2f}", "-i", o["path"]]
+                fr = f"[{first_over + i}:v]scale={ow}:-2,format=rgba[ov{i}]"
+            else:
+                extra += ["-ss", f"{o['from']:.2f}", "-i", o["path"]]
+                fr = f"[{first_over + i}:v]setpts=PTS-STARTPTS+{o['at']:.3f}/TB,fps={config.OUT_FPS},scale={ow}:-2,format=rgba[ov{i}]"
+            cx, cy = o["x"] * W, o["y"] * H
+            nxt = f"[vo{i}]"
+            pic += (f"{fr};{lab}[ov{i}]overlay=x='{cx:.0f}-w/2':y='{cy:.0f}-h/2':enable='between(t,{o['at']:.3f},{o['at'] + o['d']:.3f})'"
+                    f":eof_action=pass{nxt};")
+            lab = nxt
+    fc_clean = pic + f"{lab}null[v]"
     if keep:
-        fc_clean = _tighten_filter(keep, fc_clean) + f";[ca]{voice_af}[a]"
+        fc_clean = _tighten_filter(keep, fc_clean)
+
+    heard = [(i, o) for i, o in enumerate(over or []) if o.get("audio")]
+    vol = f",volume={voice:.2f}" if voice is not None and abs(voice - 1) > 0.001 else ""     # the stream's own sound, as set in the editor
+    if sfx or heard:    # sound effects, and the sound of videos laid over the clip, each at its moment, over the voice
+        first = 1 + len(over or [])
+        for f, _at, _vol in sfx or []:
+            extra += ["-i", str(f)]
+        mix = [f"{'[ca]' if keep else '[0:a:0]'}{voice_af}{vol}[an]"]
+        for i, (_f, at, s_vol) in enumerate(sfx or []):
+            ms = int(at * 1000)
+            mix.append(f"[{first + i}:a]aresample=48000,adelay={ms}|{ms},volume={s_vol:.2f}[x{i}]")
+        n = len(sfx or [])
+        for j, (i, o) in enumerate(heard):
+            ms = int(o["at"] * 1000)
+            mix.append(f"[{1 + i}:a]atrim=0:{o['d']:.3f},asetpts=PTS-STARTPTS,aresample=48000,adelay={ms}|{ms},volume={o['vol']:.2f}[x{n + j}]")
+        n += len(heard)
+        mix.append("[an]" + "".join(f"[x{i}]" for i in range(n)) + f"amix=inputs={n + 1}:duration=first:normalize=0,alimiter=limit=0.95[a]")
+        fc_clean += ";" + ";".join(mix)
+        sound = ["-map", "[a]"]
+    elif keep:
+        fc_clean += f";[ca]{voice_af}{vol}[a]"
         sound = ["-map", "[a]"]
     else:
-        sound = ["-map", "0:a:0", "-af", voice_af]
+        sound = ["-map", "0:a:0", "-af", f"{voice_af}{vol}"]
 
-    base_clean = ["ffmpeg", "-y", "-v", "error", "-ss", f"{start:.2f}", "-t", f"{end - start:.2f}", "-i", str(src),
+    meta_flags = [arg for k, v in (meta or {}).items() if v for arg in ("-metadata", f"{k}={v}")]
+    base_clean = ["ffmpeg", "-y", "-v", "error", "-ss", f"{start:.2f}", "-t", f"{end - start:.2f}", "-i", str(src), *extra,
                   "-filter_complex", fc_clean, "-map", "[v]", *sound,
-                  "-c:a", "aac", "-b:a", "160k", "-ar", "48000", "-movflags", "+faststart", "-pix_fmt"]
+                  "-c:a", "aac", "-b:a", "160k", "-ar", "48000", *meta_flags, "-movflags", "+faststart", "-pix_fmt"]
 
     working = [e for e in HW_ENCODERS if _hw_ok.get(e[0]) is True]
     encoders = working[:1] or [e for e in HW_ENCODERS if _hw_ok.get(e[0]) is None]
@@ -730,15 +948,15 @@ def _render_in(work: Path, src: Path, out_dir: Path, name: str, start, end, layo
 
     clean_file = work / f"{name}.clean.mp4"
     final_file = work / f"{name}.mp4"
+    total = max(0.5, sum(b - a for a, b in keep) if keep else end - start)
 
     # Execute Step 1: Render clean clip
     err = None
     for label, enc in encoders:
         try:
             cmd_clean = base_clean + enc + [str(clean_file)]
-            p = subprocess.run(cmd_clean, cwd=work, capture_output=True, text=True,
-                               encoding="utf-8", errors="replace", creationflags=NO_WINDOW,
-                               timeout=RENDER_SECONDS if label == "x264" else 180)
+            p = _encode(cmd_clean, work, stall=RENDER_STALL if label == "x264" else 90,
+                        progress=(lambda t: progress(min(0.75, 0.75 * t / total))) if progress else None)
         except subprocess.TimeoutExpired:
             if label == "x264":
                 raise RuntimeError("Making the clean clip took too long and was stopped.")
@@ -756,33 +974,40 @@ def _render_in(work: Path, src: Path, out_dir: Path, name: str, start, end, layo
         raise RuntimeError(f"Clean render failed: {err}")
 
     # Step 2: Burn subtitles and creator tag onto clean clip to create final clip (name.mp4)
-    # Uses -c:a copy so audio is 100% identical and encoding is lightning fast
+    # Uses -c:a copy so audio is 100% identical and encoding is fast
     tag_png = work / "t.png"
-    if tag and tag_png.is_file():
-        filter_burn = f"[0:v]ass=filename={name}.ass:fontsdir=f[va];[va][1:v]overlay={int(tag[0])}:{int(tag[1])}[v]"
+    can_cap = _tools.can_draw_captions()
+    has_tag = bool(tag and tag_png.is_file())
+    if has_tag:
+        cap_f = f"ass=filename={name}.ass:fontsdir=f" if can_cap else "null"
+        filter_burn = f"[0:v]{cap_f}[va];[va][1:v]overlay={int(tag[0])}:{int(tag[1])}[v]"
         base_burn = ["ffmpeg", "-y", "-v", "error", "-i", str(clean_file), "-i", "t.png",
                      "-filter_complex", filter_burn, "-map", "[v]", "-map", "0:a",
-                     "-c:a", "copy", "-movflags", "+faststart", "-pix_fmt"]
-    else:
+                     "-c:a", "copy", *meta_flags, "-movflags", "+faststart", "-pix_fmt"]
+    elif can_cap:
         base_burn = ["ffmpeg", "-y", "-v", "error", "-i", str(clean_file),
                      "-vf", f"ass=filename={name}.ass:fontsdir=f", "-map", "0:v", "-map", "0:a",
-                     "-c:a", "copy", "-movflags", "+faststart", "-pix_fmt"]
-
-    for label, enc in encoders:
-        try:
-            cmd_burn = base_burn + enc + [str(final_file)]
-            p = subprocess.run(cmd_burn, cwd=work, capture_output=True, text=True,
-                               encoding="utf-8", errors="replace", creationflags=NO_WINDOW,
-                               timeout=RENDER_SECONDS if label == "x264" else 180)
-        except subprocess.TimeoutExpired:
-            if label == "x264":
-                raise RuntimeError("Burning subtitles took too long and was stopped.")
-            continue
-        if p.returncode == 0 and final_file.is_file() and final_file.stat().st_size > 100000:
-            break
-        err = p.stderr[-1200:]
+                     "-c:a", "copy", *meta_flags, "-movflags", "+faststart", "-pix_fmt"]
     else:
-        raise RuntimeError(f"Subtitle burn failed: {err}")
+        base_burn = None
+
+    if base_burn is None:
+        shutil.copyfile(clean_file, final_file)
+    else:
+        for label, enc in encoders:
+            try:
+                cmd_burn = base_burn + enc + [str(final_file)]
+                p = _encode(cmd_burn, work, stall=RENDER_STALL if label == "x264" else 90,
+                            progress=(lambda t: progress(min(0.99, 0.75 + 0.24 * t / total))) if progress else None)
+            except subprocess.TimeoutExpired:
+                if label == "x264":
+                    raise RuntimeError("Burning subtitles took too long and was stopped.")
+                continue
+            if p.returncode == 0 and final_file.is_file() and final_file.stat().st_size > 100000:
+                break
+            err = p.stderr[-1200:]
+        else:
+            raise RuntimeError(f"Subtitle burn failed: {err}")
 
     length = sum(b - a for a, b in keep) if keep else end - start
     cover_t = min(1.2, length / 2)

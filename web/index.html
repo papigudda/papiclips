@@ -14,7 +14,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Inter:wght@300&family=Archivo+Black&family=Anton&family=Poppins:wght@800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --brand:#FF2E54;--brand-press:#E0183E;--brand-ink:#FFFFFF;--brand-soft:rgba(255,46,84,0.14);--brand-line:rgba(255,46,84,0.36);--brand-deep:#9E0E28;
+  --brand:#FF2E54;--brand-press:#E0183E;--brand-ink:#FFFFFF;--on-brand:#FFFFFF;--brand-soft:rgba(255,46,84,0.14);--brand-line:rgba(255,46,84,0.36);--brand-deep:#9E0E28;
   --accent:#FF2E54;--accent-2:#8B5CF6;--accent-cyan:#00F0FF;
   --accent-gradient:linear-gradient(135deg, #FF2E54 0%, #FF5733 100%);
   --accent-glow:rgba(255,46,84,0.35);
@@ -1342,6 +1342,150 @@ body{background:var(--bg) !important;color:var(--text) !important;font-family:-a
 .sty[aria-pressed=true] span{background:linear-gradient(90deg, rgba(255,46,84,0.3) 0%, rgba(255,46,84,0.12) 100%) !important;color:#fff !important}
 .sty[aria-pressed=true] span::after{content:" ✓";font-weight:800;color:var(--brand)}
 .sty:disabled{opacity:.35 !important;cursor:not-allowed !important}
+.home-top{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(300px,1fr);gap:16px;padding:14px 28px 4px;align-items:stretch}
+@media (max-width:1100px){.home-top{grid-template-columns:1fr}}
+@media (max-width:640px){.home-top{padding:12px 16px 4px}}
+.mk{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px 20px 16px;min-width:0}
+.mk>h2{font-size:clamp(20px,2.1vw,25px);font-weight:700;letter-spacing:-.03em;line-height:1.2;color:var(--text);text-wrap:balance}
+.mk>h2 em{font-style:normal;color:var(--brand)}
+.mk>p{margin:6px 0 14px;font-size:13.5px;color:var(--dim)}
+.composer.big{max-width:none;margin:0;background:transparent;border:0;border-radius:0}
+.composer.big .modes{border:0;padding:0;margin-bottom:10px;gap:6px;flex-wrap:wrap}
+.composer.big .modes button{border-radius:999px;border:1px solid var(--line);background:var(--muted);padding:6px 13px;font-size:12.5px;border-bottom:1px solid var(--line)}
+.composer.big .modes button:hover{background:var(--card-hover)}
+.composer.big .modes button[aria-selected=true]{background:var(--brand-soft);border-color:var(--brand-line);color:var(--brand)}
+.composer.big .composer-input{background:var(--muted);border:1px solid var(--line-2);border-radius:14px;padding:5px;gap:6px;transition:border-color .15s ease}
+.composer.big .composer-input:focus-within{border-color:var(--brand-line)}
+.composer.big .composer-input input,.composer.big .composer-input input:focus{height:46px;padding:0 10px 0 40px;font-size:15px;border-radius:10px;flex:1;min-width:0}
+.composer.big .composer-input>svg{left:15px}
+.composer.big .composer-input>.btn{flex:none;height:46px;border-radius:11px;padding:0 18px;font-size:14px}
+.composer.big:has(#url:focus){border-color:transparent}
+.composer.big .att{margin:8px 0 0}
+.composer.big .prerange{margin:10px 0 0}
+.composer.big .live-prev,.composer.big .live-how{margin-left:0;margin-right:0}
+.quick{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:12px}
+.quick>b{font-size:12px;color:var(--faint);font-weight:600;margin:0 2px 0 6px}
+.quick>b:first-child{margin-left:0}
+.qchip{height:30px;padding:0 11px;border-radius:999px;border:1px solid var(--line);background:var(--muted);color:var(--dim);font:inherit;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.qchip svg{width:14px;height:14px}
+.qchip:hover{color:var(--text);background:var(--card-hover)}
+.qchip[aria-pressed=true]{border-color:var(--brand-line);color:var(--brand);background:var(--brand-soft)}
+.qchip:disabled{opacity:.45;cursor:default}
+.qchip.more{border-style:dashed}
+.qchip.more[aria-expanded=true]{border-style:solid;color:var(--text);background:var(--card-hover)}
+.hmore{margin-top:12px;border:1px solid var(--line);border-radius:14px;background:var(--bg);overflow:hidden}
+.hmore .look{border-top:0}
+.hmore .composer-bar{padding:4px 12px 12px;border-top:1px solid var(--line);padding-top:10px}
+.hcamp{position:relative;overflow:hidden;border-radius:20px;padding:20px;background:linear-gradient(140deg,rgba(255,46,84,0.16),var(--card) 58%);border:1px solid var(--brand-line);display:flex;flex-direction:column;gap:8px;min-width:0}
+.hcamp>*{position:relative;z-index:1}
+.hcamp .hc-art{position:absolute;inset:0 0 0 45%;z-index:0;opacity:.35;-webkit-mask-image:linear-gradient(90deg,transparent,#000 70%);mask-image:linear-gradient(90deg,transparent,#000 70%)}
+.hcamp .hc-art img,.hcamp .hc-art video{width:100%;height:100%;object-fit:cover;display:block}
+.hcamp .tag{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:3px 10px;border-radius:999px;background:var(--brand);color:var(--on-brand)}
+.hcamp .tag i{width:7px;height:7px;border-radius:50%;background:var(--on-brand);animation:pulse 1.3s infinite}
+.hcamp .tag.soft{background:rgba(255,255,255,.1);color:var(--text)}
+.hcamp h3{font-size:19px;font-weight:700;letter-spacing:-.02em;line-height:1.25;color:var(--text);max-width:85%}
+.hcamp p{font-size:13px;color:var(--dim);max-width:88%}
+.hcamp .pool{font-size:32px;font-weight:800;letter-spacing:-.04em;color:var(--brand);line-height:1.1;margin-top:4px}
+.hcamp .pool small{font-size:12px;color:var(--dim);font-weight:500;letter-spacing:0;margin-left:8px}
+.hcamp ul{margin:2px 0 0;padding:0;list-style:none;display:grid;gap:5px;font-size:13px;color:var(--text)}
+.hcamp ul li::before{content:"✓";color:var(--brand);font-weight:800;margin-right:8px}
+.hcamp .row{margin-top:auto;padding-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+.home-sec{padding:18px 28px 0}
+@media (max-width:640px){.home-sec{padding:16px 16px 0}}
+.sec-h{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.sec-h h3{font-size:14px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:7px}
+.sec-h h3 svg{width:16px;height:16px;color:var(--brand)}
+.sec-h .sub{font-size:12.5px;color:var(--faint)}
+.sec-h .grow{flex:1}
+.sec-h .lnk2{border:0;background:transparent;font:inherit;font-size:12.5px;font-weight:600;color:var(--brand);cursor:pointer;padding:4px 6px;border-radius:8px}
+.sec-h .lnk2:hover{background:var(--brand-soft)}
+.rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.home-sec .rgrid{grid-template-columns:repeat(6,minmax(0,1fr))}
+@media (max-width:1280px){.home-sec .rgrid{grid-template-columns:repeat(4,minmax(0,1fr))}.home-sec .rgrid .rc:nth-child(n+5){display:none}}
+@media (max-width:700px){.home-sec .rgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.rc{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;min-width:0;display:flex;flex-direction:column;transition:border-color .15s ease}
+.rc:hover{border-color:var(--line-2)}
+.rc-th{all:unset;cursor:pointer;display:block;position:relative;aspect-ratio:9/13;background:#000;overflow:hidden}
+.rc-th:focus-visible{outline:2px solid var(--brand);outline-offset:-2px}
+.rc-th img{width:100%;height:100%;object-fit:cover;display:block}
+.rc-th .sc{position:absolute;left:8px;top:8px;font-size:10.5px;font-weight:800;padding:2px 7px;border-radius:999px;background:rgba(0,0,0,.6);color:#fff}
+.rc-th .sc.s-hi{background:var(--brand);color:var(--on-brand)}.rc-th .sc.s-mid{background:#14532D;color:#86EFAC}
+.rc-th .edt{position:absolute;right:8px;top:8px;font-size:10px;font-weight:800;letter-spacing:.04em;padding:2px 7px;border-radius:999px;background:#FF7AD9;color:#1a0820}
+.rc-th .len{position:absolute;right:8px;bottom:50px;font-size:11px;font-weight:600;padding:1px 6px;border-radius:6px;background:rgba(0,0,0,.6);color:#fff}
+.rc-wrap{position:relative}
+.rc .go{position:absolute;left:8px;right:8px;bottom:8px;height:34px;border:0;border-radius:10px;background:var(--brand);color:var(--on-brand);display:flex;align-items:center;justify-content:center;gap:6px;font:inherit;font-weight:800;font-size:12.5px;cursor:pointer;transition:background-color .15s ease}
+.rc .go svg{width:15px;height:15px}
+.rc .go:hover{background:var(--brand-press)}
+.dlg-edit{display:flex;align-items:center;gap:12px;width:100%;margin:12px 0 4px;padding:12px 14px;border-radius:14px;border:1px solid var(--brand-line);background:var(--brand-soft);color:var(--text);font:inherit;text-align:left;cursor:pointer;transition:background-color .15s ease,border-color .15s ease}
+.dlg-edit:hover{background:rgba(255,46,84,0.22);border-color:var(--brand)}
+.dlg-edit>svg{color:var(--brand);width:20px;height:20px}
+.dlg-edit span{flex:1;min-width:0}.dlg-edit b{display:block;font-size:14px}.dlg-edit small{display:block;font-size:12px;color:var(--dim)}
+.rc-th .mk2{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:12px;font-size:12px;color:var(--dim);background:var(--muted)}
+.rc-th .mk2.bad{color:#FF8A8A;background:var(--bad-soft)}
+.rc-bd{padding:9px 10px 10px;min-width:0}
+.rc-bd b{display:block;font-size:12.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rc-bd span{display:block;font-size:11px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rempty{display:flex;align-items:center;gap:14px;padding:18px;border:1px dashed var(--line-2);border-radius:16px;color:var(--dim);font-size:13px}
+.rempty div>b:first-child{display:block;color:var(--text);font-size:14px}.rempty b{color:var(--text)}
+.rempty .btn{margin-left:auto;flex:none}
+.hcards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:16px 28px 4px}
+@media (max-width:900px){.hcards{grid-template-columns:1fr}}
+@media (max-width:640px){.hcards{padding:14px 16px 4px}}
+.hcard{all:unset;box-sizing:border-box;cursor:pointer;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;display:flex;gap:12px;align-items:center;min-width:0;transition:border-color .15s ease,background-color .15s ease}
+.hcard:hover{border-color:var(--brand-line)}
+.hcard:focus-visible{outline:2px solid var(--brand)}
+.hcard[aria-disabled=true]{cursor:default}.hcard[aria-disabled=true]:hover{border-color:var(--line)}
+.hcard>i{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-style:normal;font-size:18px;background:var(--muted);flex:none;color:var(--brand)}
+.hcard>i svg{width:19px;height:19px}
+.hcard div{min-width:0}
+.hcard b{display:block;font-size:13.5px;color:var(--text)}
+.hcard span{display:block;font-size:12px;color:var(--dim)}
+.hcard .bar{height:4px;margin-top:6px;background:var(--muted)}
+#camps-home:not(:empty),#ov:not(:empty){margin-top:8px}
+.nav-item .count.new{background:var(--brand);color:var(--on-brand);font-weight:800;letter-spacing:.03em}
+.nav-item.on .count.new{background:var(--on-brand);color:var(--brand)}
+.stbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.stbar .seg2{display:flex;gap:2px;padding:3px;background:var(--muted);border-radius:11px}
+.stbar .seg2 button{height:32px;padding:0 12px;border:0;border-radius:8px;background:transparent;color:var(--dim);font:inherit;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.stbar .seg2 button:hover{color:var(--text)}
+.stbar .seg2 button[aria-pressed=true]{background:var(--brand);color:var(--on-brand)}
+.stbar .seg2 button small{font-size:11px;opacity:.75}
+.stbar .find{position:relative;margin-left:auto;width:min(280px,100%)}
+.stbar .find input{width:100%;height:38px;padding:0 12px 0 34px;border-radius:11px;border:1px solid var(--line-2);background:var(--muted)}
+.stbar .find svg{position:absolute;left:11px;top:11px;width:16px;height:16px;color:var(--faint)}
+.sthelp{display:flex;gap:10px;align-items:center;padding:12px 14px;border-radius:14px;background:var(--brand-soft);border:1px solid var(--brand-line);color:var(--text);font-size:13px;margin-bottom:16px}
+.sthelp svg{color:var(--brand);flex:none}
+.sthelp span{flex:1;min-width:0}
+.lib-drop{display:flex;align-items:center;gap:16px;padding:22px;border:1.5px dashed var(--line-2);border-radius:18px;background:var(--card);cursor:pointer;transition:border-color .15s ease,background-color .15s ease;margin-bottom:16px}
+.lib-drop:hover,.lib-drop.over{border-color:var(--brand);background:var(--brand-soft)}
+.lib-drop>i{width:52px;height:52px;border-radius:14px;background:var(--brand);color:var(--on-brand);display:grid;place-items:center;flex:none}
+.lib-drop>i svg{width:24px;height:24px}
+.lib-drop b{display:block;font-size:16px;color:var(--text)}
+.lib-drop div span{display:block;font-size:12.5px;color:var(--dim);margin-top:2px}
+.lib-drop .btn{margin-left:auto;flex:none}
+.lib-drop.busy{cursor:progress}
+.lgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+.li{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;min-width:0;transition:border-color .15s ease}
+.li:hover{border-color:var(--line-2)}
+.li-pv{position:relative;aspect-ratio:16/10;background:var(--muted);display:grid;place-items:center;overflow:hidden}
+.li-pv img,.li-pv video{width:100%;height:100%;object-fit:contain;display:block;background:#000}
+.li-pv .fs{font-size:34px;line-height:1.1;color:var(--text);text-align:center;padding:0 12px;overflow:hidden;max-height:100%}
+.li-pv .snd{width:56px;height:56px;border-radius:50%;border:0;background:var(--brand);color:var(--on-brand);display:grid;place-items:center;cursor:pointer;font-size:20px}
+.li-pv .snd:hover{background:var(--brand-press)}
+.li-pv .kind{position:absolute;left:8px;top:8px;font-size:10px;font-weight:800;letter-spacing:.05em;padding:2px 7px;border-radius:999px;background:rgba(0,0,0,.6);color:#fff;text-transform:uppercase}
+.li-bd{display:flex;align-items:center;gap:8px;padding:10px 8px 10px 12px;min-width:0}
+.li-bd div{flex:1;min-width:0}
+.li-bd b{display:block;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li-bd span{display:block;font-size:11.5px;color:var(--dim)}
+@media (max-width:640px){
+  .mk{padding:16px 14px 14px}
+  .composer.big .composer-input{flex-wrap:wrap}
+  .composer.big .composer-input input{flex-basis:100%}
+  .composer.big .composer-input>svg{top:18px}
+  .composer.big .composer-input>.btn{width:100%;justify-content:center}
+  .lib-drop{padding:16px;gap:12px}.lib-drop>i{width:44px;height:44px}.lib-drop .btn{display:none}.lib-drop b{font-size:15px}
+  .stbar .find{margin-left:0;width:100%}
+}
 
 </style>
 </head>
@@ -1377,6 +1521,7 @@ body{background:var(--bg) !important;color:var(--text) !important;font-family:-a
 <dialog id="formdlg"></dialog>
 <dialog id="ytmodal"></dialog>
 <input type="file" id="file" accept="video/*" multiple hidden>
+<input type="file" id="libfile" accept=".ttf,.otf,audio/*,image/*,video/*,.gif" multiple hidden>
 <div id="toasts" role="status" aria-live="polite"></div>
 <div class="pop" id="bellpop" role="dialog" aria-label="Notifications" hidden></div>
 <div class="pop menu" id="acctpop" role="menu" hidden></div>
@@ -1816,26 +1961,23 @@ function openFeedback(kind = "bug", context = "") {
 function checkUpdates(btn) {
   toast("PapiClips Studio Pro is running the latest custom build.", "ok");
 }
-const NEWS = {id: "2026-11-24", items: [
-  {e: "⏹️", t: "Stop a video", d: "Changed your mind? Press Stop on a video being made. The clips already made stay; re-make any of the rest later.", new: true},
-  {e: "💰", t: "Paid campaigns, right here", d: "Clip & get paid: the campaign that's live now is on Home and under Paid campaigns, with its clipper pool, every stream to clip (tap one) and the moments the team marked. Join on papiclips.com, clip here, post, get paid for your views.", new: true, act: "go", v: "campaigns", btn: "See it"},
-  {e: "📺", t: "Last stream, ready to clip", d: "When a creator isn't live, their page shows their last stream: clip all of it, or tap Exact moment for just the part you want.", new: true},
-  {e: "⏹️", t: "Recording only when you want it", d: "Stop now means stop: it won't start again by itself during that stream, and closing the app stops recording. Live clipping records that one stream; to record every stream, turn on Auto-record in the creator's Setup.", new: true},
-  {e: "🧠", t: "Free AI fills in more", d: "When your AI key runs out, the free AI on your PC writes the big text and title of exact moments too. Captions never get rewritten by it, so they stay right.", new: true},
-  {e: "⏱️", t: "Clip an exact moment", d: "Know when it happened? Paste the link, tap Exact moment, drag the start and end (or type them, like 1:02:30), and get a clip of exactly that part, fast. You see a picture of the start and the end.", act: "go", v: "overview", btn: "Try it"},
-  {e: "🔥", t: "Clips that go viral", d: "Moments are picked where the streamer really reacted (screaming, laughing, the sound jumping) and where the stream's chat went wild, then every moment is checked side by side so only the best make it. The reaction right after a moment stays in the clip."},
-  {e: "💬", t: "English captions fixed", d: "English streams are never mistaken for Hindi any more, and every clip is checked on its own sound, so English clips always get English captions and Hindi clips get Hinglish."},
-  {e: "🧠", t: "Know when your AI key runs out", d: "If your key hits its limit, PapiClips tells you: it switches to the free AI on your PC by itself, or shows you how to set it up in two steps.", act: "go", v: "settings", tab: "ai", btn: "AI settings", admin: true, new: true},
-  {e: "🏷️", t: "Creator tag", d: "Put the streamer's channel on your clips, like /Mizoplays with the YouTube logo. The handle is found from the video by itself; pick YouTube, Instagram, Kick or Twitch logos and one of 4 looks. Under the layouts, turn on Creator tag.", act: "go", v: "overview", btn: "Try it"},
-  {e: "🇮🇳", t: "Hinglish captions, fixed for good", d: "Hindi clips now get captions from a speech model made for Hinglish: \"bhai ye kya ho gaya\", right every time, no AI key needed. It downloads by itself the first time (about 800 MB).", new: true},
-  {e: "🖼️", t: "Set webcam & game before clipping", d: "Pick Facecam top, then tap Set webcam & game on your video: drag a box onto the webcam and one over the game, choose 50/50 or Big webcam, and see the clip before it's made.", new: true},
-  {e: "🎯", t: "Fix facecam", d: "Webcam in the wrong place? Open a clip, tap Fix facecam and drag the box onto it. Remembered for that streamer."},
-  {e: "🧠", t: "Free AI on your PC", d: "AI key ran out? Clips still get made, with a free AI that runs on your computer. No key, no limits.", act: "go", v: "settings", tab: "ai", btn: "Turn it on", admin: true},
-  {e: "🚀", t: "Multi-Model AI Cascading", d: "Automatically switches between Groq and Gemini for lightning-fast viral titles and clips.", act: "go", v: "settings", tab: "ai", btn: "AI Settings", admin: true},
-  {e: "🎨", t: "11 caption styles", d: "With live previews, right under the link. Plus Auto zoom on big reactions and Cut silences.", act: "go", v: "overview", btn: "Try it"},
-  {e: "🔴", t: "Live clipping in 1 click", d: "Paste a channel on Home and press Start. Clips come while they stream.", act: "golivehome", btn: "Try it"},
-  {e: "⚡", t: "Faster clips", d: "Several clips are made at once, and long Hindi videos are listened to faster."},
-  {e: "🏷️", t: "Your @handle and Hindi script", d: "A watermark with your handle on every clip, and captions in हिंदी if you want."},
+const NEWS = {id: "2026-11-29", items: [
+  {e: "✂️", t: "Cut exactly what you pick", d: "In the editor, drag on the video or captions track to pick a part (its edges snap to words), then press Del: only that part is cut. Drag the edge of a cut to make it longer or shorter. A plain click just moves the playhead.", new: true},
+  {e: "📊", t: "A real export bar", d: "Export now shows how much of your clip is made, in percent, with about how long is left.", new: true},
+  {e: "🎞️", t: "Your clip's preview window & full editor", d: "Clicking a clip opens its preview & quick controls: watch it, change the title and description, post it. Open in the editor is right at the top, and Edit opens the full timeline editor.", new: true},
+  {e: "🎵", t: "Music and the stream's volume", d: "In the editor's Audio: turn the stream's own sound down (or off for a meme edit), and put any sound from your library under the whole clip as music with ♫.", new: true},
+  {e: "🔤", t: "Your own fonts, right in the export", d: "A bold or black font from your library now comes out in the exported clip exactly as in the editor, not in a plain font spilling out of its box.", new: true},
+  {e: "✂️", t: "The Editor page", d: "Every clip in one place, with an Edit button on each. Filter by Not edited, Edited or Being made, or search. Your newest clips are also on Home, under Ready to edit.", new: true, act: "go", v: "studio", btn: "Open it"},
+  {e: "⚡", t: "Hype Edit all", d: "One click edits every new clip: punch-ins on the loudest moments, a flash and a riser on the peak, whooshes on the cuts and the filler words cut. Each clip is made again with it.", new: true, act: "go", v: "studio", btn: "Try it"},
+  {e: "📁", t: "Your library", d: "Add your own fonts, sounds, memes, pictures and short videos once, in Library. They're ready in the editor on every clip: memes and videos on the Media track, sounds on the Sound track, fonts for the big text and captions.", new: true, act: "go", v: "assets", btn: "Open it"},
+  {e: "🎬", t: "The PapiClips pro editor", d: "Open any clip and edit it like a pro: a live preview that changes as you edit, a timeline with your words, split and cut (or delete words from the transcript), 9 transitions (flash, whoosh, zoom, glitch, wipe…), sound effects, punch-ins, colour looks, text effects, and a drag-to-move big text. Then Export.", new: true},
+  {e: "🔥", t: "Hype Edit", d: "One click in the editor: it finds the moments the streamer and chat went off, punches in, lands a flash and a boom on the peak, whooshes the cuts and cuts the filler words. Undo takes it all back.", new: true},
+  {e: "✍️", t: "Your own text on every clip", d: "Under Options: one big text and one description for all clips (your set text, links and #tags stay exactly as you write them). Leave them empty and the AI writes them, now with 3-5 fitting hashtags.", new: true},
+  {e: "👂", t: "The AI listens to every clip", d: "With a Gemini key, each clip is heard once before it's made: it ends after the payoff (not before it), never mid-sentence, gets a heading written for that exact cut, and English captions come from the sound itself.", new: true},
+  {e: "⏹️", t: "Stop a video", d: "Changed your mind? Press Stop on a video being made. The clips already made stay; re-make any of the rest later."},
+  {e: "📺", t: "Last stream, ready to clip", d: "When a creator isn't live, their page shows their last stream: clip all of it, or tap Exact moment for just the part you want."},
+  {e: "⏹️", t: "Recording only when you want it", d: "Stop now means stop: it won't start again by itself during that stream, and closing the app stops recording. Live clipping records that one stream; to record every stream, turn on Auto-record in the creator's Setup."},
+  {e: "🚀", t: "Multi-Model AI Cascading", d: "Automatically switches between Groq, Ollama, and Gemini for lightning-fast viral titles and clips.", act: "go", v: "settings", tab: "ai", btn: "AI Settings", admin: true},
   {e: "🔴", t: "YouTube Shorts Scheduler", d: "Bulk schedule 10+ viral clips directly to your YouTube channel with 1 click.", act: "openytmodal", btn: "Schedule", admin: false},
 ]};
 const newsItems = () => NEWS.items.filter(n => !n.admin || S.status?.user?.is_admin);
@@ -1893,9 +2035,11 @@ function moveInd() {
 function drawShell() {  const nav = (v, icon, label, extra = "") => `<button class="nav-item ${S.view === v ? "on" : ""}" data-act="go" data-v="${esc(v)}" title="${esc(label)}">${icon}<span class="label">${esc(label)}</span>${extra}</button>`;
   const ytSvg = `<svg viewBox="0 0 24 24" style="width:17px;height:17px;fill:#FF0000;flex:none"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>`;
   put($("#nav"), nav("overview", navIc("home", "overview"), "Studio Home") +
+    nav("studio", ic("scissors"), "Editor", `<span class="count new">NEW</span>`) +
     `<button class="nav-item ${S.view === 'live' ? 'on' : ''}" data-act="golivehome" title="Clip a live stream">${ic("radio")}<span class="label">Live Stream Radar</span></button>` +
     nav("library", navIc("film", "library"), "Video Vault", (() => { const w = S.jobs.filter(j => ["queued", "running"].includes(j.status)).length;
       return w ? `<span class="working" title="${w} working now"><i></i>${w} active</span>` : S.jobs.length ? `<span class="count">${S.jobs.length}</span>` : ""; })()) +
+    nav("assets", ic("folder"), "Library", S.lib && S.lib.length ? `<span class="count">${S.lib.length}</span>` : "") +
     nav("connected", ic("link"), "Connected Channels", (() => { const conn = (S.accounts || []).filter(a => a.platform === 'youtube'); return conn.length ? `<span class="count" style="background:#10B981;color:#fff">Synced</span>` : ''; })()) +
     `<button class="nav-item" data-act="openytmodal" title="1-Click YouTube Shorts Bulk Scheduler" style="color:#FF3B5C">${ytSvg}<span class="label">YouTube Shorts</span></button>` +
     `<h4><span>Creators</span></h4>` +
@@ -1913,11 +2057,18 @@ function drawShell() {  const nav = (v, icon, label, extra = "") => `<button cla
       <button class="icon-btn bell" data-act="bell" title="Notifications" aria-label="Notifications${S.status.unread ? `, ${S.status.unread} new` : ""}" aria-haspopup="dialog">${ic("bell")}${S.status.unread ? `<span class="dotn">${S.status.unread > 9 ? "9+" : S.status.unread}</span>` : ""}</button></div>` : ""));
   const c = creator();
   const recording = S.creators.filter(x => x.live_job).length;
-  let title = {overview:"Home", library:"All videos", settings:"Settings", usage:"AI usage", campaigns:"Paid campaigns"}[S.view] || "", sub = "", act = "";
+  let title = {overview:greeting(), library:"Video Vault", settings:"Settings", usage:"AI usage", campaigns:"Paid campaigns", studio:"Editor", assets:"Library"}[S.view] || "", sub = "", act = "";
+  if (S.view === "studio") { const n = readyClips().filter(([, c]) => c.status === "done").length;
+    sub = n ? `${n} clip${n === 1 ? "" : "s"} ready to edit. Open one to cut it, add transitions, sounds, text and your own memes.` : "Every clip you make shows up here, ready to edit.";
+    act = hypeBtn(); }
+  if (S.view === "assets") { sub = "Your own fonts, sounds, memes, pictures and videos, ready in the editor for every clip.";
+    act = `<button class="btn primary" data-act="libpick">${ic("plus")}Add files</button>`; }
   if (S.view === "campaigns") { sub = "Clip these creators and get paid for your views.";
-    act = `<a class="btn" href="${esc(campSite())}/earn#me" target="_blank" rel="noopener" title="Your clips and earnings, on papiclips.com">${ic("upright")}<span>My<span class="long"> clips &amp;</span> earnings</span></a>`; }
+    act = `<a class="btn" href="${esc(campSite())}/earn#me" target="_blank" rel="noopener" title="Your clips and earnings">${ic("upright")}<span>My<span class="long"> clips &amp;</span> earnings</span></a>`; }
   if (S.view === "usage") sub = "What the AI has been used for.";
-  if (S.view === "overview") sub = `${greeting()}. ${S.creators.length} creator${S.creators.length === 1 ? "" : "s"}${recording ? `, ${recording} recording now` : ""}.`;
+  if (S.view === "overview") { const making = S.jobs.filter(j => ["queued", "running"].includes(j.status)).length, live = S.creators.filter(x => x.live_job || liveOn(x).length).length;
+    sub = [making ? `${making} video${making === 1 ? "" : "s"} making clips` : "", live ? `${live} creator${live === 1 ? "" : "s"} live` : "", recording ? `${recording} recording now` : ""].filter(Boolean).join(" · ")
+      || (S.jobs.length ? "Paste a link to make more clips, or open one in the editor." : "Paste a link below to make your first clips."); }
   if (S.view === "library") sub = "Every video and recording, across all creators.";
   if (S.view === "settings") sub = (S.status.accounts === false ? "Your AI key and connected apps." : "Your profile, security and connected apps.");
   let pic = "", subHtml = null, tabs = "";
@@ -1959,7 +2110,7 @@ function drawShell() {  const nav = (v, icon, label, extra = "") => `<button cla
   try { document.title = title ? `${title} · PapiClips PRO` : "PapiClips Studio Pro"; } catch {}
 }
 
-const ROUTES = {overview: "", library: "videos", settings: "settings", usage: "usage", campaigns: "campaigns"};
+const ROUTES = {overview: "", library: "videos", settings: "settings", usage: "usage", campaigns: "campaigns", studio: "editor", assets: "library"};
 function pathFor(v, tab) {
   if (v.startsWith("c:")) return `/app/creators/${encodeURIComponent(v.slice(2))}${tab && tab !== "clips" ? "/" + tab : ""}`;
   if (v === "settings") return "/app/settings" + (tab ? "/" + tab : "");
@@ -1980,6 +2131,7 @@ function remember(v, tab, how = "push") {
 setInterval(() => { if (!document.hidden && (S.view === "overview" || S.view === "campaigns")) loadCampaigns(); }, 5 * 60 * 1000);
 addEventListener("popstate", () => { const [v, tab] = fromPath(location.pathname); go(v, tab, true); });
 function go(v, tab, fromHistory) {
+  if (v === "connected") { v = "settings"; tab = "apps"; }
   if (v.startsWith("c:") && !S.creators.some(c => "c:" + c.id === v)) v = "overview";
   S.view = v; if (tab) S.ctab = tab; else if (!v.startsWith("c:")) S.ctab = "clips";
   if (v === "settings") S.stab = setTabs().some(x => x[0] === tab) ? tab : setTabs()[0][0];
@@ -1988,16 +2140,18 @@ function go(v, tab, fromHistory) {
   $("#app").classList.remove("open");
   const view = $("#view");
   if (window._gaStop) { window._gaStop(); window._gaStop = null; }
-  $("#heroSlot").innerHTML = v === "overview" ? `<section class="hero"><div class="ga-bg" id="appAscii" aria-hidden="true"></div><div id="campPill"></div><h2>What do you want to clip today?</h2>
-      <p>Paste a link or drop in videos. You get captioned shorts back.</p><div id="add"></div></section>` : "";
-  if (v === "overview") { view.innerHTML = `<div id="ov"></div>`; }
+  $("#heroSlot").innerHTML = v === "overview" ? `<section class="home-top"><div class="mk"><h2>Paste a stream. <em>Get clips. Edit like a pro.</em></h2>
+      <p>The AI finds the moments and makes captioned shorts. Open any clip in the editor to finish it.</p><div id="add"></div></div><div id="homeCamp"></div></section>
+      <section class="home-sec" id="readyRow"></section><section class="hcards" id="homeCards"></section>` : "";
+  if (v === "overview") { view.innerHTML = `<div id="ov"></div>`; drawHomeTop(); loadLib(); }
+  else if (v === "studio") { view.innerHTML = `<div id="studio"></div>`; }
+  else if (v === "assets") { view.innerHTML = `<div id="assets"></div>`; drawAssets(true); loadLib(); }
   else if (v === "campaigns") { S.view = "overview"; render(); }
   else if (v === "library") view.innerHTML = `<div id="add"></div><div id="jobs"></div>`;
   else if (v === "settings") view.innerHTML = `<div id="sform"></div>`;
   else if (v === "usage") { view.innerHTML = `<div id="usage"></div>`; loadUsage(); }
   else view.innerHTML = `<div id="stream"></div><div id="cbody"></div>`;   // the live player stays put across tabs: no restart, no rebuffer
   if ($("#add")) drawAdd(v === "overview" ? "hero" : "compact");
-  if (v === "overview" && window.GradientASCII) { try { window._gaStop = GradientASCII($("#appAscii"), {colors: ["#FF2E54", "#FF5733", "#8B5CF6", "#00F0FF", "#FFFFFF"], shape: "horizon", lightMode: true, cellSize: 16, density: 0.8, glyphOpacity: 0.26, gradientOpacity: 0.32, glow: 0.06, grain: 0.06, mouseInteraction: false, clickEffect: "none"}); } catch {} }
   if (v === "settings") drawSettings();
   if (v.startsWith("c:")) setTab(S.ctab);
   $("#main").scrollTo(0, 0); render();
@@ -2017,26 +2171,28 @@ function setTab(t) {
 /* ============================================================ add bar */
 function drawAdd(variant) {
   const c = creator();
-  const liveMode = !c && addMode() === "live";
+  const liveMode = !c && addMode() === "live", big = variant === "hero";
   $("#add").innerHTML = `<form class="composer ${variant === "hero" ? "big" : "compact"}${liveMode ? " is-live" : ""}" id="addform">
     ${c ? "" : `<div class="modes" role="tablist" aria-label="What to clip">
       <button type="button" role="tab" data-act="addmode" data-m="video" aria-selected="${!liveMode}">${ic("film")}Clip a video</button>
-      <button type="button" role="tab" data-act="addmode" data-m="live" aria-selected="${liveMode}"><span class="rdot"></span>Clip a live stream</button></div>`}
-    ${liveMode ? `<div class="composer-input">${ic("radio")}<input id="liveurl" placeholder="Paste their channel link: youtube.com/@name, twitch.tv/name or kick.com/name" autocomplete="off" aria-label="Channel link" value="${esc(S.liveDraft || "")}"></div>
+      <button type="button" role="tab" data-act="addmode" data-m="live" aria-selected="${liveMode}"><span class="rdot"></span>Clip a live stream</button>${big ? `
+      <button type="button" data-act="pickfile">${ic("up")}Upload a file</button>` : ""}</div>`}
+    ${liveMode ? `<div class="composer-input">${ic("radio")}<input id="liveurl" placeholder="Paste their channel link: youtube.com/@name, twitch.tv/name or kick.com/name" autocomplete="off" aria-label="Channel link" value="${esc(S.liveDraft || "")}">${big ? `<button class="btn primary live-go" id="liveGo"><span class="rdot"></span>Start live clipping</button>` : ""}</div>
       <div id="livePrev" class="live-prev"></div>
       <div class="live-how"><span><b>1</b>Paste the channel of the streamer you clip</span><span><b>2</b>Press <b>Start live clipping</b></span><span><b>3</b>While they stream, clips are made by themselves. Keep the app open.</span></div>`
-    : `<div class="composer-input">${ic("link")}<input id="url" placeholder="Paste a YouTube, Twitch or Kick video link" autocomplete="off" aria-label="Video link"></div>
+    : `<div class="composer-input">${ic("link")}<input id="url" placeholder="Paste a YouTube, Twitch or Kick video link" autocomplete="off" aria-label="Video link">${big ? `<button class="btn primary" id="goBtn">${ic("scissors")}Make clips</button>` : ""}</div>
     <div class="att" id="att"><div><div class="att-in" id="attIn"></div></div></div>
     ${S.preRange && !c ? `<div class="prerange">${ic("scissors")}<span>Only the moment at <b>${hms(S.preRange.start)} – ${hms(S.preRange.end)}</b>${S.preRange.label ? ` · ${esc(S.preRange.label)}` : ""}</span><button type="button" class="rm" data-act="clearrange" aria-label="Clip the whole video instead">${ic("x")}</button></div>` : ""}`}
+    ${big ? quickPicks() + `<div class="hmore" id="hmore"${S.moreOpen ? "" : " hidden"}>` : ""}
     ${lookPanel(c)}
     <div class="composer-bar">
-      ${liveMode ? "" : `<button type="button" class="chip" data-act="pickfile">${ic("up")}Upload video</button>`}
+      ${liveMode || big ? "" : `<button type="button" class="chip" data-act="pickfile">${ic("up")}Upload video</button>`}
       ${c || liveMode ? "" : picker("o_creator", "File under creator", [{v:"", label:"No creator", icon:"user"}, ...S.creators.map(x => ({v:x.id, label:x.name, img:x.profile?.pic && x.profile.channel === x.channel ? avatarUrl(x) : ""}))], "")}
       <button type="button" class="chip" data-act="toggleopts" aria-expanded="false">${ic("sliders")}Options</button>
       <span class="grow"></span>${liveMode ? `<span class="hint">Works with YouTube, Twitch and Kick</span>
-      <button class="btn primary live-go" id="liveGo"><span class="rdot"></span>Start live clipping</button>`
+      ${big ? "" : `<button class="btn primary live-go" id="liveGo"><span class="rdot"></span>Start live clipping</button>`}`
       : `<span class="hint">or drop a video file here</span>
-      <button class="btn primary" id="goBtn">${ic("scissors")}Make clips</button>`}
+      ${big ? "" : `<button class="btn primary" id="goBtn">${ic("scissors")}Make clips</button>`}`}
     </div>
     <div class="composer-opts" inert><div class="og">
       <div class="ob wide"${liveMode ? " hidden" : ""}><div class="ot">Clips</div><div class="nsteps">
@@ -2047,6 +2203,10 @@ function drawAdd(variant) {
       <div class="ob"><div class="ot">Your watermark</div>
         <label class="f">Your @handle on every clip<input id="o_wm" maxlength="40" placeholder="@yourname" value="${esc(c ? (c.watermark || "") : lsGet("ck_wm"))}"></label>
         <small class="sub">Small and see-through, under the captions. Leave empty for none.</small></div>
+      <div class="ob"><div class="ot">Your own text <span class="sub" style="font-weight:400">(optional)</span></div>
+        <label class="f">Big text on every clip<input id="o_hook_text" maxlength="60" placeholder="Leave empty: the AI writes one for each clip" value="${esc(c?.hook_text || "")}"></label>
+        <label class="f">Description for every clip<textarea id="o_desc_text" rows="2" maxlength="2000" placeholder="Leave empty: the AI writes one, with 3-5 hashtags. A set campaign text goes here.">${esc(c?.description_text || "")}</textarea></label>
+        <small class="sub">Used exactly as you write it (links, @names and #tags stay).</small></div>
       <div class="ob"><div class="ot">Language spoken</div><div class="langs">
         <label class="f">Spoken<select id="o_lang" title="Hindi and other languages use Whisper, installed the first time it's needed">${opts(S.status.languages || {auto:"Auto-detect"}, c?.lang ?? "auto")}</select></label>
         <label class="f">Captions in<select id="o_caplang">${opts(S.status.caption_langs || {auto:"As spoken"}, c?.caption_lang ?? "auto")}</select></label></div>
@@ -2057,7 +2217,7 @@ function drawAdd(variant) {
       <div class="ob"${liveMode ? " hidden" : ""}><div class="ot">Part of the video</div><div class="range">
         <label>From<input id="o_from" type="number" min="0" placeholder="start" aria-label="From minute">min</label>${ic("arrowr")}
         <label>To<input id="o_to" type="number" min="0" placeholder="end" aria-label="Up to minute">min</label></div></div>
-    </div></div></form>`;
+    </div></div>${big ? "</div>" : ""}</form>`;
   if (liveMode) { if (S.liveDraft) livePreview(S.liveDraft); } else drawAtt();
   setTimeout(playLooks, 50);
 }
@@ -2589,6 +2749,7 @@ document.addEventListener("click", e => {
   if (sg && !sg.disabled) { $("#" + sg.dataset.seg).value = sg.dataset.v;
     sg.parentElement.querySelectorAll("[data-seg]").forEach(b => b.setAttribute("aria-pressed", String(b === sg)));
     if (sg.classList.contains("sty")) playLooks();
+    if (sg.dataset.seg === "o_style" || sg.dataset.seg === "o_layout") syncQuick();
     if (sg.dataset.seg === "o_layout") { const r = $(".camrow"); if (r) r.hidden = !["split", "gameplay"].includes(sg.dataset.v); drawAtt(); }
     if (creatorId() && ["o_style", "o_layout", "o_tag_style", "o_tag_pos"].includes(sg.dataset.seg)) saveLook({[sg.dataset.seg.slice(2)]: sg.dataset.v});
     return; }
@@ -2615,7 +2776,8 @@ function jobOptions() {
              tag:!!$("#o_tag")?.checked, tag_handle:($("#o_tag_handle")?.value || "").trim(),
              tag_platforms:($("#o_tag_plats")?.value || "").split(",").filter(Boolean),
              tag_style:$("#o_tag_style")?.value || "clean", tag_pos:$("#o_tag_pos")?.value || "bottom_left",
-             watermark:($("#o_wm")?.value || "").trim()};
+             watermark:($("#o_wm")?.value || "").trim(),
+             hook_text:($("#o_hook_text")?.value || "").trim(), description_text:($("#o_desc_text")?.value || "").trim()};
   lsSet("ck_style", o.style); lsSet("ck_layout", o.layout); lsSet("ck_caps", o.captions ? "1" : "0"); lsSet("ck_zoom", o.zoom ? "1" : "0"); lsSet("ck_tight", o.tighten ? "1" : "0"); lsSet("ck_cam", o.cam_hint); lsSet("ck_wm", o.watermark);
   lsSet("ck_tag", o.tag ? "1" : "0"); lsSet("ck_tag_style", o.tag_style); lsSet("ck_tag_pos", o.tag_pos); lsSet("ck_tag_plats", o.tag_platforms.join(","));
   if (n("#o_from") !== null) o.range_start = n("#o_from") * 60;
@@ -2898,14 +3060,13 @@ function clipHtml(j, c) {
       ${postPills(c) ? `<div class="row" style="gap:4px">${postPills(c)}</div>` : ""}
       <div class="clip-foot">
         ${busyClip ? "" : `<label class="selck" title="Select this clip"><input type="checkbox" data-sel="${key}" ${sel().has(key) ? "checked" : ""} aria-label="Select this clip"></label>`}
-        <button class="btn sm primary" data-act="openclip" ${a} title="Edit clip settings, captions & layout"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> Edit</button>
-        <a class="btn sm icon ghost" target="_blank" href="${location.pathname}?edit_job=${j.id}&edit_clip=${c.id}" title="Edit in new tab" aria-label="Edit in new tab">${ic("upright")}</a>
+        ${c.status === "done" || c.status === "error" ? `<button class="btn sm primary" data-act="editclip" ${a} title="Open in the pro editor: cut, transitions, sounds, text, then post">${ic("scissors")}Edit</button>` : ""}
         ${c.status === "done" ? `<a class="btn sm icon ghost" href="${m}${esc(c.file)}?download=1" title="Download" aria-label="Download">${ic("down")}</a>` : ""}
         <button class="btn sm icon ghost" data-act="copy" ${a} title="Copy post text" aria-label="Copy post text">${ic("copy")}</button>
         <button class="btn sm icon ghost" data-act="tocampaign" ${a} title="Send to a paid campaign" aria-label="Send to a paid campaign">${ic("money")}</button>
         ${busyClip ? "" : `<button class="btn sm icon ghost" data-act="delclip" ${a} title="Delete this clip" aria-label="Delete this clip">${ic("trash")}</button>`}
         <span class="grow"></span>
-        ${c.status === "done" ? `<button class="btn sm" data-act="openclip" ${a}>${ic("send")}Post</button>` : ""}
+        ${c.status === "done" ? `<button class="btn sm" data-act="openclip" ${a}>${ic("send")}Preview &amp; Post</button>` : ""}
       </div>
     </div></article>`;
 }
@@ -2945,7 +3106,7 @@ function jobHtml(j) {
                 j.took ? "made in " + fmt(j.took) : "", j.kind === "live" ? "recording, " + j.stage.toLowerCase() : ""].filter(Boolean).map(esc).join(" · ");
   const pic = j.thumb ? `<img src="/media/${esc(j.id)}/thumb.jpg" alt="" loading="lazy">` : ic(j.source?.type === "file" ? "film" : "link");
   return `<div class="job-head"><div class="jt"><span class="jthumb">${pic}${j.duration ? `<span class="du">${fmt(j.duration)}</span>` : ""}</span><div style="min-width:0"><h3>${esc(j.title || j.source.name)}</h3><p class="sub">${meta}</p></div></div>
-      <div class="row" style="flex-wrap:nowrap;gap:4px">${busy ? (j.stop ? `<span class="sub">Stopping…</span>` : `<button class="btn sm" data-act="stopjob" data-j="${j.id}" title="Stop making this video. Clips already made stay.">${ic("stop")}Stop</button>`) : `
+      <div class="row" style="flex-wrap:nowrap;gap:4px">${busy ? (j.stop ? (j.delete_when_stopped ? `<span class="sub">Deleting when stopped…</span>` : `<span class="sub">Stopping…</span><button class="btn sm icon ghost" data-act="deljob" data-j="${j.id}" title="Delete it as soon as it has stopped" aria-label="Delete this video when it has stopped">${ic("trash")}</button>`) : `<button class="btn sm" data-act="stopjob" data-j="${j.id}" title="Stop making this video. Clips already made stay.">${ic("stop")}Stop</button>`) : `
         ${j.clips.some(c => c.status === "done") ? `<button class="btn sm icon ghost" data-act="dlall" data-j="${j.id}" title="Download all clips of this video" aria-label="Download all clips of this video">${ic("down")}</button>` : ""}
         <button class="btn sm icon ghost" data-act="deljob" data-j="${j.id}" title="Delete" aria-label="Delete this video and its clips">${ic("trash")}</button>
         <label class="selck" title="Select this video and its clips"><input type="checkbox" data-sel="j:${j.id}" ${sel().has("j:" + j.id) ? "checked" : ""} aria-label="Select this video"></label>`}</div></div>
@@ -2979,7 +3140,7 @@ function drawSelBar() {
   if (!n) return;
   put(bar, `<b>${n} selected</b>
     <button class="btn sm" data-act="selall">Select all</button>
-    <button class="btn sm primary" <button class="btn sm" data-act="openytmodal" style="background:#cc0000;color:#fff;border-color:#cc0000"><span style="display:inline-block;width:14px;height:14px;vertical-align:-2px;margin-right:4px"><svg viewBox="0 0 24 24" style="width:100%;height:100%;fill:currentColor"><path d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.5 3.55 12 3.55 12 3.55s-7.5 0-9.38.5A3.02 3.02 0 0 0 .5 6.19C0 8.07 0 12 0 12s0 3.93.5 5.81a3.02 3.02 0 0 0 2.12 2.14c1.88.5 9.38.5 9.38.5s7.5 0 9.38-.5a3.02 3.02 0 0 0 2.12-2.14C24 15.93 24 12 24 12s0-3.93-.5-5.81zM9.55 15.57V8.43L15.82 12l-6.27 3.57z"/></svg></span>Bulk Post to YouTube</button>
+    <button class="btn sm" data-act="openytmodal" style="background:#cc0000;color:#fff;border-color:#cc0000"><span style="display:inline-block;width:14px;height:14px;vertical-align:-2px;margin-right:4px"><svg viewBox="0 0 24 24" style="width:100%;height:100%;fill:currentColor"><path d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.5 3.55 12 3.55 12 3.55s-7.5 0-9.38.5A3.02 3.02 0 0 0 .5 6.19C0 8.07 0 12 0 12s0 3.93.5 5.81a3.02 3.02 0 0 0 2.12 2.14c1.88.5 9.38.5 9.38.5s7.5 0 9.38-.5a3.02 3.02 0 0 0 2.12-2.14C24 15.93 24 12 24 12s0-3.93-.5-5.81zM9.55 15.57V8.43L15.82 12l-6.27 3.57z"/></svg></span>Bulk Post to YouTube</button>
     <button class="btn sm" data-act="seldl" ${dl ? "" : "disabled"}>${ic("down")}Download${dl ? ` ${dl} clip${dl === 1 ? "" : "s"}` : ""}</button>
     <button class="btn sm danger" data-act="seldel">${ic("trash")}Delete</button>
     <button class="btn sm" data-act="selclear">Cancel</button>`);
@@ -3073,6 +3234,8 @@ function drawCreatorForm() {
         <label class="sw span"><input type="checkbox" data-k="zoom" ${c.zoom === false ? "" : "checked"}><span>Auto zoom<small>The picture punches in on the loudest moments: a shout, a laugh, the big reaction.</small></span></label>
         <label class="sw span"><input type="checkbox" data-k="tighten" ${c.tighten === false ? "" : "checked"}><span>Cut silences<small>Quiet pauses and filler words (um, uh) are cut out, so clips move faster. The game's action is never cut.</small></span></label>
         <label class="f">Your watermark<input data-k="watermark" maxlength="40" value="${esc(c.watermark || "")}" placeholder="@yourname"><small class="sub" style="font-weight:400">Your @handle, small and see-through on every clip. Empty for none.</small></label>
+        <label class="f">Big text on every clip<input data-k="hook_text" maxlength="60" value="${esc(c.hook_text || "")}" placeholder="Empty: the AI writes one per clip"><small class="sub" style="font-weight:400">Your own heading on all of this streamer's clips, in place of the AI's.</small></label>
+        <label class="f span">Description for every clip<textarea data-k="description_text" rows="2" maxlength="2000" placeholder="Empty: the AI writes one, with 3-5 hashtags">${esc(c.description_text || "")}</textarea><small class="sub" style="font-weight:400">Posted exactly as written: your set text, links and #tags stay.</small></label>
         <label class="f">Language spoken<select data-k="lang">${opts(S.status.languages || {auto:"Auto-detect"}, c.lang || "auto")}</select></label>
         <label class="f">Captions in<select data-k="caption_lang">${opts(S.status.caption_langs || {auto:"As spoken"}, c.caption_lang || "auto")}</select></label>
         <label class="f">Game<input data-k="game" value="${esc(c.game || "")}" placeholder="Read from the title"><small class="sub" style="font-weight:400">Left empty, the game is read from the stream's title. Set it for a streamer whose title says nothing: GTA 6, Fortnite, Elden Ring.</small></label>
@@ -3325,6 +3488,167 @@ function drawOverview() {
       ${o.posts.map(p => `<tr><td data-l="Status">${pst(p)}</td><td data-l="Clip" class="c-main">${p.url ? `<a class="lnk" href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.title)}</a>` : esc(p.title)}${p.error ? `<div class="err" style="margin:2px 0 0">${esc(p.error)}</div>` : ""}</td><td data-l="Creator">${esc(p.creator_name || "None")}</td><td data-l="Account">${esc(p.account_name)}</td><td data-l="Views" class="num">${p.views ?? "–"}</td>
         <td class="c-act" style="text-align:right">${p.status === "scheduled" ? `<button class="btn sm" data-act="pcancel" data-id="${p.id}">Cancel</button>` : p.status === "failed" ? `<button class="btn sm" data-act="pretry" data-id="${p.id}">Retry</button>` : ""}</td></tr>`).join("")}</table></div>`
       : `<p class="help">Nothing queued or posted yet.</p>`}</div>`);
+}
+
+/* ============================================================ Home, the Editor page and the Library */
+/* The quick picks under the link on Home: three caption styles and two layouts, one tap each. They press the
+   same buttons as More options, so both always agree and Make clips reads them the same way. */
+const QUICK_LAYOUT = {split: "Facecam top", gameplay: "Gameplay + cam", crop: "Fill screen", zoom: "Zoomed in", blur: "Blurred fill"};
+function quickPicks() {
+  const st = S.status.styles || {}, ly = S.status.layouts || {};
+  const style = lsGet("ck_style") in st ? lsGet("ck_style") : "bounce", layout = lsGet("ck_layout") in ly ? lsGet("ck_layout") : "blur";
+  const pick = (all, cur, pref) => [...new Set([cur, ...pref])].filter(k => k in all).slice(0, 3);
+  const caps = lsGet("ck_caps") !== "0";
+  return `<div class="quick" id="quick"><b>Captions</b>${pick(st, style, ["bounce", "hype", "pop"]).map(k =>
+      `<button type="button" class="qchip" data-act="quick" data-k="o_style" data-v="${esc(k)}" aria-pressed="${k === style}"${caps ? "" : " disabled"}>${esc(st[k])}</button>`).join("")}
+    <b>Layout</b>${pick(ly, layout, ["split", "blur", "crop"]).slice(0, 2).map(k =>
+      `<button type="button" class="qchip" data-act="quick" data-k="o_layout" data-v="${esc(k)}" aria-pressed="${k === layout}">${esc(QUICK_LAYOUT[k] || LAYOUT_SHORT[k] || ly[k])}</button>`).join("")}
+    <button type="button" class="qchip more" data-act="moreopts" aria-expanded="${!!S.moreOpen}" aria-controls="hmore">${ic("sliders")}More options</button></div>`;
+}
+function syncQuick() {
+  $$("#quick [data-act=quick]").forEach(b => { const i = $("#" + b.dataset.k); if (i) b.setAttribute("aria-pressed", String(i.value === b.dataset.v)); });
+  const want = (k) => $("#" + k)?.value;
+  ["o_style", "o_layout"].forEach(k => {      // a pick in More options that isn't one of the shown chips shows as the first chip
+    const v = want(k), q = $$(`#quick [data-k="${k}"]`); if (!v || !q.length || q.some(b => b.dataset.v === v)) return;
+    const src = document.querySelector(`[data-seg="${k}"][data-v="${CSS.escape(v)}"]`);
+    q[0].dataset.v = v; q[0].textContent = k === "o_layout" ? (QUICK_LAYOUT[v] || LAYOUT_SHORT[v] || v) : (src?.title || src?.textContent.trim() || v); q[0].setAttribute("aria-pressed", "true");
+  });
+}
+document.addEventListener("change", e => { if (e.target.id === "o_captions") $$('#quick [data-k="o_style"]').forEach(b => b.disabled = !e.target.checked); });
+
+/* The card next to the link on Home: what the pro editor can do. */
+function drawHomeTop() {
+  const box = $("#homeCamp"); if (!box) return;
+  put(box, `<section class="hcamp"><span class="tag soft">${ic("scissors")} The PapiClips editor</span>
+    <h3>Finish every clip like a pro</h3><p>Every clip opens in the editor, with a live preview.</p>
+    <ul><li>Cut words out from the transcript</li><li>Transitions, whooshes, punch-ins and looks</li><li>Your own fonts, sounds and memes</li><li>Hype Edit: the whole edit in one click</li></ul>
+    <div class="row"><button class="btn primary" data-act="go" data-v="studio">${ic("scissors")}Open the editor</button><button class="btn" data-act="go" data-v="assets">${ic("folder")}Your library</button></div></section>`);
+}
+
+/* Every clip, newest video first: [job, clip]. */
+function readyClips() { return S.jobs.flatMap(j => (j.clips || []).map(c => [j, c])); }
+const notEdited = () => readyClips().filter(([, c]) => c.status === "done" && !c.edit);
+function readyCard(j, c) {
+  const a = `data-j="${esc(j.id)}" data-c="${esc(c.id)}"`, who = S.creators.find(x => x.id === j.creator)?.name || j.title || "";
+  const busy = c.status === "queued" || c.status === "rendering";
+  const pic = c.status === "done" ? `<img src="/media/${esc(j.id)}/${esc(c.cover)}?v=${c.version || 0}" alt="" loading="lazy">`
+    : `<span class="mk2${c.status === "error" ? " bad" : ""}">${c.status === "error" ? "Couldn't make this clip. Open it to try again." : c.status === "rendering" ? "Making this clip…" : "Waiting its turn…"}</span>`;
+  return `<article class="rc"><div class="rc-wrap"><button class="rc-th" data-act="openclip" ${a} aria-label="Open: ${esc(c.hook || c.title || "clip")}"${busy ? " disabled" : ""}>${pic}
+      ${c.score ? `<span class="sc ${scoreCls(c.score)}" title="AI score">${c.score}</span>` : ""}${c.edit ? `<span class="edt">EDITED</span>` : ""}
+      ${c.status === "done" ? `<span class="len">${fmt(c.end - c.start)}</span>` : ""}</button>
+      ${c.status === "done" ? `<button class="go" data-act="editclip" ${a} title="Open in the editor">${ic("scissors")}Edit</button>` : ""}</div>
+    <div class="rc-bd"><b>${esc(c.hook || c.title || "Untitled clip")}</b><span>${fmt(c.end - c.start)}${who ? ` · ${esc(who)}` : ""}</span></div></article>`;
+}
+function drawReady() {
+  const box = $("#readyRow"); if (!box) return;
+  const list = readyClips().filter(([, c]) => c.status === "done").slice(0, 6);
+  put(box, `<div class="sec-h"><h3>${ic("scissors")}Ready to edit</h3><span class="sub">· open a clip in the editor, or Hype Edit it in one click</span><span class="grow"></span>
+      ${list.length ? `<button class="lnk2" data-act="go" data-v="studio">All clips →</button>` : ""}</div>
+    ${list.length ? `<div class="rgrid">${list.map(([j, c]) => readyCard(j, c)).join("")}</div>`
+      : `<div class="rempty">${ic("film")}<div><b>Your clips show up here</b>Paste a link above and press Make clips. Each clip opens in the editor.</div></div>`}`);
+}
+function hypeBtn() {
+  const n = notEdited().length;
+  return S.hypeRun ? `<button class="btn" disabled>${ic("sparkle")}Hype editing ${S.hypeRun.i} of ${S.hypeRun.n}…</button>`
+    : n ? `<button class="btn primary" data-act="hypeall" title="Punch-ins, a flash, whooshes and filler words cut, on every clip that has no edit yet">${ic("sparkle")}Hype Edit ${n} clip${n === 1 ? "" : "s"}</button>` : "";
+}
+function drawHomeCards() {
+  const box = $("#homeCards"); if (!box) return;
+  const n = notEdited().length, L = S.lib || [], k = t => L.filter(i => i.kind === t).length;
+  const live = S.creators.find(x => x.live_job) || S.creators.find(x => liveOn(x).length);
+  put(box, `<button class="hcard" data-act="hypeall"${n && !S.hypeRun ? "" : ' aria-disabled="true"'}><i>🔥</i><div><b>${S.hypeRun ? `Hype editing ${S.hypeRun.i} of ${S.hypeRun.n}…` : n ? `Hype Edit ${n} new clip${n === 1 ? "" : "s"}` : "Hype Edit all new clips"}</b>
+      <span>${n || S.hypeRun ? "Punch-ins, a flash and whooshes on every clip, in one click" : S.jobs.length ? "Every clip has an edit. New clips show up here." : "Make some clips first, then edit them all in one click."}</span></div></button>
+    <button class="hcard" data-act="go" data-v="assets"><i>${ic("folder")}</i><div><b>Your library</b><span>${L.length ? `${L.length} item${L.length === 1 ? "" : "s"}: ${[k("font") && `${k("font")} font${k("font") > 1 ? "s" : ""}`, k("sound") && `${k("sound")} sound${k("sound") > 1 ? "s" : ""}`, k("media") && `${k("media")} meme${k("media") > 1 ? "s" : ""} and videos`].filter(Boolean).join(", ")}` : "Add your own fonts, sounds and memes"}</span></div></button>
+    ${live ? `<button class="hcard" data-act="go" data-v="c:${esc(live.id)}"><i>${ic("radio")}</i><div><b>${esc(live.name)} is ${live.live_job ? "being recorded" : "live"}</b><span>${live.live_job ? "Clips come by themselves while they stream" : "Record the stream and get clips while they play"}</span></div></button>`
+      : `<button class="hcard" data-act="golivehome"><i>${ic("radio")}</i><div><b>Clip a live stream</b><span>Paste a channel. Clips come by themselves while they stream.</span></div></button>`}`);
+}
+
+/* Hype Edit on every clip that has no edit yet, one after another, without opening them. */
+async function hypeAll() {
+  if (S.hypeRun || !window.CKEditor?.hypeAuto) return;
+  const list = notEdited();
+  if (!list.length) return toast(S.jobs.length ? "Every clip already has an edit." : "Make some clips first.");
+  if (!await ask(`Hype Edit ${list.length} clip${list.length === 1 ? "" : "s"}?`, "Each clip gets punch-ins on its loudest moments, a flash and a riser on the peak, whooshes on the cuts and its filler words cut, then is made again. Open any clip in the editor afterwards to change it.", "Hype Edit all")) return;
+  S.hypeRun = {i: 0, n: list.length}; let done = 0, same = 0, bad = 0;
+  for (const [j, c] of list) {
+    S.hypeRun.i++; render();
+    try { (await CKEditor.hypeAuto(j.id, c.id)) === "done" ? done++ : same++; } catch (err) { bad++; S.hypeErr = err.message; }
+  }
+  S.hypeRun = null; await tick(); render();
+  toast(done ? `Hype Edit is on ${done} clip${done === 1 ? "" : "s"}. They're being made again now.${bad ? ` ${bad} couldn't be edited: ${S.hypeErr}` : ""}` : bad ? `Those clips couldn't be edited: ${S.hypeErr}` : "Those clips had no hype moments to add.", done ? "ok" : bad ? "bad" : "");
+}
+
+/* The Editor page: every clip, with a filter and a search. */
+function drawStudio() {
+  const box = $("#studio"); if (!box) return;
+  const all = readyClips(), f = S.stF || "all", q = (S.stQ || "").toLowerCase();
+  const by = {all, todo: all.filter(([, c]) => c.status === "done" && !c.edit), edited: all.filter(([, c]) => c.edit), making: all.filter(([, c]) => c.status === "queued" || c.status === "rendering")};
+  const list = by[f].filter(([j, c]) => !q || `${c.hook} ${c.title} ${j.title}`.toLowerCase().includes(q));
+  if (!$("#stGrid")) box.innerHTML = `<div class="sthelp">${ic("sparkle")}<span><b>Tip:</b> press <b>Edit</b> on a clip to open it full screen: cut words from the transcript, add transitions, sounds, punch-ins, text effects and your own memes, then Export.</span></div>
+    <div class="stbar"><div class="seg2" id="stSeg"></div><label class="find">${ic("eye")}<input id="stQ" placeholder="Find a clip" value="${esc(S.stQ || "")}" aria-label="Find a clip"></label></div><div id="stGrid"></div>`;
+  put($("#stSeg"), [["all", "All"], ["todo", "Not edited"], ["edited", "Edited"], ["making", "Being made"]].map(([k, l]) =>
+    `<button data-act="stf" data-v="${k}" aria-pressed="${f === k}">${l}<small>${by[k].length}</small></button>`).join(""));
+  put($("#stGrid"), list.length ? `<div class="rgrid">${list.map(([j, c]) => readyCard(j, c)).join("")}</div>`
+    : `<div class="rempty">${ic("scissors")}<div><b>${all.length ? "No clips here" : "No clips yet"}</b>${all.length ? "Try another filter or search." : "Make clips on Home: paste a link, press Make clips. They show up here to edit."}</div>${all.length ? "" : `<button class="btn primary" data-act="go" data-v="overview">Make clips</button>`}</div>`);
+}
+document.addEventListener("input", e => { if (e.target.id === "stQ") { S.stQ = e.target.value; drawStudio(); } });
+
+/* The Library: your own fonts, sounds, memes, pictures and videos, for the editor. */
+async function loadLib() {
+  try { S.lib = (await api("/api/library")).items || []; } catch { return; }
+  await Promise.all(S.lib.filter(i => i.kind === "font" && !i.ready).map(i => new FontFace(`PKLIB-${i.id}`, `url(${i.url})`).load().then(f => { document.fonts.add(f); i.ready = true; }).catch(() => {})));
+  drawShell(); drawAssets(); drawHomeCards();
+}
+function libKindOf(n) { return /\.(ttf|otf)$/i.test(n) ? "font" : /\.(mp3|wav|m4a|aac|ogg|opus|flac)$/i.test(n) ? "sound" : "media"; }
+async function libUpload(files) {
+  files = [...files]; if (!files.length || S.libBusy) return;
+  for (const f of files) {
+    S.libBusy = f.name; drawAssets();
+    const fd = new FormData(); fd.append("kind", libKindOf(f.name)); fd.append("file", f);
+    try {
+      const r = await fetch("/api/library", {method: "POST", body: fd});
+      if (!r.ok) { let m = "That file couldn't be added."; try { m = (await r.json()).detail || m; } catch {} toast(`${f.name}: ${m}`, "bad"); }
+    } catch { toast(`${f.name} couldn't be uploaded.`, "bad"); }
+  }
+  S.libBusy = ""; await loadLib(); toast("Added to your library. Use it in the editor, on any clip.", "ok");
+}
+$("#libfile").addEventListener("change", e => { libUpload(e.target.files); e.target.value = ""; });
+document.addEventListener("dragover", e => { if (S.view === "assets") { e.preventDefault(); $("#libDrop")?.classList.add("over"); } });
+document.addEventListener("dragleave", e => { if (S.view === "assets" && !e.relatedTarget) $("#libDrop")?.classList.remove("over"); });
+document.addEventListener("drop", e => { if (S.view !== "assets") return; e.preventDefault(); $("#libDrop")?.classList.remove("over"); libUpload(e.dataTransfer.files); });
+let libAudio = null;
+function libPlay(id, btn) {
+  const it = (S.lib || []).find(i => i.id === id); if (!it) return;
+  if (libAudio && libAudio.dataset.id === id && !libAudio.paused) { libAudio.pause(); btn.textContent = "▶"; return; }
+  libAudio?.pause(); $$("[data-act=libplay]").forEach(b => b.textContent = "▶");
+  libAudio = new Audio(it.url); libAudio.dataset.id = id; libAudio.play().catch(() => {}); btn.textContent = "❚❚";
+  libAudio.onended = () => { btn.textContent = "▶"; };
+}
+async function libDel(id) {
+  const it = (S.lib || []).find(i => i.id === id); if (!it) return;
+  if (!await ask(`Delete “${it.name}” from your library?`, "Clips already made keep it. Edits that use it lose it.", "Delete", true)) return;
+  try { await api(`/api/library/${encodeURIComponent(id)}`, {method: "DELETE"}); toast("Deleted from your library.", "ok"); } catch (err) { toast(err.message, "bad"); }
+  loadLib();
+}
+function drawAssets(first) {
+  const box = $("#assets"); if (!box) return;
+  const L = S.lib || [], f = S.libF || "all", n = k => L.filter(i => i.kind === k).length;
+  const list = f === "all" ? L : L.filter(i => i.kind === f);
+  if (first || !$("#libGrid")) box.innerHTML = `<div class="lib-drop" id="libDrop" data-act="libpick" role="button" tabindex="0"><i>${ic("up")}</i><div><b id="libDropT"></b>
+      <span>Fonts (.ttf, .otf) · sounds (mp3, wav, m4a) · memes and pictures (png, jpg, gif) · videos up to 2 minutes</span></div><span class="btn primary">${ic("plus")}Choose files</span></div>
+    <div class="stbar"><div class="seg2" id="libSeg"></div></div><div id="libGrid"></div>`;
+  $("#libDrop").classList.toggle("busy", !!S.libBusy);
+  $("#libDropT").textContent = S.libBusy ? `Adding ${S.libBusy}…` : "Drop your fonts, sounds, memes and videos here";
+  put($("#libSeg"), [["all", "All", L.length], ["font", "Fonts", n("font")], ["sound", "Sounds", n("sound")], ["media", "Memes & videos", n("media")]].map(([k, l, c]) =>
+    `<button data-act="libf" data-v="${k}" aria-pressed="${f === k}">${l}<small>${c}</small></button>`).join(""));
+  const len = s => s ? `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, "0")}` : "";
+  put($("#libGrid"), list.length ? `<div class="lgrid">${list.map(i => `<article class="li"><div class="li-pv">
+      ${i.kind === "font" ? `<span class="fs" style="font-family:'PKLIB-${esc(i.id)}',sans-serif">Aa WAIT WHAT</span><span class="kind">Font</span>`
+        : i.kind === "sound" ? `<button class="snd" data-act="libplay" data-id="${esc(i.id)}" aria-label="Hear ${esc(i.name)}">▶</button><span class="kind">Sound</span>`
+        : `<img src="${esc(i.thumb || i.url)}" alt="" loading="lazy"><span class="kind">${esc(i.type === "image" ? "Picture" : i.type === "gif" ? "GIF" : "Video")}</span>`}</div>
+      <div class="li-bd"><div><b title="${esc(i.name)}">${esc(i.kind === "font" && i.family ? i.family : i.name)}</b><span>${i.kind === "font" ? "For big text and captions" : i.kind === "sound" ? `${len(i.dur)} · on the Sound track` : `${i.dur ? len(i.dur) + " · " : ""}on the Media track`}</span></div>
+        <button class="btn sm icon ghost" data-act="libdel" data-id="${esc(i.id)}" title="Delete" aria-label="Delete ${esc(i.name)}">${ic("trash")}</button></div></article>`).join("")}</div>`
+    : `<div class="rempty">${ic("folder")}<div><b>${L.length ? "Nothing of this kind yet" : "Your library is empty"}</b>Add a font, a sound effect or a meme. In the editor, open <b>Library</b> to put it on any clip.</div></div>`);
 }
 
 /* ============================================================ AI usage */
@@ -3776,6 +4100,13 @@ function initLiveClipEditor(j, c) {
   syncAllSettings();
 }
 
+function editClip(jid, cid) {
+  const c = jobOf(jid)?.clips.find(x => x.id === cid);
+  if (!window.CKEditor || !c || !(c.status === "done" || c.status === "error")) return openClip(jid, cid);
+  if ($("#clipdlg").open) $("#clipdlg").close();
+  CKEditor.open(jid, cid);
+}
+
 function drawClipDlg(full) {
   const j = jobOf(D.jid), c = j?.clips.find(x => x.id === D.cid), dlg = $("#clipdlg");
   if (!c) { if (dlg.open) dlg.close(); return; }
@@ -3819,6 +4150,7 @@ function drawClipDlg(full) {
             <button class="btn icon ghost" data-act="closedlg" aria-label="Close">${ic("x")}</button>
           </div>
         </div>
+        ${c.status === "done" || c.status === "error" ? `<button class="dlg-edit" data-act="editclip" data-j="${esc(j.id)}" data-c="${esc(c.id)}">${ic("scissors")}<span><b>Open in the editor${c.edit ? " · edited" : ""}</b><small>Cut it, add transitions, sounds, text effects and your own memes</small></span>${ic("arrowr")}</button>` : ""}
         <h3>On the video</h3>
         <label class="f">Big text<input data-f="hook" value="${esc(c.hook || '')}" placeholder="HOOK / BIG HEADLINE"></label>
         <label class="sw"><input type="checkbox" data-f="captions" data-caption-toggle ${c.captions === false ? "" : "checked"}>Generate captions</label>
@@ -3873,7 +4205,8 @@ $("#clipdlg").addEventListener("click", e => { if (e.target === e.currentTarget)
 /* ============================================================ render + polling */
 function render() {
   drawShell(); drawJobs(); drawStream(); drawSelBar();
-  if (S.view === "overview") drawOverview();
+  if (S.view === "overview") { drawOverview(); drawReady(); drawHomeCards(); }
+  if (S.view === "studio") drawStudio();
   if ($("#clog")) drawLog();
   if (D.jid) drawClipDlg(false);
 }
@@ -4015,6 +4348,14 @@ document.addEventListener("click", async e => {
     }
     if (a === "menu") return $("#app").classList.toggle("open");
     if (a === "collapse") { const m = $("#app").classList.toggle("mini"); try { localStorage.setItem("mini", m ? "1" : ""); } catch {} return; }
+    if (a === "quick") { const t = document.querySelector(`[data-seg="${d.k}"][data-v="${CSS.escape(d.v)}"]`); if (t && !t.disabled) t.click(); return; }
+    if (a === "moreopts") { S.moreOpen = !S.moreOpen; const m = $("#hmore"); if (m) m.hidden = !S.moreOpen; b.setAttribute("aria-expanded", String(S.moreOpen)); if (S.moreOpen) setTimeout(playLooks, 50); return; }
+    if (a === "hypeall") return hypeAll();
+    if (a === "stf") { S.stF = d.v; return drawStudio(); }
+    if (a === "libpick") return $("#libfile").click();
+    if (a === "libf") { S.libF = d.v; return drawAssets(); }
+    if (a === "libplay") return libPlay(d.id, b);
+    if (a === "libdel") return libDel(d.id);
     if (a === "toggleopts") { const p = $(".composer-opts"), open = !p.classList.contains("open"); p.classList.toggle("open", open); p.inert = !open; b.classList.toggle("on", open); b.setAttribute("aria-expanded", String(open)); return; }
     if (a === "focusurl") return $("#url")?.focus();
     if (a === "step") {
@@ -4111,6 +4452,7 @@ document.addEventListener("click", async e => {
     if (a === "addmore") { const u = $("#url"); return u && !u.value ? (u.focus(), toast("Paste another link, or drop a file anywhere on the box.")) : $("#file").click(); }
     if (a === "closedlg") return $("#clipdlg").close();
     if (a === "openclip") return openClip(d.j, d.c);
+    if (a === "editclip") return editClip(d.j, d.c);
     if (a === "newcreator") {
       const dlg = $("#formdlg");
       dlg.innerHTML = `<form method="dialog" class="dlg"><h2>New creator</h2><p class="help">Each creator gets their own workspace, folder, settings and accounts.</p>
@@ -4201,7 +4543,7 @@ document.addEventListener("click", async e => {
     }
     if (a === "deljob") {
       if (!await ask("Delete this video?", "The video and all of its clips are permanently deleted. This cannot be undone.", "Delete", true)) return;
-      await api(`/api/jobs/${d.j}`, {method:"DELETE"}); toast("Deleted"); return tick();
+      const r = await api(`/api/jobs/${d.j}`, {method:"DELETE"}); toast(r && r.later ? "It's deleted as soon as it has stopped." : "Deleted"); return tick();
     }
     if (a === "chadd") {
       const k = d.p, v = $("#chan_" + k)?.value.trim();
@@ -4340,11 +4682,12 @@ $("#main").addEventListener("scroll", () => $(".topbar").classList.toggle("stuck
   if (editJob && editClip) {
     setTimeout(() => openClip(editJob, editClip, !!q.get("edit_job")), 350);
   }
-  loop();
+  loop(); loadLib();
   if (S.status.tour && !fromSite && !$("#formdlg").open) setTimeout(startTour, 500);   // once, the first time someone signs in
   checkNew(true);
   setInterval(async () => { try { S.status = await api("/api/status"); drawShell(); if (S.view === "overview") drawOverview(); checkNew(); } catch {} }, 15000);
 })();
 </script>
+<script src="/assets/editor.js?v=2"></script>
 </body>
 </html>

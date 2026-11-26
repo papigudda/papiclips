@@ -45,13 +45,14 @@ MATCH = 0.35               # how much a box the AI points at must cover a measur
 EDGE = 2.2                 # how much brighter than the average line a border must be
 
 
-def _frames(path: str | Path, count: int = MAX_FRAMES) -> np.ndarray:
-    """The video as a few grey frames, spread through it."""
+def _frames(path: str | Path, count: int = MAX_FRAMES, span=None) -> np.ndarray:
+    """The video (or the stretch `span` = (start, end) seconds of it) as a few grey frames, spread through it."""
     try:
-        dur = _duration(path)
+        dur = (span[1] - span[0]) if span else _duration(path)
         rate = max(count / dur, 0.02) if dur > 0 else 0.2
+        seek = ["-ss", f"{max(0.0, span[0]):.2f}", "-t", f"{max(1.0, dur):.2f}"] if span else []
         proc = subprocess.run(
-            ["ffmpeg", "-v", "error", "-i", str(path),
+            ["ffmpeg", "-v", "error", *seek, "-i", str(path),
              "-vf", f"fps={rate:.4f},scale={W}:{H},format=gray",
              "-frames:v", str(count), "-f", "rawvideo", "-"],
             capture_output=True, timeout=180)
@@ -287,11 +288,12 @@ def _finish(path: str | Path, found: dict, w: int, h: int, still: np.ndarray) ->
             "corner": _corner(x0, y0, x1, y1, w, h), "score": found.get("score", 0.0), "conf": conf}
 
 
-def _frame_jpeg(path: str | Path, width: int = 768) -> bytes:
-    """One frame of the stream, small, as a JPEG: what a model is shown."""
+def _frame_jpeg(path: str | Path, width: int = 768, span=None) -> bytes:
+    """One frame of the stream (from the middle of `span` if given), small, as a JPEG: what a model is shown."""
+    at = (span[0] + span[1]) / 2.0 if span else _duration(path) / 2.0
     try:
         return subprocess.run(
-            ["ffmpeg", "-v", "error", "-ss", f"{max(0.0, _duration(path) / 2.0):.1f}", "-i", str(path),
+            ["ffmpeg", "-v", "error", "-ss", f"{max(0.0, at):.1f}", "-i", str(path),
              "-frames:v", "1", "-vf", f"scale={width}:-2", "-pix_fmt", "yuvj420p", "-q:v", "4",
              "-f", "image2pipe", "-vcodec", "mjpeg", "-"],
             capture_output=True, timeout=120).stdout or b""
@@ -299,16 +301,16 @@ def _frame_jpeg(path: str | Path, width: int = 768) -> bytes:
         return b""
 
 
-def _asked(path: str | Path, ask):
-    """One frame to the model: (did it look, its box as parts of the frame or None)."""
-    jpeg = _frame_jpeg(path)
+def _asked(path: str | Path, ask, span=None):
+    """One frame to the model: (did it look, its box as parts of the frame or None, does the camera fill it)."""
+    jpeg = _frame_jpeg(path, span=span)
     if not jpeg:
-        return False, None
+        return False, None, False
     try:
         answer = ask(jpeg) or {}
     except Exception:  # noqa: BLE001 - a model that cannot look is not a failure
-        return False, None
-    return bool(answer.get("looked")), answer.get("box")
+        return False, None, False
+    return bool(answer.get("looked")), answer.get("box"), bool(answer.get("full"))
 
 
 def _seen(path: str | Path, box, w: int, h: int, still: np.ndarray, light: np.ndarray) -> dict | None:
@@ -332,7 +334,7 @@ def _seen(path: str | Path, box, w: int, h: int, still: np.ndarray, light: np.nd
     return _finish(path, found, w, h, still)
 
 
-def find_streamer_face(path: str | Path, w: int, h: int) -> dict | None:
+def find_streamer_face(path: str | Path, w: int, h: int, span=None) -> dict | None:
     """Finds the persistent streamer facecam across the video using computer vision / MediaPipe / Haar.
     Returns the box in source pixels: {'x': x, 'y': y, 'w': w, 'h': h, 'corner': ..., 'conf': 'high', 'source': 'face_tracker'}.
     """
@@ -347,7 +349,9 @@ def find_streamer_face(path: str | Path, w: int, h: int) -> dict | None:
             return None
         
         dur = _duration(path)
-        sample_times = [dur * frac for frac in (0.1, 0.25, 0.4, 0.6, 0.75, 0.9)] if dur > 2 else [0.5, 1.0]
+        t0, t1 = (span[0], span[1]) if span else (0.0, dur)
+        s_dur = max(0.0, t1 - t0)
+        sample_times = [t0 + s_dur * frac for frac in (0.1, 0.25, 0.4, 0.6, 0.75, 0.9)] if s_dur > 2 else [t0 + 0.5, t0 + 1.0]
         detected = []
         for t in sample_times:
             cap.set(cv2.CAP_PROP_POS_MSEC, t * 1000)
@@ -387,25 +391,36 @@ def find_streamer_face(path: str | Path, w: int, h: int) -> dict | None:
         return None
 
 
-def detect(path: str | Path, ask=None) -> dict | None:
+ROOM_MOVING = 0.22         # with no webcam box: at most this share of the picture moving reads as a camera filling it
+
+
+def _room(still: np.ndarray) -> bool:
+    """Does the whole picture look like a camera on a person in a room (little of it moves) rather than a game?"""
+    return float((still > STILL_MIN * 2).mean()) < ROOM_MOVING
+
+
+def detect(path: str | Path, ask=None, span=None) -> dict | None:
     """The facecam's box in the source, in source pixels, or None."""
     w, h = _size(path)
     if not w or not h:
         return None
 
     # 1. High-precision Computer Vision / MediaPipe face tracking
-    tracked = find_streamer_face(path, w, h)
+    tracked = find_streamer_face(path, w, h, span=span)
     if tracked and tracked.get("corner") != "middle":
         return tracked
 
-    frames = _frames(path)
+    frames = _frames(path, span=span)
     if len(frames) < 4:
         return tracked
     still = _stillness(frames)
     light = frames.astype(np.float32).mean(axis=0)
-    looked, hinted = (False, None)
+    looked, hinted, full = (False, None, False)
     if ask is not None:
-        looked, hinted = _asked(path, ask)
+        res = _asked(path, ask, span) if span is not None else _asked(path, ask)
+        looked, hinted, full = (res if len(res) == 3 else (*res, False))
+        if looked and full:
+            return {"full": True, "conf": "high", "score": 1.0}     # the camera fills the frame: no box to cut out
         if looked and not hinted:
             return tracked
     vx, hy = _profiles(frames)
@@ -419,5 +434,9 @@ def detect(path: str | Path, ask=None) -> dict | None:
         if seen:
             return seen
     if not found:
-        return tracked
+        if tracked:
+            return tracked
+        if not looked and _room(still):
+            return {"full": True, "conf": "high", "score": 0.6}
+        return None
     return _finish(path, found[0], w, h, still)

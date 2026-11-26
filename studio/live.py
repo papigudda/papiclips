@@ -11,7 +11,7 @@ from pathlib import Path
 
 import numpy as np
 
-from . import alerts, auth, brain, config, creators, ctx, facecam, games, hashtags, jobs, load, media, transcribe, usage
+from . import alerts, auth, brain, config, creators, ctx, facecam, games, hashtags, jobs, load, media, render, roman, transcribe, usage, whisper
 
 # ":username!user@host PRIVMSG #channel :the message"
 _NICK = re.compile(r"(?m)^:([A-Za-z0-9_]{2,25})!")
@@ -83,11 +83,13 @@ def resolve(url: str) -> dict:
     title = info.get("title") or ""
     if "(live)" in title and info.get("description"):  # Twitch puts the real stream title here
         title = str(info["description"]).splitlines()[0][:120]
+    from . import tag as _tag
     urls = [f["url"] for f in fmts if isinstance(f, dict) and f.get("url")]
     if not urls:
         raise NotLive("Could not open the live stream.")
     return {"urls": urls, "title": title,
-            "uploader": info.get("uploader") or info.get("channel") or ""}
+            "uploader": info.get("uploader") or info.get("channel") or "",
+            "handle": _tag.handle_from_info(info, url), "platform": _tag.platform_of(url)}
 
 
 def active():
@@ -165,6 +167,12 @@ class Session:
         self.facecam_box = None       # where the webcam is, found once the first clip is made
         self.facecam_checked = False  # the look is made once, even when it finds nothing
         self.ai_busy = 0.0            # when the AI check now running was started, 0 when none is
+        # the language spoken: picked for the creator, or told by Whisper from the first stretch of speech
+        want = (settings.get("lang") or "auto") if isinstance(settings, dict) else "auto"
+        self.spoken = None if want == "auto" else want
+        if self.spoken:
+            job["lang"] = self.spoken
+        self.whisper_ok = True        # turned off if Whisper can't be installed: the English model is used instead
 
     def _ask_ai(self, window=None, why=None):
         """Ask the AI on its own thread, so a slow answer never stops the recording.
@@ -269,6 +277,8 @@ class Session:
                 break
             if not self.job.get("uploader"):
                 self.job.update(title=info["title"], uploader=info["uploader"])
+            if not self.job.get("handle") and info.get("handle"):
+                self.job.update(handle=info["handle"], platform=info.get("platform", ""))
             self.part += 1
             with self.lock:
                 self.seg_clock = max(self.seg_clock, self.samples / SR)
@@ -325,6 +335,7 @@ class Session:
             if fails >= 3:
                 break
             self.stop_flag.wait(3)
+        self.ended = True
 
     def _scan_segments(self):
         """Pick up buffer pieces ffmpeg has finished writing."""
@@ -359,11 +370,7 @@ class Session:
                     self.seg_clock = max(self.seg_clock, end)
                 self.listed.update(r[0] for r in rows if len(r) > 2)
                 self.csv_seen[i] = len(rows)
-            buf_sec = max(60.0, float(self.settings.get("buffer_min", 60))) * 60
-            keep_from = self.seg_clock - buf_sec
-            protect_starts = [c["start"] - 30 for c in self.job.get("clips", []) if c.get("status") in ("queued", "rendering")]
-            if protect_starts:
-                keep_from = min(keep_from, min(protect_starts))
+            keep_from = self._keep_from()
             while self.segments and self.segments[0][2] < keep_from:
                 self.segments.pop(0)[0].unlink(missing_ok=True)
             if time.time() - self.swept > 60:
@@ -378,6 +385,14 @@ class Session:
                             p.unlink(missing_ok=True)
                     except OSError:          # already gone: a finished recording clears the buffer
                         pass
+
+    def _keep_from(self) -> float:
+        """Where the buffer starts being kept, on the piece clock."""
+        buf_sec = max(60.0, float(self.settings.get("buffer_min", 60)) * 60)
+        keep_from = self.seg_clock - buf_sec
+        waiting = [c["start"] - PAD - 30 for c in list(self.job.get("clips", []))
+                   if (c.get("status") in ("queued", "rendering") or (c.get("status") == "queued" and not c.get("src")))]
+        return min([keep_from] + waiting)
 
     # ---------------------------------------------------------------- chat (Twitch only)
     def _chat(self, channel):
@@ -457,7 +472,7 @@ class Session:
         if not hurry or n > SR * 24:
             # cut at the quietest moment between 4 and 6.5 s, so no word is split; the rest waits for the next pass
             _, cut = next(transcribe._chunks(audio, 4.0, 6.5))
-        words = transcribe.transcribe(audio[:cut], lang=self.job.get("lang") or "en")
+        words = self._hear(audio[:cut])
         off = base / SR
         for w in words:
             w["s"], w["e"] = round(w["s"] + off, 2), round(w["e"] + off, 2)
@@ -591,14 +606,16 @@ class Session:
         self.verdicts.append(dict(v, result=result))
         del self.verdicts[:-6]
 
-    CLIP_WORDS = re.compile(r"\bclip(\s+(it|that|this))?\b", re.I)
+    CLIP_WORDS = re.compile(r"\b[ck]lip(\s+(it|that|this))?\b", re.I)     # "klip": क्लिप in Roman letters
     SAID_BEFORE, SAID_AFTER, SAID_GAP = 60, 15, 45
 
     def _triggers(self, new_words):
         """Built in: when someone says "clip" ("clip it", "clip that"), the AI looks at that moment as soon as its
         transcript is ready; people say it right after something worth clipping. Then the creator's own trigger
         phrases from Setup, which clip straight away with no AI check."""
-        for w in new_words or []:
+        # Whisper writes Hindi in Devanagari: words are read in Roman letters, so "क्लिप" is heard as "clip" too
+        new_words = [dict(w, w=roman.to_roman(w["w"])) if roman.needs_roman(w["w"]) else w for w in new_words or []]
+        for w in new_words:
             if self.CLIP_WORDS.search(re.sub(r"[^a-z' ]", "", w["w"].lower())) and w["s"] - self.last_said > self.SAID_GAP \
                     and not self.said:
                 self.said = {"t": w["s"], "why": 'Someone said "clip"'}
@@ -623,6 +640,7 @@ class Session:
             try:
                 c = brain.describe(text, self.job["title"], self.job["uploader"], game=self._game(),
                                    timeout=config.LIVE_AI_TIMEOUT)
+                c.pop("_by", None)
             except Exception as e:  # noqa: BLE001
                 # Someone asked for this clip by hand. A slow or broken AI costs it its hook, not the clip.
                 self.job["ai"]["last_error"] = str(e)[-200:]
@@ -637,13 +655,12 @@ class Session:
     def _add_clip(self, c):
         self.n += 1
         c.update(id=f"clip{self.n:03d}", style=self.settings["style"], layout=self.settings["layout"],
-                 captions=self.job["options"].get("captions", True), status="queued", version=0, made_at=time.time())
-        if self.job["options"].get("hook_text"):      # the person's own big text, in place of the AI's
-            c["hook"] = self.job["options"]["hook_text"]
-        if self.job["options"].get("description_text"):
-            c["description"], c["fixed_description"] = self.job["options"]["description_text"], True
-        else:
-            hashtags.apply(c, self.words, self.job.get("title", ""), self.job.get("uploader", ""), self._game())
+                 captions=self.job["options"].get("captions", True), zoom=self.settings.get("zoom", True),
+                 watermark=self.settings.get("watermark", ""), tighten=self.settings.get("tighten", True),
+                 **{k: self.settings.get(k, jobs.DEFAULTS[k]) for k in jobs.TAG_KEYS},
+                 status="queued", version=0, made_at=time.time())
+        o = {k: self.job["options"].get(k) or self.settings.get(k) or "" for k in ("hook_text", "description_text")}
+        jobs.own_text(c, o, list(self.words), self.job.get("title", ""), self.job.get("uploader", ""), getattr(self, "game", "") or None)
         with self.lock:
             self.job["clips"].append(c)
         jobs.save(self.job)
@@ -693,13 +710,25 @@ class Session:
             return
         finally:
             lst.unlink(missing_ok=True)
-        # Only the gameplay layout uses a webcam, and only once the clip's own file is written: the
+        # Only the facecam layouts use a webcam, and only once the clip's own file is written: the
         # webcam is looked for in it, once per stream.
-        if clip.get("layout") == "gameplay":
-            if not self.facecam_box:
-                self.facecam_box = self._find_facecam(src) or self.job.get("facecam")
+        if clip.get("layout") in render.FACECAM_LAYOUTS:
+            if not self.facecam_checked:
+                info = jobs._remembered_info(self.job)
+                found = None if info.get("manual") else self._find_facecam(src)
+                mem = jobs._remembered(self.job)
+                size = jobs._src_size(self.job, {"src": str(src)})
+                # where this streamer's webcam is remembered to be wins over one look at one clip that disagrees
+                if mem and size[0] and size[1] and not (found and jobs._iou(found, jobs._px(mem, *size)) >= jobs.CAM_AGREE):
+                    found = jobs._px(mem, *size)
+                elif found and size[0] and size[1]:
+                    jobs._learn(self.job, jobs._frac(found, *size))
+                self.facecam_box = found
+                self.facecam_checked = True
             if self.facecam_box:
                 clip["facecam"] = self.facecam_box
+                # the part of the game and the share of the frame set for this streamer before, if they were
+                jobs._use_frame(self.job, clip, *jobs._src_size(self.job, {"src": str(src)}))
         dur = segs[-1][2] - segs[0][1]
         offset = self._align(src, segs[0][1] + self.clock_fix, dur)
         self.clock_fix = offset - segs[0][1]  # the two clocks drift ~4 s an hour; start the next clip from here
@@ -718,6 +747,33 @@ class Session:
         clip["start"], clip["end"] = span
         jobs.render_one(self.job, clip, list(self.words))
 
+    def _hear(self, audio):
+        """The words in this audio, by the speech model for the language spoken (English: Parakeet; Arabic: Sherpa AR; else Whisper)."""
+        from . import fetch_model
+        if self.spoken == "ar" and fetch_model.ready("ar"):
+            return transcribe.transcribe(audio, lang="ar")
+        if self.spoken is None and self.whisper_ok and len(audio) >= SR * 4:
+            got = None
+            try:
+                got = whisper.detect(audio)
+            except Exception:  # noqa: BLE001
+                got = None
+            if got:
+                self.spoken = "hi" if got[0] == "ur" else got[0]
+                with self.lock:
+                    self.job["lang"] = self.spoken
+                if jobs._hinglish_mode(self.job):
+                    whisper.fetch_hinglish_soon()
+            else:
+                self.whisper_ok, self.spoken = False, "en"
+        if self.spoken and not whisper.is_english(self.spoken) and self.whisper_ok:
+            if self.spoken != "ar":
+                try:
+                    return whisper.transcribe(audio, self.spoken)
+                except Exception:  # noqa: BLE001 - the English model still hears names, numbers and "clip that"
+                    self.whisper_ok = False
+        return transcribe.transcribe(audio)
+
     def _align(self, src, guess, dur):
         """Where `src` really starts on the transcript clock. The video pieces and the audio feed keep separate
         clocks that drift apart, so transcribe the clip's own audio and line its words up with the live words.
@@ -726,7 +782,7 @@ class Session:
         try:
             wav = src.with_suffix(".wav")
             media.extract_audio(src, wav)
-            heard = transcribe.transcribe(media.load_audio(wav), lang=self.job.get("lang") or "en")
+            heard = self._hear(media.load_audio(wav))
             wav.unlink(missing_ok=True)
             with self.lock:
                 near = [w for w in self.words if guess - 15 <= w["s"] <= guess + dur + 15]
@@ -920,18 +976,24 @@ def start_session(creator: dict, url=None) -> dict:
                                   "Twitch and Kick streams still work. YouTube"))
     if len(active_mine()) >= config.MAX_LIVE_PER_USER:
         raise ValueError(f"You're already recording {len(active_mine())} streams, the most this server allows at once. Stop one first.")
-    if len(active()) >= config.MAX_LIVE_TOTAL or (active() and load.busy()):
-        raise ValueError("PeakCut is recording as many streams as it can right now. Try again in a little while.")
+    if len(active()) >= config.MAX_LIVE_TOTAL:
+        raise ValueError("PapiClips is recording as many streams as it can right now. Try again in a little while.")
+    if active() and load.busy():
+        raise ValueError("This computer is busy with the recording that's already on (and the clips it's making), so a "
+                         "second one now would make both of them fail. Stop one, or try again once the clips are done.")
     from . import fetch_model, tools
     if tools.missing():
         raise ValueError(tools.HELP)
-    lang = creator.get("lang") if fetch_model.known(creator.get("lang")) else fetch_model.DEFAULT
-    if lang != fetch_model.DEFAULT and not transcribe.REMOTE and not fetch_model.ready(lang):
+    lang = creator.get("lang") or "auto"
+    if lang != fetch_model.DEFAULT and fetch_model.known(lang) and not transcribe.REMOTE and not fetch_model.ready(lang):
         raise ValueError(f"This creator speaks {fetch_model.label(lang)}, and its speech model isn't on this computer "
                          "yet. Add it in Settings → Speech models (an admin can do this), then start recording again.")
     job = jobs.create({"type": "live", "url": url, "name": f"{creator['name']} live"}, {}, enqueue=False,
                       creator=creator["id"], kind="live")
-    job.update(status="live", stage="Connecting to the stream", lang=lang)
+    kw = {"status": "live", "stage": "Connecting to the stream"}
+    if fetch_model.known(lang):
+        kw["lang"] = lang
+    job.update(**kw)
     jobs.save(job)
     Session(job, creator).start()
     return job
@@ -942,7 +1004,7 @@ def _watch_user(uid):
     from . import profiles
     with ctx.as_user(uid):
         try:
-            todo = [c for c in creators.all_creators() if c["auto_watch"] and c["channel"]]
+            todo = [c for c in creators.all_creators() if (c["auto_watch"] or c.get("watch_once")) and c["channel"]]
             if not todo:
                 return
         except Exception:  # noqa: BLE001
@@ -959,7 +1021,7 @@ def check_now(cid):
         from . import profiles
         with ctx.as_user(uid):
             c = creators.get(cid)
-            if not c or not c["auto_watch"] or not c["channel"]:
+            if not c or not (c["auto_watch"] or c.get("watch_once")) or not c["channel"]:
                 return
             for url in c.get("channels", {}).values():
                 profiles._live.pop(url.rstrip("/").lower(), None)     # a fresh answer, not one from two minutes ago
@@ -976,6 +1038,11 @@ def _watch_one(c):
             return
         # the chosen channel first, then their other platforms
         urls = [c["channel"]] + [u for u in c.get("channels", {}).values() if u != c["channel"]]
+        if c.get("hold"):
+            # Stop was pressed while they were live: left alone until they've gone offline, then watched as usual
+            if not any(profiles.live_shared(profiles.platform_of(u), u).get("live") for u in urls):
+                creators.update(c["id"], {"hold": False})
+            return
         for url in urls:
             # one shared "are they live?" answer per channel, however many people follow it
             if not profiles.live_shared(profiles.platform_of(url), url).get("live"):
@@ -989,6 +1056,8 @@ def _watch_one(c):
                 except NotLive:
                     continue
             start_session(c, url)
+            if c.get("watch_once"):
+                creators.update(c["id"], {"watch_once": False})     # this stream only: not their next ones
             where = creators.platform_key(url).title()
             creators.log(c["id"], f"Went live on {where}: recording started automatically")
             alerts.notify(f"{c['name']} went live on {where}, recording started.")
@@ -1024,7 +1093,7 @@ def _resume_recordings(paused):
             with ctx.as_user(uid):
                 try:
                     c = creators.get(cid)
-                    if not c or active_for(cid):
+                    if not c or active_for(cid) or c.get("hold"):
                         continue
                     resolve(normalize(url))      # raises NotLive if the stream has ended: no empty recording is made
                     start_session(c, url)
@@ -1039,14 +1108,55 @@ def _resume_recordings(paused):
         time.sleep(30)
 
 
+RESUME_MARK = "resume-recordings"
+
+
+def _should_resume() -> bool:
+    """Recordings that were on when PapiClips stopped are picked up again on a server (ACCOUNTS=1), or when restarted
+    for an update."""
+    mark = config.DATA_DIR / RESUME_MARK
+    if mark.exists():
+        mark.unlink(missing_ok=True)
+        return True
+    return bool(config.ACCOUNTS)
+
+
+def _autorecord_once():
+    """Once, after upgrade: keep auto-record only where intentionally enabled."""
+    from . import notices
+    for uid in auth.user_ids():
+        mark = config.user_dir(uid) / "autorecord-v2"
+        if mark.exists():
+            continue
+        try:
+            with ctx.as_user(uid):
+                was = [c for c in creators.all_creators() if c.get("auto_watch")]
+                for c in was:
+                    creators.update(c["id"], {"auto_watch": False})
+                if was:
+                    names = ", ".join(c["name"] for c in was[:6]) + (f" and {len(was) - 6} more" if len(was) > 6 else "")
+                    notices.add(uid, "live", "Auto-record is now only on where you turn it on",
+                                f"It was turned off for {names}. To record a streamer every time they go live, open them, "
+                                "Setup, and turn on Record automatically.", "/app/videos", ref="autorecord-v2")
+            mark.parent.mkdir(parents=True, exist_ok=True)
+            mark.write_text("1", encoding="utf-8")
+        except Exception:  # noqa: BLE001
+            pass
+
+
 def start():
     paused = []
+    resume = _should_resume()
+    _autorecord_once()
     for j in jobs.all_jobs():
         if j.get("recover"):
             with ctx.as_user(j["user"]):
                 recover(j)
         if j.get("was_live") and j.get("creator"):
-            paused.append((j["user"], j["creator"], j["source"]["url"]))
+            if resume:
+                paused.append((j["user"], j["creator"], j["source"]["url"]))
+            else:
+                j["stage"] = "Recording stopped when PapiClips was closed"
             j.pop("was_live", None)
             jobs.save(j)
     if paused:

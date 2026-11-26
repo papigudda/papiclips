@@ -1,4 +1,4 @@
-"""ClipKontrast web server. Run with:  python -m studio.server
+"""PapiClips web server. Run with:  python -m studio.server
 
 Public pages:  /  /login  /signup          The app:  /app  (signed-in users only)
 Everything under /api, /media and /oauth needs a session, except /api/auth/* and /api/public."""
@@ -21,7 +21,7 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Redirect
 
 from . import admin as admins
 from . import account, load
-from . import (accounts, ai, alerts, auth, brain, config, creators, ctx, db, jobs, live, media, posting,
+from . import (accounts, ai, alerts, auth, brain, config, creators, ctx, db, jobs, library, live, media, posting,
                profiles, render, safe, transcribe, usage, whisper)
 
 from . import tools as _tools  # noqa: E402
@@ -117,6 +117,8 @@ class Gate:
                 cap = 9 * 1024 * 1024          # a screenshot or a campaign cover
             if path in ("/api/public/bug-report", "/api/bug-report"):
                 cap = 7 * 1024 * 1024          # a bug report, with its screenshot
+            if path == "/api/library":
+                cap = 210 * 1024 * 1024        # a font, sound, picture or video for the editor's library
             try:
                 if int(req.headers.get("content-length") or 0) > cap:
                     return await deny(413, f"That file is too big. The limit is {config.MAX_UPLOAD_MB} MB." if path == "/api/upload" else "That request is too large.")
@@ -656,7 +658,13 @@ def status(request: Request):
             "youtube": accounts.youtube_ready(), "connect": {p: accounts.can_connect(p) for p in accounts.PLATFORM_NAMES}, "max_upload_mb": config.MAX_UPLOAD_MB, "upload_part_mb": config.UPLOAD_PART_MB, "max_batch": config.MAX_ACTIVE_JOBS_PER_USER,
             "styles": {k: v["label"] for k, v in render.STYLES.items()}, "layouts": render.LAYOUTS,
             "tag": {"styles": tagmod.STYLES, "platforms": tagmod.PLATFORMS, "positions": tagmod.POSITIONS},
-            "languages": whisper.LANGUAGES, "caption_langs": whisper.CAPTION_LANGS}
+            "languages": whisper.LANGUAGES, "caption_langs": whisper.CAPTION_LANGS, "speech": _speech_brief()}
+
+
+def _speech_brief() -> dict:
+    """Which spoken languages can be transcribed here: for the language choice when adding a video."""
+    from . import fetch_model
+    return {k: {"label": m[0], "size_mb": m[3], "state": fetch_model.status(k)} for k, m in fetch_model.MODELS.items()}
 
 
 # ================================================================ videos
@@ -899,13 +907,34 @@ def _up_root() -> Path:
     return d
 
 
+UP_IDLE_SEC = 15 * 60     # an upload of your own that hasn't moved for this long was left behind
+
+
+def _up_active(d: Path) -> float:
+    """When this upload last moved: its folder, or any piece in it."""
+    newest = d.stat().st_mtime
+    for f in d.iterdir():
+        try:
+            newest = max(newest, f.stat().st_mtime)
+        except OSError:
+            pass
+    return newest
+
+
 def _up_sweep():
-    """Forget uploads that were started and never finished (after six hours)."""
+    """Forget uploads that were started and never finished: anyone's after six hours, and the asker's own once
+    they have stood still for UP_IDLE_SEC."""
+    me = ctx.uid_or_none()
     for d in _up_root().glob("up-*"):
         try:
-            if d.is_dir() and time.time() - d.stat().st_mtime > 6 * 3600:
+            if not d.is_dir():
+                continue
+            idle = time.time() - _up_active(d)
+            if idle > 6 * 3600:
                 shutil.rmtree(d, ignore_errors=True)
-        except OSError:
+            elif me and idle > UP_IDLE_SEC and json.loads((d / "meta.json").read_text(encoding="utf-8")).get("user") == me:
+                shutil.rmtree(d, ignore_errors=True)
+        except (OSError, ValueError):
             pass
 
 
@@ -1040,8 +1069,10 @@ def rerender(jid: str, cid: str, body: dict = Body(...)):
     clip = next((c for c in job["clips"] if c["id"] == cid), None)
     if not clip:
         raise HTTPException(404, "No such clip")
-    if job["status"] in ("queued", "running") or clip.get("status") in ("queued", "rendering"):
-        raise HTTPException(409, "This clip is still being made. Try again when it has finished.")
+    if jobs.clip_busy(job, clip):
+        raise HTTPException(409, "This clip is being made right now. Try again when it has finished.")
+    if job["status"] in ("queued", "running"):
+        raise HTTPException(409, "Its video is still being made. Re-make this clip when the video has finished, or press Stop on the video.")
     _throttle("render:" + ctx.uid(), 20, 600, "That's a lot of re-makes in a short time. Wait a few minutes.")
     try:
         jobs.request_render(jid, cid, body)
@@ -1153,6 +1184,103 @@ def stop_job(jid: str):
 
 
 
+@app.get("/api/jobs/{jid}/clips/{cid}/editor")
+def clip_editor(jid: str, cid: str):
+    """Open a clip in the editor: its preview copy (made the first time it's opened), words, sound and layout."""
+    job = _job_or_404(jid)
+    if not any(c["id"] == cid for c in job["clips"]):
+        raise HTTPException(404, "No such clip")
+    try:
+        return jobs.editor_data(jid, cid)
+    except (ValueError, RuntimeError) as e:
+        raise HTTPException(400, safe.friendly(e, 300))
+
+
+@app.get("/api/jobs/{jid}/clips/{cid}/editor/{name}")
+def clip_editor_file(jid: str, cid: str, name: str):
+    """The editor's preview copy of a clip, and its thumbnail strip."""
+    job = _job_or_404(jid)
+    if name not in ("preview.mp4", "strip.jpg") or not re.fullmatch(r"[\w\-]{1,40}", cid):
+        raise HTTPException(404)
+    f = Path(job["dir"]) / "edit" / cid / name
+    if not f.is_file():
+        raise HTTPException(404)
+    return FileResponse(f, headers={"Cache-Control": "private, max-age=3600"})
+
+
+@app.get("/api/edit/sound/{kind}")
+def edit_sound(kind: str):
+    """A sound effect, to hear it in the editor before it's used."""
+    from . import edit as editmod
+    f = editmod.sound_file(kind.removesuffix(".wav"))
+    if not f:
+        raise HTTPException(404)
+    return FileResponse(f, media_type="audio/wav", headers={"Cache-Control": "private, max-age=86400"})
+
+
+@app.get("/api/edit/font/{name}")
+def edit_font(name: str):
+    """The caption and heading fonts, so the editor's preview draws text the way the clip will."""
+    if name not in render.FONT_FILES.values():
+        raise HTTPException(404)
+    f = Path(__file__).resolve().parent / "fonts" / name
+    if not f.is_file():
+        raise HTTPException(404)
+    return FileResponse(f, media_type="font/ttf", headers={"Cache-Control": "public, max-age=604800"})
+
+
+# ---------------------------------------------------------------- the editor's library: own fonts, sounds, media
+@app.get("/api/library")
+def library_list():
+    return {"items": library.listing(ctx.uid()), "limits": library.MAX_MB, "kinds": library.KINDS}
+
+
+@app.post("/api/library")
+async def library_add(kind: str = Form(...), file: UploadFile = File(...)):
+    """Add a font, sound, picture or video to the person's library. It's checked and made into a safe format first."""
+    _throttle("library:" + ctx.uid(), 60, 3600, "That's a lot of uploads in a short time. Wait a little.")
+    tmp = config.TMP_DIR / f"lib-{os.urandom(6).hex()}{Path(file.filename or '').suffix.lower()[:8]}"
+    size = 0
+    try:
+        with tmp.open("wb") as out:
+            while chunk := await file.read(1024 * 1024):
+                size += len(chunk)
+                if size > library.MAX_MB.get(kind, 50) * 1024 * 1024:
+                    raise HTTPException(413, f"That file is too big. The limit is {library.MAX_MB.get(kind, 50)} MB.")
+                out.write(chunk)
+        uid = ctx.uid()
+        item = await run_in_threadpool(library.add, uid, kind, file.filename or "", tmp)
+    except library.LibraryError as e:
+        raise HTTPException(400, str(e))
+    finally:
+        tmp.unlink(missing_ok=True)
+    ctx.bump()
+    return item
+
+
+@app.delete("/api/library/{iid}")
+def library_delete(iid: str):
+    if not library.delete(ctx.uid(), iid):
+        raise HTTPException(404, "That isn't in your library.")
+    ctx.bump()
+    return {"ok": True}
+
+
+@app.get("/api/library/{iid}/{what}")
+def library_file(iid: str, what: str):
+    """A library item's file (to hear, see or draw it in the editor), or its picture."""
+    if what not in ("file", "thumb"):
+        raise HTTPException(404)
+    it = library.get(ctx.uid(), iid)
+    f = library.path(ctx.uid(), iid, thumb=what == "thumb")
+    if not it or not f:
+        raise HTTPException(404)
+    kind = {"font": "font/" + ("otf" if f.suffix == ".otf" else "ttf"), "sound": "audio/mp4"}.get(it["kind"]) if what == "file" else "image/jpeg"
+    if it["kind"] == "media" and what == "file":
+        kind = "image/png" if f.suffix == ".png" else "video/mp4"
+    return FileResponse(f, media_type=kind, headers={"Cache-Control": "private, max-age=86400", "X-Content-Type-Options": "nosniff"})
+
+
 def _clip_or_404(jid: str, cid: str):
     job = _job_or_404(jid)
     clip = next((c for c in job["clips"] if c["id"] == cid), None)
@@ -1200,6 +1328,10 @@ def clip_write(jid: str, cid: str):
 @app.delete("/api/jobs/{jid}")
 def delete_job(jid: str):
     job = _job_or_404(jid)
+    if job.get("stop") and job["status"] in ("queued", "running") and jid not in live.SESSIONS:
+        job["delete_when_stopped"] = True        # stopping: deleted as soon as it has stopped
+        jobs.save(job)
+        return {"ok": True, "later": True}
     if job["status"] in ("queued", "running", "live") or jid in live.SESSIONS:
         raise HTTPException(409, "This is still being made. Press Stop on it first, or wait for it to finish.")
     jobs.delete(jid)
@@ -1530,10 +1662,17 @@ def delete_my_account(request: Request, body: dict = Body(...)):
 def media_file(jid: str, name: str, download: int = 0):
     if not re.fullmatch(r"[\w\-]+(?:\.(?:clean|src))?\.(mp4|jpg)", name):
         raise HTTPException(404)
-    f = Path(_job_or_404(jid)["dir"]) / "clips" / name
+    job = _job_or_404(jid)
+    f = Path(job["dir"]) / "clips" / name
     if not f.is_file():
         raise HTTPException(404)
-    return FileResponse(f, filename=name if download else None, headers={"Cache-Control": "private, max-age=300"})
+    save_as = name
+    if download and name.endswith(".mp4"):
+        # a clip is saved under its title, not "clip01.mp4", the same as when several are downloaded as a zip
+        clip = next((c for c in job.get("clips", []) if Path(str(c.get("file") or "")).name == name), None)
+        if clip:
+            save_as = account.clip_title_name(clip, Path(name).stem) + ".mp4"
+    return FileResponse(f, filename=save_as if download else None, headers={"Cache-Control": "private, max-age=300"})
 
 
 # ================================================================ creators and live recording

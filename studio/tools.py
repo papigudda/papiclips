@@ -1,7 +1,7 @@
-"""The two programs PeakCut runs to work on video: ffmpeg and ffprobe.
+"""The two programs PapiClips runs to work on video: ffmpeg and ffprobe.
 
-They are not part of PeakCut and have to be on the computer. On Windows a missing one shows up as the bare
-"[WinError 2] The system cannot find the file specified", which tells nobody what to do. So PeakCut looks for them
+They are not part of PapiClips and have to be on the computer. On Windows a missing one shows up as the bare
+"[WinError 2] The system cannot find the file specified", which tells nobody what to do. So PapiClips looks for them
 itself (also in the places installers put them before Windows has told running programs), uses them from there,
 and when they really are missing says so in plain words, before any video is started."""
 import os
@@ -11,10 +11,11 @@ import time
 from pathlib import Path
 
 NEEDED = ("ffmpeg", "ffprobe")
-HELP = ("PeakCut needs ffmpeg to work on video, and it isn't installed on this computer yet. "
+HELP = ("PapiClips needs ffmpeg to work on video, and it isn't installed on this computer yet. "
         + ("Open a terminal and run:  winget install Gyan.FFmpeg" if sys.platform == "win32" else
-           "Run:  brew install ffmpeg" if sys.platform == "darwin" else "Run:  sudo apt install ffmpeg")
-        + "  Then close PeakCut and start it again.")
+           "Open Terminal and run:  brew install ffmpeg-full  (plain \"ffmpeg\" from Homebrew can't draw captions)"
+           if sys.platform == "darwin" else "Run:  sudo apt install ffmpeg")
+        + "  Then close PapiClips and start it again.")
 _seen = {"at": 0.0, "missing": list(NEEDED)}
 
 
@@ -23,8 +24,10 @@ def _places() -> list:
     root = Path(__file__).resolve().parent.parent
     out = [root / "ffmpeg" / "bin", root / "bin", root]
     env = os.environ.get
-    if env("PEAKCUT_FFMPEG_DIR"):                    # the folder that holds ffmpeg, if it lives somewhere unusual
-        out.insert(0, Path(env("PEAKCUT_FFMPEG_DIR")))
+    for var in ("PAPICLIPS_FFMPEG_DIR", "PEAKCUT_FFMPEG_DIR", "CLIPKONTRAST_FFMPEG_DIR"):
+        if env(var):                    # the folder that holds ffmpeg, if it lives somewhere unusual
+            out.insert(0, Path(env(var)))
+            break
     if sys.platform == "win32":
         local = Path(env("LOCALAPPDATA") or "")
         if str(local) not in ("", "."):
@@ -46,8 +49,15 @@ def _places() -> list:
 
 
 def setup() -> list:
-    """Make ffmpeg and ffprobe reachable for everything PeakCut runs. Returns the ones that could not be found."""
+    """Make ffmpeg and ffprobe reachable for everything PapiClips runs. Returns the ones that could not be found."""
     exe = ".exe" if sys.platform == "win32" else ""
+    if sys.platform == "darwin":
+        # Homebrew's "ffmpeg-full" (it draws captions: libass) isn't put on the PATH by itself; plain "ffmpeg" can't
+        # draw them. When it's there, it's used first.
+        for d in (Path("/opt/homebrew/opt/ffmpeg-full/bin"), Path("/usr/local/opt/ffmpeg-full/bin")):
+            if (d / "ffmpeg").is_file() and str(d) not in os.environ.get("PATH", "").split(os.pathsep):
+                os.environ["PATH"] = str(d) + os.pathsep + os.environ.get("PATH", "")
+                break
     missing = []
     for name in NEEDED:
         if shutil.which(name):
@@ -81,3 +91,24 @@ def explain(e) -> str:
 
 
 setup()
+
+
+_captions = {"ok": None}
+
+
+def can_draw_captions() -> bool:
+    """Can this computer's ffmpeg draw captions (its "ass" filter, from libass)? Homebrew's plain ffmpeg can't."""
+    if _captions["ok"] is None:
+        import subprocess
+        try:
+            out = subprocess.run(["ffmpeg", "-hide_banner", "-filters"], capture_output=True, text=True, timeout=20,
+                                 creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0)).stdout
+            _captions["ok"] = any(l.split()[1:2] == ["ass"] for l in out.splitlines() if l.strip())
+        except Exception:  # noqa: BLE001 - can't tell: assumed it can (what nearly every ffmpeg does)
+            _captions["ok"] = True
+    return _captions["ok"]
+
+
+NO_CAPTIONS = ("Captions are off on this clip: this computer's ffmpeg can't draw them. "
+               + ("On a Mac, open Terminal and run  brew install ffmpeg-full  then restart PapiClips and re-make the clip."
+                  if sys.platform == "darwin" else "Install a full build of ffmpeg, restart PapiClips and re-make the clip."))
