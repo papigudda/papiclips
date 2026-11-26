@@ -4,24 +4,24 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PapiClips Studio Pro</title>
-<link rel="icon" type="image/svg+xml" href="/brand/favicon.svg?v=papi3">
-<link rel="icon" type="image/png" sizes="64x64" href="/brand/favicon.png?v=papi3">
-<link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32.png?v=papi3">
-<link rel="shortcut icon" href="/favicon.ico?v=papi3">
-<link rel="apple-touch-icon" href="/brand/avatar.png?v=papi3">
+<link rel="icon" type="image/svg+xml" href="/brand/favicon.svg?v=tatya1">
+<link rel="icon" type="image/png" sizes="64x64" href="/brand/favicon.png?v=tatya1">
+<link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32.png?v=tatya1">
+<link rel="shortcut icon" href="/favicon.ico?v=tatya1">
+<link rel="apple-touch-icon" href="/brand/avatar.png?v=tatya1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Inter:wght@300&family=Archivo+Black&family=Anton&family=Poppins:wght@800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --brand:#FF2E54;--brand-press:#E0183E;--brand-ink:#FFFFFF;--on-brand:#FFFFFF;--brand-soft:rgba(255,46,84,0.14);--brand-line:rgba(255,46,84,0.36);--brand-deep:#9E0E28;
+  --brand:#FF2E54;--brand-press:#E0183E;--brand-ink:#FFFFFF;--on-brand:#FFFFFF;--brand-soft:rgba(255,46,84,0.16);--brand-line:rgba(255,46,84,0.42);--brand-deep:#FF5C7C;
   --accent:#FF2E54;--accent-2:#8B5CF6;--accent-cyan:#00F0FF;
   --accent-gradient:linear-gradient(135deg, #FF2E54 0%, #FF5733 100%);
   --accent-glow:rgba(255,46,84,0.35);
-  --frame:#06070B;--frame-2:#0E121E;--frame-line:rgba(255,255,255,0.07);--frame-text:#F8FAFC;--frame-dim:#94A3B8;
-  --bg:#07080D;--muted:#0D111D;--card:#121626;--card-hover:#181E32;--card-active:#202844;
-  --line:rgba(255,255,255,0.08);--line-2:rgba(255,255,255,0.16);
-  --text:#F8FAFC;--dim:#94A3B8;--faint:#64748B;
+  --frame:#0B060B;--frame-2:#150B13;--frame-line:rgba(255,255,255,0.09);--frame-text:#F8FAFC;--frame-dim:#C4B8C2;
+  --bg:#080408;--muted:#140B13;--card:#1A0E18;--card-hover:#241320;--card-active:#2F1829;
+  --line:rgba(255,255,255,0.10);--line-2:rgba(255,255,255,0.18);
+  --text:#F8FAFC;--dim:#C4B8C2;--faint:#8C7C8A;
   --good:#10B981;--good-soft:rgba(16,185,129,0.16);--bad:#EF4444;--bad-soft:rgba(239,68,68,0.16);--live:#FF1E44;
   --r-lg:16px;--r:12px;--r-sm:8px;
   color-scheme:dark;
@@ -1487,6 +1487,249 @@ body{background:var(--bg) !important;color:var(--text) !important;font-family:-a
   .stbar .find{margin-left:0;width:100%}
 }
 
+/* ================================================================
+   CHOSO CRIMSON BACKDROP + APPLE LIQUID GLASS DESIGN SYSTEM
+   ================================================================ */
+:root{
+  --glass-surface:linear-gradient(155deg,rgba(255,255,255,.11) 0%,rgba(18,9,16,.50) 38%,rgba(10,5,11,.62) 100%);
+  --glass-elevated:linear-gradient(155deg,rgba(255,255,255,.13) 0%,rgba(22,11,18,.72) 45%,rgba(10,5,11,.82) 100%);
+  --glass-spec:inset 0 1px 0 rgba(255,255,255,.28),inset 1px 0 0 rgba(255,255,255,.11),inset 0 -1px 0 rgba(255,255,255,.06);
+  --glass-ring:rgba(255,255,255,.20);
+  --glass-ring-hi:rgba(255,255,255,.34);
+  --glass-shadow:0 18px 46px rgba(0,0,0,.44);
+  --ruby-glow:0 8px 28px rgba(255,46,84,.42);
+}
+body{
+  background:#070409 !important;
+  color:var(--text) !important;
+  position:relative;
+}
+body::before{
+  content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;
+  background:url('/brand/bg-choso.jpg?v=choso1') 48% 20%/cover no-repeat;
+  filter:saturate(1.10) contrast(1.06) brightness(.98);
+}
+body::after{
+  content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(64% 58% at 74% 18%,rgba(255,46,84,.10),transparent 65%),
+    linear-gradient(135deg,rgba(8,4,10,.26) 0%,rgba(12,6,12,.12) 48%,rgba(6,3,8,.34) 100%);
+}
+
+/* Spatial floating glass workspace & dock: canvas stays crisp so Choso shows clearly behind Liquid Glass cards */
+.app{grid-template-columns:266px minmax(0,1fr) !important;padding:12px;gap:12px;background:transparent !important}
+.app.mini{grid-template-columns:82px minmax(0,1fr) !important}
+.side{
+  height:calc(100vh - 24px) !important;border-radius:24px !important;
+  background:linear-gradient(180deg,rgba(16,8,15,.44) 0%,rgba(8,4,10,.56) 100%) !important;
+  backdrop-filter:blur(22px) saturate(195%);-webkit-backdrop-filter:blur(22px) saturate(195%);
+  border:1px solid var(--glass-ring) !important;
+  box-shadow:var(--glass-spec),var(--glass-shadow);
+  padding:14px 10px !important;
+}
+main#main{
+  background:rgba(8,4,10,.08) !important;
+  backdrop-filter:none !important;-webkit-backdrop-filter:none !important;
+  margin:0 !important;height:calc(100vh - 24px) !important;border-radius:26px !important;
+  border:1px solid rgba(255,255,255,.20);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.24),0 24px 64px rgba(0,0,0,.42);
+}
+.topbar{
+  background:rgba(14,7,13,.46) !important;
+  backdrop-filter:blur(22px) saturate(195%) !important;-webkit-backdrop-filter:blur(22px) saturate(195%) !important;
+  border-bottom:1px solid rgba(255,255,255,.16) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18);
+}
+.topbar h1,.topbar p,.sec-h h3,.sec-h .sub{text-shadow:0 2px 10px rgba(0,0,0,.9),0 1px 3px rgba(0,0,0,.95)}
+.sec-h .sub{color:rgba(248,250,252,.82) !important}
+.rempty,.empty{
+  background:linear-gradient(155deg,rgba(255,255,255,.08),rgba(14,7,13,.54)) !important;
+  backdrop-filter:blur(20px) saturate(190%) !important;-webkit-backdrop-filter:blur(20px) saturate(190%) !important;
+  border:1px dashed rgba(255,255,255,.24) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 14px 34px rgba(0,0,0,.36);
+  color:#E2DCE4 !important;
+}
+.side-head{padding:8px 8px 18px 8px !important}
+.brand-avatar-box{
+  width:42px !important;height:42px !important;border-radius:13px !important;
+  border:1.5px solid rgba(255,255,255,.38) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 6px 20px rgba(255,46,84,.48) !important;
+  background:rgba(255,255,255,.08) !important;
+}
+.brand-title{font-size:17px !important;letter-spacing:-.03em;text-shadow:0 2px 10px rgba(0,0,0,.5)}
+.pro-tag{
+  background:linear-gradient(90deg,rgba(255,46,84,.32),rgba(255,87,51,.22)) !important;
+  border:1px solid rgba(255,105,135,.48) !important;color:#FFD6DF !important;
+  backdrop-filter:blur(10px);box-shadow:inset 0 1px 0 rgba(255,255,255,.22);
+}
+
+/* Liquid Glass cards & surfaces */
+.mk,.hcamp,.rc,.hcard,.card,.tile,.clip,.livecard,.lib-drop,.li,.hmore,.ai-who,.ai-card,.appcard,.pc-top,.pc-camp .cm-note,.pcm,.pce,.pcs{
+  background:var(--glass-surface) !important;
+  backdrop-filter:blur(28px) saturate(190%);-webkit-backdrop-filter:blur(28px) saturate(190%);
+  border:1px solid var(--glass-ring) !important;
+  box-shadow:var(--glass-spec),0 14px 36px rgba(0,0,0,.38) !important;
+}
+.mk,.hcamp{border-radius:22px !important}
+.rc:hover,.hcard:hover,.card:hover,.clip:hover,.li:hover,.pcs:hover{
+  border-color:var(--glass-ring-hi) !important;
+  box-shadow:var(--glass-spec),0 18px 42px rgba(0,0,0,.48),0 0 24px rgba(255,46,84,.14) !important;
+}
+.hcamp{
+  background:linear-gradient(95deg,rgba(16,7,14,.84) 0%,rgba(24,10,19,.66) 52%,rgba(14,6,12,.22) 100%) !important;
+  border-color:rgba(255,110,138,.42) !important;
+}
+.hcamp .hc-art{inset:0 0 0 36% !important;opacity:.76 !important;-webkit-mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.65) 45%,#000 92%);mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.65) 45%,#000 92%)}
+.hcamp .hc-art img,.hcamp .hc-art video{filter:contrast(1.06) saturate(1.10)}
+.hcamp p{color:rgba(248,250,252,.88) !important;text-shadow:0 1px 8px rgba(0,0,0,.7)}
+.hcamp h3,.hcamp ul{text-shadow:0 1px 10px rgba(0,0,0,.72)}
+.hcamp .tag.soft{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.2);backdrop-filter:blur(12px)}
+.hcard>i,.tile i{
+  background:rgba(255,46,84,.16) !important;border:1px solid rgba(255,46,84,.34);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.2);color:#FF7A95 !important;
+}
+.sthelp{
+  background:linear-gradient(90deg,rgba(255,46,84,.18),rgba(255,255,255,.06)) !important;
+  border:1px solid rgba(255,105,135,.32) !important;backdrop-filter:blur(18px);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.2);
+}
+
+/* Liquid Glass buttons, capsules & navigation pills */
+.nav-item{border-radius:12px !important;border:1px solid transparent !important;margin-bottom:3px;padding:9px 11px !important}
+.nav-item:hover{background:rgba(255,255,255,.09) !important;border-color:rgba(255,255,255,.14) !important;color:#fff;transform:translateX(2px)}
+.nav-item.on,.nav-item.active{
+  background:linear-gradient(90deg,rgba(255,46,84,.34) 0%,rgba(255,46,84,.12) 100%) !important;
+  border:1px solid rgba(255,100,132,.42) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 6px 20px rgba(255,46,84,.22) !important;
+  color:#fff !important;
+}
+.nav-item.on:hover{background:linear-gradient(90deg,rgba(255,46,84,.42) 0%,rgba(255,46,84,.18) 100%) !important}
+.btn{
+  border-radius:999px !important;
+  background:rgba(255,255,255,.08) !important;
+  border:1px solid rgba(255,255,255,.18) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.22);
+  backdrop-filter:blur(14px);color:#F8FAFC !important;
+}
+.btn:hover{background:rgba(255,255,255,.15) !important;border-color:rgba(255,255,255,.32) !important;color:#fff !important}
+.btn.ghost{background:transparent !important;border-color:transparent !important;box-shadow:none !important}
+.btn.ghost:hover{background:rgba(255,255,255,.10) !important;border-color:rgba(255,255,255,.14) !important}
+.btn.primary{
+  background:linear-gradient(135deg,rgba(255,58,96,.94) 0%,rgba(214,18,58,.96) 100%) !important;
+  border:1px solid rgba(255,155,175,.48) !important;color:#FFFFFF !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.40),var(--ruby-glow) !important;
+}
+.btn.primary:hover{
+  background:linear-gradient(135deg,#FF486B 0%,#EE1D47 100%) !important;
+  border-color:rgba(255,190,205,.65) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.52),0 10px 30px rgba(255,46,84,.55) !important;
+}
+.btn.primary:disabled{background:rgba(255,255,255,.08) !important;color:rgba(255,255,255,.4) !important;border-color:rgba(255,255,255,.1) !important;box-shadow:none !important}
+.btn.danger{background:rgba(239,68,68,.18) !important;border-color:rgba(239,68,68,.38) !important;color:#FCA5A5 !important}
+.btn.danger:hover{background:rgba(239,68,68,.28) !important;color:#fff !important}
+.rc-th .len{bottom:8px !important}
+.rc .go{
+  position:static !important;margin:0 10px 10px !important;width:calc(100% - 20px) !important;
+  background:linear-gradient(135deg,rgba(255,58,96,.92),rgba(214,18,58,.95)) !important;
+  border:1px solid rgba(255,170,185,.45);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.38),0 6px 20px rgba(255,46,84,.40);
+  backdrop-filter:blur(12px);border-radius:999px !important;
+}
+.rc .go:hover{background:linear-gradient(135deg,#FF486B,#EE1D47) !important}
+.news .ni{-webkit-mask-image:linear-gradient(90deg,#000 84%,transparent);mask-image:linear-gradient(90deg,#000 84%,transparent)}
+
+/* Chips, Inputs, Composer, Tabs & Sliders (Purging legacy light/lime leaks) */
+.composer.big .composer-input,.composer.compact{
+  background:rgba(12,7,13,.56) !important;border:1px solid rgba(255,255,255,.18) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 4px 16px rgba(0,0,0,.25);
+  backdrop-filter:blur(16px);
+}
+.composer:has(#url:focus),.composer.big .composer-input:focus-within{border-color:rgba(255,90,122,.7) !important;box-shadow:0 0 0 3px rgba(255,46,84,.18),inset 0 1px 0 rgba(255,255,255,.2) !important}
+.composer.big .modes button,.qchip,.chip,.seg-mini button{
+  background:rgba(255,255,255,.07) !important;border:1px solid rgba(255,255,255,.14) !important;
+  color:#CBD5E1 !important;backdrop-filter:blur(12px);
+}
+.composer.big .modes button:hover,.qchip:hover,.chip:hover,.chip:focus-visible,.seg-mini button:hover{
+  background:rgba(255,255,255,.15) !important;border-color:rgba(255,255,255,.28) !important;color:#fff !important;
+}
+.composer.big .modes button[aria-selected=true],.qchip[aria-pressed=true],.chip.on,.pick.open .chip,.seg-mini button[aria-pressed=true]{
+  background:rgba(255,46,84,.24) !important;border-color:rgba(255,105,135,.58) !important;
+  color:#FFFFFF !important;box-shadow:inset 0 1px 0 rgba(255,255,255,.24);
+}
+.modes button[aria-selected=true]{background:rgba(255,255,255,.10) !important;color:#fff !important;border-bottom-color:var(--brand) !important}
+.ob,.nstep,.meter,.stbar .seg2,.utabs,.ttabs,.range label{
+  background:rgba(14,8,14,.55) !important;border:1px solid rgba(255,255,255,.11) !important;backdrop-filter:blur(14px);
+}
+.step,.tile-o,.look .tile-o,.seg,.tsty span,.pc-steps div,.pc-about,.pc-tot div{
+  background:rgba(25,14,21,.62) !important;border:1px solid rgba(255,255,255,.14) !important;color:var(--text) !important;
+}
+.step:hover,.utabs .tabbtn:hover,.ttabs .tabbtn:hover,.tabbtn:hover,.seg button:hover,.seg button:focus-visible,.tile-o:enabled:hover,.tile-o:focus-visible{
+  background:rgba(255,255,255,.12) !important;color:#fff !important;
+}
+.seg button[aria-pressed=true],.tile-o[aria-pressed=true],.look .tile-o[aria-pressed=true]{
+  background:rgba(255,46,84,.24) !important;color:#fff !important;box-shadow:inset 0 0 0 1.5px var(--brand) !important;
+}
+.seg button[aria-pressed=true] small{color:#FFA4B8 !important}
+.lay-prev{background:rgba(10,6,12,.85) !important;border:1px solid rgba(255,255,255,.1)}
+.lay-prev .ph{background:#24141D !important}
+.lay-prev .ph::before{background:linear-gradient(160deg,#FF2E54,#5B1022) !important}
+.lay-prev .ph i{background:linear-gradient(135deg,#FF2E54,#FF6B8A) !important}
+.lay-prev.split .ph::before{background:#F8FAFC !important}
+.step .n{background:rgba(255,46,84,.22) !important;border-color:rgba(255,46,84,.45) !important;color:#fff !important}
+tr:hover>td{background:rgba(255,255,255,.04) !important}
+a.lnk,.appsetup a,.ai-form .hint a,.rep-dlg .lnk,.pc-sec .lnk,.cm-more{color:#FF6B8A !important}
+a.lnk:hover{color:#FFA0B4 !important}
+.appsetup .copyrow code,.mo-t button,.lp .fset,.lp .mset{
+  background:rgba(22,12,18,.8) !important;border:1px solid rgba(255,255,255,.18) !important;color:#F8FAFC !important;
+}
+.working{color:#FF8BA3 !important;background:rgba(255,46,84,.18) !important;border:1px solid rgba(255,46,84,.35)}
+.avatar{background:rgba(255,46,84,.24) !important;color:#FFD6DF !important;border:1px solid rgba(255,46,84,.4)}
+.ai-card{background:rgba(255,255,255,.06) !important;border:1px solid rgba(255,255,255,.14) !important}
+.ai-card:hover{background:rgba(255,255,255,.12) !important}
+.ai-card.on{border-color:rgba(255,46,84,.58) !important}
+.ai-card .ai-ic{background:rgba(255,46,84,.22) !important;color:#FF7A95 !important}
+.shot .veil span{background:linear-gradient(135deg,#FF2E54,#E0183E) !important;color:#fff !important;box-shadow:0 4px 14px rgba(255,46,84,.45)}
+.shot:hover .veil span{background:linear-gradient(135deg,#FF486B,#EE1D47) !important;transform:scale(1.06)}
+
+/* Menus, Popovers, Dialogs, Toasts & Banners in Frosted Liquid Glass */
+.news,.pick-menu,.pop,.ntoast,.toast,#selbar,dialog,.dlg,dialog#clipdlg,.editor,dialog#ytmodal{
+  background:var(--glass-elevated) !important;
+  backdrop-filter:blur(34px) saturate(195%) !important;-webkit-backdrop-filter:blur(34px) saturate(195%) !important;
+  border:1px solid rgba(255,255,255,.18) !important;
+  box-shadow:var(--glass-spec),0 24px 64px rgba(0,0,0,.62) !important;
+  color:var(--text) !important;
+}
+.news .ni button{background:rgba(255,255,255,.09) !important;border:1px solid rgba(255,255,255,.12)}
+.news .ni button:hover{background:rgba(255,46,84,.24) !important;color:#fff !important}
+.pick-opt,.pop.menu button{color:#E2E8F0 !important}
+.pick-opt:hover,.pick-opt:focus-visible,.pop.menu button:hover,.nt:hover,.ntoast:hover{background:rgba(255,255,255,.10) !important;color:#fff !important}
+.pick-new,.pick-new .av,.pick-opt .av{color:#FF7A95 !important;background:rgba(255,46,84,.18) !important}
+.pick-new:hover{background:rgba(255,46,84,.26) !important;color:#fff !important}
+.vb{background:rgba(255,46,84,.16) !important;border:1px solid rgba(255,105,135,.35) !important;color:#FFE4EA !important;backdrop-filter:blur(16px)}
+.vb b{color:#fff !important}
+.vb.warn-bar{background:rgba(245,158,11,.18) !important;border-color:rgba(251,191,36,.38) !important;color:#FEF3C7 !important}
+.vb.warn-bar b,.vb.warn-bar svg{color:#FDE68A !important}
+.vb.ok-bar{background:rgba(16,185,129,.18) !important;border-color:rgba(52,211,153,.38) !important;color:#D1FAE5 !important}
+.vb.ok-bar b,.vb.ok-bar svg{color:#6EE7B7 !important}
+.pill.brand{color:#fff !important}
+.pill.warn{color:#FDBA74 !important;background:rgba(245,158,11,.18) !important}
+.lp .ok{color:#6EE7B7 !important;background:rgba(16,185,129,.18) !important;border:1px solid rgba(52,211,153,.3)}
+.lp.bad{color:#FCA5A5 !important;background:rgba(239,68,68,.16) !important;border:1px solid rgba(239,68,68,.3)}
+.lp.bad b{color:#FEE2E2 !important}
+.savebar{background:rgba(20,11,18,.88) !important;border:1px solid rgba(255,105,135,.38) !important;backdrop-filter:blur(24px);color:#fff !important}
+.editor .panel{background:rgba(16,9,15,.68) !important;backdrop-filter:blur(24px)}
+.editor .panel .job-head{background:rgba(20,11,18,.84) !important;backdrop-filter:blur(20px)}
+.editor .stage{background:rgba(6,4,9,.72) !important}
+.sty span{background:rgba(14,9,15,.82) !important;color:#F8FAFC !important;backdrop-filter:blur(8px)}
+.splat button.on{background:rgba(255,46,84,.28) !important;color:#fff !important}
+.rc-th .sc.s-hi,.badge.s-hi{background:linear-gradient(135deg,#FF2E54,#E0183E) !important;color:#fff !important;border:1px solid rgba(255,180,195,.35) !important}
+
+@media (max-width:900px){
+  .app,.app.mini{padding:0;gap:0}
+  .side{height:100vh !important;border-radius:0 24px 24px 0 !important}
+  main#main{height:100vh !important;border-radius:0 !important;border:0}
+}
+
 </style>
 </head>
 <body>
@@ -1495,7 +1738,7 @@ body{background:var(--bg) !important;color:var(--text) !important;font-family:-a
     <div class="side-head">
       <div class="brand-badge-wrap">
         <div class="brand-avatar-box">
-          <img class="brand-avatar-img" src="/brand/avatar.png" alt="PapiClips">
+          <img class="brand-avatar-img" src="/brand/avatar.png?v=tatya1" alt="PapiClips">
         </div>
         <div class="brand-text-col">
           <span class="brand-title">PapiClips</span>
@@ -3519,7 +3762,7 @@ document.addEventListener("change", e => { if (e.target.id === "o_captions") $$(
 /* The card next to the link on Home: what the pro editor can do. */
 function drawHomeTop() {
   const box = $("#homeCamp"); if (!box) return;
-  put(box, `<section class="hcamp"><span class="tag soft">${ic("scissors")} The PapiClips editor</span>
+  put(box, `<section class="hcamp"><div class="hc-art" aria-hidden="true"><img src="/brand/bg-choso.jpg?v=choso1" alt=""></div><span class="tag soft">${ic("scissors")} The PapiClips editor</span>
     <h3>Finish every clip like a pro</h3><p>Every clip opens in the editor, with a live preview.</p>
     <ul><li>Cut words out from the transcript</li><li>Transitions, whooshes, punch-ins and looks</li><li>Your own fonts, sounds and memes</li><li>Hype Edit: the whole edit in one click</li></ul>
     <div class="row"><button class="btn primary" data-act="go" data-v="studio">${ic("scissors")}Open the editor</button><button class="btn" data-act="go" data-v="assets">${ic("folder")}Your library</button></div></section>`);
@@ -3535,9 +3778,9 @@ function readyCard(j, c) {
     : `<span class="mk2${c.status === "error" ? " bad" : ""}">${c.status === "error" ? "Couldn't make this clip. Open it to try again." : c.status === "rendering" ? "Making this clip…" : "Waiting its turn…"}</span>`;
   return `<article class="rc"><div class="rc-wrap"><button class="rc-th" data-act="openclip" ${a} aria-label="Open: ${esc(c.hook || c.title || "clip")}"${busy ? " disabled" : ""}>${pic}
       ${c.score ? `<span class="sc ${scoreCls(c.score)}" title="AI score">${c.score}</span>` : ""}${c.edit ? `<span class="edt">EDITED</span>` : ""}
-      ${c.status === "done" ? `<span class="len">${fmt(c.end - c.start)}</span>` : ""}</button>
-      ${c.status === "done" ? `<button class="go" data-act="editclip" ${a} title="Open in the editor">${ic("scissors")}Edit</button>` : ""}</div>
-    <div class="rc-bd"><b>${esc(c.hook || c.title || "Untitled clip")}</b><span>${fmt(c.end - c.start)}${who ? ` · ${esc(who)}` : ""}</span></div></article>`;
+      ${c.status === "done" ? `<span class="len">${fmt(c.end - c.start)}</span>` : ""}</button></div>
+    <div class="rc-bd"><b>${esc(c.hook || c.title || "Untitled clip")}</b><span>${fmt(c.end - c.start)}${who ? ` · ${esc(who)}` : ""}</span></div>
+    ${c.status === "done" ? `<button class="go" data-act="editclip" ${a} title="Open in the editor">${ic("scissors")}Edit</button>` : ""}</article>`;
 }
 function drawReady() {
   const box = $("#readyRow"); if (!box) return;

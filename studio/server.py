@@ -449,7 +449,7 @@ def brand(name: str):
 @app.get("/brand/styles/{name}")
 def style_preview(name: str):
     """The moving preview of each caption style (made by packaging/make_style_previews.py)."""
-    if not re.fullmatch(r"[a-z]+\.(webm|jpg)", name) or not (WEB / "brand" / "styles" / name).is_file():
+    if not re.fullmatch(r"[a-z_]+\.(webm|jpg)", name) or not (WEB / "brand" / "styles" / name).is_file():
         raise HTTPException(404)
     return FileResponse(WEB / "brand" / "styles" / name, media_type="video/webm" if name.endswith(".webm") else "image/jpeg",
                         headers={"Cache-Control": "public, max-age=604800, stale-while-revalidate=86400"})
